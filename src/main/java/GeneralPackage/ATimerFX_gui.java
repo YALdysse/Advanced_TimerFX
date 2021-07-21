@@ -38,6 +38,8 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.scene.shape.Box;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
@@ -61,8 +63,7 @@ import java.util.prefs.Preferences;
 
 public class ATimerFX_gui extends Application
 {
-    private static final int PREFERRED_WIDTH = 360;
-    private static final int PREFERRED_HEIGHT = 260;
+
 
     private TextField timerName_textFiels;
 
@@ -105,6 +106,7 @@ public class ATimerFX_gui extends Application
     private MenuItem exit_menuItem;
     private BorderPane menu_BorderPane;
 
+    private static final double rem = new Text("").getBoundsInParent().getHeight();
     private final Label colon_Label = new Label(":");
     private final Label colon_Label2 = new Label(":");
     private int timerTimeInSeconds;
@@ -129,6 +131,9 @@ public class ATimerFX_gui extends Application
     private int locX = 0;
     private int locY = 0;
     private String currentLanguage_str = "English";
+
+    private static final int PREFERRED_WIDTH = 360;
+    private static final int PREFERRED_HEIGHT = (int) (rem * 17.4D);
 
     public void start(Stage aStage)
     {
@@ -169,11 +174,13 @@ public class ATimerFX_gui extends Application
 
     private void initComponents()
     {
+        YALtools.printDebugMessage("rem: " + rem);
+
         timerName_textFiels = new TextField();
         timerName_textFiels.setPromptText("Name of timer (optional)");
         //timerName_textFiels.setMaxWidth(Double.MAX_VALUE);
 
-        HBox timerName_Box = new HBox(15, timerName_textFiels);
+        HBox timerName_Box = new HBox(rem * 0.1, timerName_textFiels);
         timerName_Box.setAlignment(Pos.CENTER);
 
         hours_Spinner = new Spinner(0, 23, 0);
@@ -242,7 +249,7 @@ public class ATimerFX_gui extends Application
         gp.setAlignment(Pos.CENTER);
         //gp.setGridLin
         // esVisible(true);
-        gp.setHgap(20);
+        gp.setHgap(rem * 1.1);
 
         //--------------------------------- Меню
         menuBar = new MenuBar();
@@ -344,7 +351,7 @@ public class ATimerFX_gui extends Application
         });
 
         language_Menu.getItems().addAll(russianLanguage_MenuItem, ukrainianLanguage_MenuItem, englishLanguage_MenuItem);
-        general_menu.getItems().addAll(language_Menu,gitHubRepository_MenuItem, exit_menuItem);
+        general_menu.getItems().addAll(language_Menu, gitHubRepository_MenuItem, exit_menuItem);
         timer_Menu.getItems().addAll(startTimer_MenuItem, stopTimer_MenuItem);
 
         menuBar.getMenus().addAll(general_menu, timer_Menu);
@@ -367,9 +374,9 @@ public class ATimerFX_gui extends Application
 //        //superRoot.setBackground(new Background(bImage));
 //        //
 
-        root = new VBox(15, timerName_Box, gp);
+        root = new VBox(rem * 1.05D, timerName_Box, gp);
         root.setPrefSize(PREFERRED_WIDTH, PREFERRED_HEIGHT);
-        root.setPadding(new Insets(15));
+        root.setPadding(new Insets(rem * 1.0D));
 
         superRoot = new VBox(menu_BorderPane, root);
 
@@ -391,7 +398,7 @@ public class ATimerFX_gui extends Application
             stopTimerButton_Action(event);
         });
 
-        HBox startTimer_Box = new HBox(15, startTimer_button);
+        HBox startTimer_Box = new HBox(rem * 1.0D, startTimer_button);
         startTimer_Box.setAlignment(Pos.CENTER);
         //startTimer_Box.setPrefWidth(root.getPrefWidth()-15);
 
@@ -433,8 +440,9 @@ public class ATimerFX_gui extends Application
         ToggleGroup radioToggleGroup = new ToggleGroup();
         radioToggleGroup.getToggles().addAll(shutdown_radio, suspend_radio, reboot_radio, custom_command);
 
-        VBox radioGroup_Box = new VBox(5, shutdown_radio, suspend_radio, reboot_radio, custom_command, customCommand_textField);
-        radioGroup_Box.setPadding(new Insets(0.0D, 0.0D, 0.0D, 40.0D));
+        VBox radioGroup_Box = new VBox(rem * 0.4D, shutdown_radio, suspend_radio, reboot_radio, custom_command, customCommand_textField);
+        radioGroup_Box.setPadding(new Insets(0.0D, 0.0D, 0.0D, rem * 2.1D));
+        //radioGroup_Box.setBorder(new javafx.scene.layout.Border(new BorderStroke(Color.BLACK,BorderStrokeStyle.DOTTED, new CornerRadii(rem * 0.1D),BorderWidths.FULL)));
 
         performActionAfterTimerWentOut_checkBox = new CheckBox("Perform Action when timer went out");
         performActionAfterTimerWentOut_checkBox.setWrapText(true);
@@ -450,7 +458,7 @@ public class ATimerFX_gui extends Application
                 YALtools.printDebugMessage("getBoundsInParent:" + root.getBoundsInParent().getHeight());
                 YALtools.printDebugMessage("getBoundsInLocal:" + root.getBoundsInLocal().getHeight());
                 YALtools.printDebugMessage("AllPaddings:" + (15 * root.getChildren().size()));
-                scene.getWindow().setHeight(400);
+                scene.getWindow().setHeight(PREFERRED_HEIGHT + ((rem * 1.85D) * radioGroup_Box.getChildren().size()));
             } else
             {
                 action = false;
@@ -1004,7 +1012,7 @@ public class ATimerFX_gui extends Application
             timerName_str = local.get("timerName_Label", "Name of timer:");
             action_str = local.get("timerAction_Label", "Action: ");
             info_str = local.get("info_text", "Info");
-            gitHubRepository_MenuItem.setText(local.get("gitHubRepository_MenuItem","Repository on GitHub"));
+            gitHubRepository_MenuItem.setText(local.get("gitHubRepository_MenuItem", "Repository on GitHub"));
             customCommandPromtText_str = local.get("customCommandPromtText", "Enter here command that will be performed after timer went out");
 
             customCommand_textField.setPromptText(customCommandPromtText_str);
