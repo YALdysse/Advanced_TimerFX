@@ -28,6 +28,12 @@ import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
@@ -40,7 +46,10 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
+
+import java.awt.*;
 import java.io.*;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.LocalTime;
@@ -89,6 +98,7 @@ public class ATimerFX_gui extends Application
     private MenuItem russianLanguage_MenuItem;
     private MenuItem ukrainianLanguage_MenuItem;
     private MenuItem englishLanguage_MenuItem;
+    private MenuItem gitHubRepository_MenuItem;
     private Menu timer_Menu;
     private MenuItem startTimer_MenuItem;
     private MenuItem stopTimer_MenuItem;
@@ -154,6 +164,8 @@ public class ATimerFX_gui extends Application
     private Image russianFlag_Image;
     private Image ukraineFlag_Image;
     private Image unitedKingdom_Image;
+    private Image exit_Image;
+    private Image gitHub_Image;
 
     private void initComponents()
     {
@@ -238,36 +250,14 @@ public class ATimerFX_gui extends Application
         language_Menu = new Menu("Language");
         timer_Menu = new Menu("Timer");
 
-        startTimer_MenuItem = new MenuItem("Start Timer");
-        startTimer_MenuItem.setOnAction(event ->
-        {
-            startTimer_Action(null);
-        });
-        startTimer_MenuItem.acceleratorProperty().set(new KeyCodeCombination(KeyCode.ENTER, KeyCodeCombination.CONTROL_DOWN));
-
-        stopTimer_MenuItem = new MenuItem("Stop Timer");
-        stopTimer_MenuItem.setOnAction(event ->
-        {
-            stopTimerButton_Action(null);
-        });
-        stopTimer_MenuItem.acceleratorProperty().set(new KeyCodeCombination(KeyCode.SPACE, KeyCodeCombination.CONTROL_DOWN));
-        stopTimer_MenuItem.setDisable(true);
-
-        exit_menuItem = new MenuItem("Exit");
-        exit_menuItem.acceleratorProperty().set(new KeyCodeCombination(KeyCode.Q, KeyCombination.CONTROL_DOWN));
-        exit_menuItem.setOnAction(event ->
-        {
-            YALtools.printDebugMessage("Завершение работы приложения.");
-            saveSettings();
-            System.exit(0);
-        });
-
         //Загружыем флаги стран
         try
         {
             russianFlag_Image = new Image(this.getClass().getClassLoader().getResource("Images/russia.png").openStream());
             ukraineFlag_Image = new Image(this.getClass().getClassLoader().getResource("Images/ukraine_2.png").openStream());
             unitedKingdom_Image = new Image(this.getClass().getClassLoader().getResource("Images/UK.png").openStream());
+            exit_Image = new Image(this.getClass().getClassLoader().getResource("Images/exit.png").openStream());
+            gitHub_Image = new Image(this.getClass().getClassLoader().getResource("Images/gitHub.png").openStream());
         }
         catch (IOException ioExc)
         {
@@ -284,6 +274,57 @@ public class ATimerFX_gui extends Application
         ImageView unitedKingdom_ImageView = new ImageView(unitedKingdom_Image);
         unitedKingdom_ImageView.setFitHeight(24);
         unitedKingdom_ImageView.setFitWidth(24);
+
+        ImageView exit_ImageView = new ImageView(exit_Image);
+        exit_ImageView.setFitWidth(24);
+        exit_ImageView.setFitHeight(24);
+
+        ImageView gitHub_ImageView = new ImageView(gitHub_Image);
+        gitHub_ImageView.setFitWidth(24);
+        gitHub_ImageView.setFitHeight(24);
+
+        startTimer_MenuItem = new MenuItem("Start Timer");
+        startTimer_MenuItem.setOnAction(event ->
+        {
+            startTimer_Action(null);
+        });
+        startTimer_MenuItem.acceleratorProperty().set(new KeyCodeCombination(KeyCode.ENTER, KeyCodeCombination.CONTROL_DOWN));
+
+        stopTimer_MenuItem = new MenuItem("Stop Timer");
+        stopTimer_MenuItem.setOnAction(event ->
+        {
+            stopTimerButton_Action(null);
+        });
+        stopTimer_MenuItem.acceleratorProperty().set(new KeyCodeCombination(KeyCode.SPACE, KeyCodeCombination.CONTROL_DOWN));
+        stopTimer_MenuItem.setDisable(true);
+
+        exit_menuItem = new MenuItem("Exit", exit_ImageView);
+        exit_menuItem.acceleratorProperty().set(new KeyCodeCombination(KeyCode.Q, KeyCombination.CONTROL_DOWN));
+        exit_menuItem.setOnAction(event ->
+        {
+            YALtools.printDebugMessage("Завершение работы приложения.");
+            saveSettings();
+            System.exit(0);
+        });
+
+        gitHubRepository_MenuItem = new MenuItem("Repository on GitHub", gitHub_ImageView);
+        gitHubRepository_MenuItem.setOnAction(event ->
+        {
+            YALtools.printDebugMessage("Переходим к репозиторию GitHub.");
+            try
+            {
+                Desktop.getDesktop().browse(new URI("https://github.com/YALdysse/Advanced_TimerFX"));
+            }
+            catch (URISyntaxException uriSynExc)
+            {
+                YALtools.printDebugMessage("sdk");
+            }
+            catch (IOException ioExc)
+            {
+                YALtools.printDebugMessage("Возникла ошибка ввода-вывода при переходе к репозиторию GitHub.\n" + ioExc.toString());
+            }
+        });
+
 
         russianLanguage_MenuItem = new MenuItem("Русский", russianFlag_ImageView);
         russianLanguage_MenuItem.setOnAction(event ->
@@ -303,7 +344,7 @@ public class ATimerFX_gui extends Application
         });
 
         language_Menu.getItems().addAll(russianLanguage_MenuItem, ukrainianLanguage_MenuItem, englishLanguage_MenuItem);
-        general_menu.getItems().addAll(language_Menu, exit_menuItem);
+        general_menu.getItems().addAll(language_Menu,gitHubRepository_MenuItem, exit_menuItem);
         timer_Menu.getItems().addAll(startTimer_MenuItem, stopTimer_MenuItem);
 
         menuBar.getMenus().addAll(general_menu, timer_Menu);
@@ -963,6 +1004,7 @@ public class ATimerFX_gui extends Application
             timerName_str = local.get("timerName_Label", "Name of timer:");
             action_str = local.get("timerAction_Label", "Action: ");
             info_str = local.get("info_text", "Info");
+            gitHubRepository_MenuItem.setText(local.get("gitHubRepository_MenuItem","Repository on GitHub"));
             customCommandPromtText_str = local.get("customCommandPromtText", "Enter here command that will be performed after timer went out");
 
             customCommand_textField.setPromptText(customCommandPromtText_str);

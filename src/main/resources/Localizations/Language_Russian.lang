@@ -28,6 +28,7 @@
           <entry key="TimerName_PromtText" value="Название таймера (необязательно)"/>
           <entry key="info_text" value="Информация"/>
           <entry key="customCommandPromtText" value="Введите команду, которая будет выполнена после истечения времени таймера"/>
+          <entry key="gitHubRepository_MenuItem" value="Репозиторий на GitHub"/>
         </map>
       </node>
     </node>
