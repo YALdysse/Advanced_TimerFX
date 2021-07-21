@@ -156,7 +156,7 @@ public class ATimerFX_gui extends Application
         stage.setY(locY);
 
         stage.setScene(scene);
-        stage.setTitle("Advanced Timer FX [build 16 Beta]");
+        stage.setTitle("Advanced Timer FX [build 18 Beta]");
 
         scene.getWindow().setWidth(PREFERRED_WIDTH);
         scene.getWindow().setHeight(PREFERRED_HEIGHT);
@@ -528,6 +528,7 @@ public class ATimerFX_gui extends Application
             stage.setAlwaysOnTop(false);
         });
         stage.setAlwaysOnTop(true);
+        stage.setOpacity(0.5D);
 
 
         if (performActionAfterTimerWentOut_checkBox.isSelected())
@@ -563,6 +564,11 @@ public class ATimerFX_gui extends Application
             timerWentOut_Alert.setHeaderText("Timer '" + timerName_textFiels.getText() + "' went out");
             timerWentOut_Alert.setTitle("Advanced TimerFX");
             timerWentOut_Alert.initModality(Modality.APPLICATION_MODAL);
+            timerWentOut_Alert.initOwner(stage);
+            timerWentOut_Alert.setOnHiding(eventHiding ->
+            {
+                stage.setOpacity(1.0D);
+            });
             timerWentOut_Alert.show();
 
             performAction();
