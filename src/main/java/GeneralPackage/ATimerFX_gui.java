@@ -63,8 +63,6 @@ import java.util.prefs.Preferences;
 
 public class ATimerFX_gui extends Application
 {
-
-
     private TextField timerName_textFiels;
 
     private Spinner hours_Spinner;
@@ -170,7 +168,10 @@ public class ATimerFX_gui extends Application
     private Image ukraineFlag_Image;
     private Image unitedKingdom_Image;
     private Image exit_Image;
+    private Image language_Image;
     private Image gitHub_Image;
+    private Image startTimer_Image;
+    private Image stopTimer_Image;
 
     private void initComponents()
     {
@@ -265,6 +266,9 @@ public class ATimerFX_gui extends Application
             unitedKingdom_Image = new Image(this.getClass().getClassLoader().getResource("Images/UK.png").openStream());
             exit_Image = new Image(this.getClass().getClassLoader().getResource("Images/exit.png").openStream());
             gitHub_Image = new Image(this.getClass().getClassLoader().getResource("Images/gitHub.png").openStream());
+            language_Image = new Image(this.getClass().getClassLoader().getResource("Images/language_2.png").openStream());
+            startTimer_Image = new Image(this.getClass().getClassLoader().getResource("Images/startTimer_3.png").openStream());
+            stopTimer_Image = new Image(this.getClass().getClassLoader().getResource("Images/stopTimer_3.png").openStream());
         }
         catch (IOException ioExc)
         {
@@ -290,14 +294,26 @@ public class ATimerFX_gui extends Application
         gitHub_ImageView.setFitWidth(24);
         gitHub_ImageView.setFitHeight(24);
 
-        startTimer_MenuItem = new MenuItem("Start Timer");
+        ImageView language_ImageView = new ImageView(language_Image);
+        language_ImageView.setFitHeight(24);
+        language_ImageView.setFitWidth(24);
+
+        ImageView startTimer_ImageView = new ImageView(startTimer_Image);
+        startTimer_ImageView.setFitHeight(24);
+        startTimer_ImageView.setFitWidth(24);
+
+        ImageView stopTimer_ImageView = new ImageView(stopTimer_Image);
+        stopTimer_ImageView.setFitHeight(24);
+        stopTimer_ImageView.setFitWidth(24);
+
+        startTimer_MenuItem = new MenuItem("Start Timer", startTimer_ImageView);
         startTimer_MenuItem.setOnAction(event ->
         {
             startTimer_Action(null);
         });
         startTimer_MenuItem.acceleratorProperty().set(new KeyCodeCombination(KeyCode.ENTER, KeyCodeCombination.CONTROL_DOWN));
 
-        stopTimer_MenuItem = new MenuItem("Stop Timer");
+        stopTimer_MenuItem = new MenuItem("Stop Timer", stopTimer_ImageView);
         stopTimer_MenuItem.setOnAction(event ->
         {
             stopTimerButton_Action(null);
@@ -350,6 +366,8 @@ public class ATimerFX_gui extends Application
             initLocalization("English");
         });
 
+        language_Menu.setGraphic(language_ImageView);
+        //timer_Menu.setGraphic(language_ImageView);
         language_Menu.getItems().addAll(russianLanguage_MenuItem, ukrainianLanguage_MenuItem, englishLanguage_MenuItem);
         general_menu.getItems().addAll(language_Menu, gitHubRepository_MenuItem, exit_menuItem);
         timer_Menu.getItems().addAll(startTimer_MenuItem, stopTimer_MenuItem);
@@ -459,11 +477,13 @@ public class ATimerFX_gui extends Application
                 YALtools.printDebugMessage("getBoundsInLocal:" + root.getBoundsInLocal().getHeight());
                 YALtools.printDebugMessage("AllPaddings:" + (15 * root.getChildren().size()));
                 scene.getWindow().setHeight(PREFERRED_HEIGHT + ((rem * 1.85D) * radioGroup_Box.getChildren().size()));
+                stage.setMinHeight(scene.getWindow().getHeight());
             } else
             {
                 action = false;
                 root.getChildren().remove(radioGroup_Box);
                 scene.getWindow().setHeight(PREFERRED_HEIGHT);
+                stage.setMinHeight(PREFERRED_HEIGHT);
             }
         });
         //===================================================
@@ -794,7 +814,7 @@ public class ATimerFX_gui extends Application
         //Инициализация новых компонентов для отображения информации о запущенном таймере
         VBox timerIsRunning_pane_superRoot = new VBox(menuBar);
 
-        VBox timerIsRunning_pane = new VBox(15);
+        VBox timerIsRunning_pane = new VBox(rem * 1.0D);
 
         timerTime_LocalTime = LocalTime.of(timerHours, timerMinutes, timerSeconds);
 
@@ -820,7 +840,7 @@ public class ATimerFX_gui extends Application
         colon_Label.setFont(numbers_Font);
         colon_Label2.setFont(numbers_Font);
 
-        HBox secondMinutesHoursAppearance_Box = new HBox(3, hoursAppearance_Label, colon_Label, minutesAppearance_Label, colon_Label2, secondsAppearance_Label);
+        HBox secondMinutesHoursAppearance_Box = new HBox(rem * 0.25D, hoursAppearance_Label, colon_Label, minutesAppearance_Label, colon_Label2, secondsAppearance_Label);
         secondMinutesHoursAppearance_Box.setAlignment(Pos.CENTER);
         //secondMinutesHoursAppearance_Box.getChildren().add(colon_Label);
 
@@ -849,7 +869,7 @@ public class ATimerFX_gui extends Application
         }
 
 
-        timerIsRunning_pane.setPadding(new Insets(20));
+        timerIsRunning_pane.setPadding(new Insets(rem * 1.20D));
         timerIsRunning_pane.getChildren().add(stopTimer_Box);
         timerIsRunning_pane.getChildren().add(new Separator());
         timerIsRunning_pane.getChildren().add(timerInformation_Box);
@@ -867,7 +887,9 @@ public class ATimerFX_gui extends Application
         }
 
         GridPane timerInfoAppearance_GridPane = new GridPane();
-        timerInfoAppearance_GridPane.setHgap(7);
+        timerInfoAppearance_GridPane.setHgap(rem * 0.5D);
+
+        double heightPlus = 0;
 
         if (timerName_textFiels.getText() != null &&
                 !timerName_textFiels.getText().equals(""))
@@ -890,11 +912,12 @@ public class ATimerFX_gui extends Application
             //timerNameAppearance_Box.setAlignment(Pos.CENTER_LEFT);
             //timerIsRunning_pane.getChildren().add(timerNameAppearance_Box);
             timerInfoAppearance_GridPane.addRow(timerInfoAppearance_GridPane.getRowConstraints().size(), timerName_Label, timerNameValue_Label);
+
+            heightPlus += rem * 6.3D;
         }
 
         if (action)
         {
-
             actionInfo_Label = new Label(action_str);
             actionInfo_Label.setFont(fontForLabels);
 
@@ -916,9 +939,15 @@ public class ATimerFX_gui extends Application
             //YALtools.printDebugMessage(String.valueOf(timerInfoAppearance_GridPane.get));
             YALtools.printDebugMessage("actionInfo:getBoundsInParent: " + actionInfo_Label.getBoundsInParent().getWidth());
             YALtools.printDebugMessage("actionInfo:getLayoutBounds: " + actionInfo_Label.getLayoutBounds().getWidth());
-
+            heightPlus += rem * 6.3D;
 //            HBox actionInfoAppearance_Box = new HBox(10, actionInfo_Label, actionValue_Label);
-//            timerIsRunning_pane.getChildren().add(actionInfoAppearance_Box);
+//            timerIsRunning_pane.getChildren().add(actionInfoAppearance_Box);              height
+            if (timerName_textFiels.getText() != null &&
+                    !timerName_textFiels.getText().equals(""))
+            {
+                heightPlus -= rem * 6.3D;
+                heightPlus += rem * 3.1D;
+            }
         }
 
         timerIsRunning_pane.getChildren().add(timerInfoAppearance_GridPane);
@@ -926,6 +955,9 @@ public class ATimerFX_gui extends Application
         superRoot.setVisible(false);
         timerIsRunning_pane_superRoot.setVisible(true);
         scene.setRoot(timerIsRunning_pane_superRoot);
+
+        stage.setMinHeight((rem * 12.0D) + heightPlus);
+        scene.getWindow().setHeight((rem * 12.0D) + heightPlus);
 
         startTimerToUpdatingTimeAppearance();
     }
@@ -961,9 +993,10 @@ public class ATimerFX_gui extends Application
         YALtools.printDebugMessage("Кол-во узлов superRoot после остановки: " + superRoot.getChildren().size());
 
         scene.setRoot(superRoot);
+
+        scene.getWindow().setHeight(PREFERRED_HEIGHT);
+        stage.setMinHeight(PREFERRED_HEIGHT);
         superRoot.setVisible(true);
-
-
     }
 
     public LocalTime getTimerTime()

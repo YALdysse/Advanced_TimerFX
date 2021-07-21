@@ -37,6 +37,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -45,7 +46,8 @@ import java.time.LocalTime;
 
 public class TimerAlert extends Stage
 {
-    private static final int PREFERRED_WIDTH = 300;
+    private static final double rem = new Text("").getBoundsInParent().getHeight();
+    private static final int PREFERRED_WIDTH = (int)(rem * 22.0D);
     private static final int PREFERRED_HEIGHT = 300;
     private VBox root;
 
