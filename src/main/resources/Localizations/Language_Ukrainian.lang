@@ -29,6 +29,10 @@
           <entry key="info_text" value="Вiдомостi"/>
           <entry key="customCommandPromtText" value="Вкажіть команду, що буде виконана після закінчення відведеного часу таймеру"/>
           <entry key="gitHubRepository_MenuItem" value="Репозиторій на GitHub"/>
+          <entry key="delayBeforeAction_CheckBox" value="Затримка дії"/>
+          <entry key="suspendActionDescription" value="Перевести до сну"/>
+          <entry key="rebootActionDescription" value="Перезавантажити комп'ютер"/>
+          <entry key="shutdownActionDescription" value="Вимкнути комп'ютер"/>
         </map>
       </node>
     </node>

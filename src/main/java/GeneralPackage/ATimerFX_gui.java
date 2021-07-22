@@ -132,8 +132,12 @@ public class ATimerFX_gui extends Application
     private String action_str = "Action: ";
     private String info_str = "Info";
     private String customCommandPromtText_str = "Enter here command that will be performed after timer went out";
+    private String shutdownActionDescription_str = "Shut down the system";
+    private String suspendActionDescription_str = "Suspend the system";
+    private String rebootActionDescription_str = "Reboot the system";
 
     private Label actionInfo_Label;
+    private Label actionValue_Label;
     private int locX = 0;
     private int locY = 0;
     private String currentLanguage_str = "English";
@@ -495,14 +499,14 @@ public class ATimerFX_gui extends Application
         shutdown_radio.setOnAction(event ->
         {
             customCommand_textField.setVisible(false);
-            actionDescription = "Shut Down the System after timer ending.";
+            actionDescription = shutdownActionDescription_str;
         });
 
         suspend_radio = new RadioButton("Suspend the System");
         suspend_radio.setOnAction(event ->
         {
             customCommand_textField.setVisible(false);
-            actionDescription = "Suspend the System after timer ending.";
+            actionDescription = suspendActionDescription_str;
         });
 
         custom_command = new RadioButton("Custom command");
@@ -518,7 +522,7 @@ public class ATimerFX_gui extends Application
         reboot_radio.setOnAction(event ->
         {
             customCommand_textField.setVisible(false);
-            actionDescription = "Reboot the System after timer ending.";
+            actionDescription = rebootActionDescription_str;
         });
 
         customCommand_textField = new TextField();
@@ -1021,7 +1025,7 @@ public class ATimerFX_gui extends Application
             //
 
             //actionInfo_Label.setMinWidth(250);
-            Label actionValue_Label = new Label(actionDescription);
+            actionValue_Label = new Label(actionDescription);
             actionValue_Label.setFont(fontForLabelsValues);
             actionValue_Label.setWrapText(true);
 
@@ -1139,6 +1143,10 @@ public class ATimerFX_gui extends Application
             info_str = local.get("info_text", "Info");
             gitHubRepository_MenuItem.setText(local.get("gitHubRepository_MenuItem", "Repository on GitHub"));
             customCommandPromtText_str = local.get("customCommandPromtText", "Enter here command that will be performed after timer went out");
+            delayBeforeAction_CheckBox.setText(local.get("delayBeforeAction_CheckBox", "Delay before action"));
+            suspendActionDescription_str = local.get("suspendActionDescription", "Suspend the System");
+            rebootActionDescription_str = local.get("rebootActionDescription", "Reboot the System");
+            shutdownActionDescription_str = local.get("shutdownActionDescription", "Shut Down the System");
 
             customCommand_textField.setPromptText(customCommandPromtText_str);
 
@@ -1150,6 +1158,21 @@ public class ATimerFX_gui extends Application
             if (actionInfo_Label != null)
             {
                 actionInfo_Label.setText(local.get("timerAction_Label", "Action:"));
+
+                //Локализируем описание
+                if (reboot_radio.isSelected())
+                {
+                    actionDescription = rebootActionDescription_str;
+                    actionValue_Label.setText(rebootActionDescription_str);
+                } else if (suspend_radio.isSelected())
+                {
+                    actionDescription = suspendActionDescription_str;
+                    actionValue_Label.setText(suspendActionDescription_str);
+                } else if (shutdown_radio.isSelected())
+                {
+                    actionDescription = shutdownActionDescription_str;
+                    actionValue_Label.setText(shutdownActionDescription_str);
+                }
             }
 
 
