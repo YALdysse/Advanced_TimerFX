@@ -36,6 +36,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -45,7 +46,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Box;
 import javafx.scene.text.Font;
-import javafx.scene.text.FontPosture;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -85,7 +85,10 @@ public class ATimerFX_gui extends Application
     private RadioButton suspend_radio;
     private RadioButton reboot_radio;
     private RadioButton custom_command;
+    private RadioButton killProcess_RadioButton;
+    private VBox radioGroup_Box;
     private TextField customCommand_textField;
+    private TextField processID_TextField;
     private Timeline timer_obj;
     private Pane root;
     private Pane timerIsRunning_pane;
@@ -119,7 +122,9 @@ public class ATimerFX_gui extends Application
     private boolean action = false;
     private String actionDescription = null;
 
+    //---------------- Pane
     private VBox superRoot;
+    private HBox killProcess_HBox;
 
     private LocalTime timerTime_LocalTime;
     Timeline timeline = null;
@@ -501,14 +506,28 @@ public class ATimerFX_gui extends Application
         shutdown_radio = new RadioButton("Shut Down");
         shutdown_radio.setOnAction(event ->
         {
-            customCommand_textField.setVisible(false);
+            if (radioGroup_Box.getChildren().contains(customCommand_textField))
+            {
+                radioGroup_Box.getChildren().remove(customCommand_textField);
+            }
+            if (killProcess_HBox.getChildren().contains(processID_TextField))
+            {
+                killProcess_HBox.getChildren().remove(processID_TextField);
+            }
             actionDescription = shutdownActionDescription_str;
         });
 
         suspend_radio = new RadioButton("Suspend the System");
         suspend_radio.setOnAction(event ->
         {
-            customCommand_textField.setVisible(false);
+            if (radioGroup_Box.getChildren().contains(customCommand_textField))
+            {
+                radioGroup_Box.getChildren().remove(customCommand_textField);
+            }
+            if (killProcess_HBox.getChildren().contains(processID_TextField))
+            {
+                killProcess_HBox.getChildren().remove(processID_TextField);
+            }
             actionDescription = suspendActionDescription_str;
         });
 
@@ -517,25 +536,63 @@ public class ATimerFX_gui extends Application
         {
             if (custom_command.isSelected())
             {
+                radioGroup_Box.getChildren().add(radioGroup_Box.getChildren().indexOf(custom_command) + 1, customCommand_textField);
                 customCommand_textField.setVisible(true);
+            }
+            if (killProcess_HBox.getChildren().contains(processID_TextField))
+            {
+                killProcess_HBox.getChildren().remove(processID_TextField);
             }
         });
 
         reboot_radio = new RadioButton("Reboot");
         reboot_radio.setOnAction(event ->
         {
-            customCommand_textField.setVisible(false);
+            if (radioGroup_Box.getChildren().contains(customCommand_textField))
+            {
+                radioGroup_Box.getChildren().remove(customCommand_textField);
+            }
+            if (killProcess_HBox.getChildren().contains(processID_TextField))
+            {
+                killProcess_HBox.getChildren().remove(processID_TextField);
+            }
             actionDescription = rebootActionDescription_str;
         });
+
+        killProcess_RadioButton = new RadioButton("Kill Process");
+        killProcess_RadioButton.setOnAction(event ->
+        {
+            if (radioGroup_Box.getChildren().contains(customCommand_textField))
+            {
+                radioGroup_Box.getChildren().remove(customCommand_textField);
+            }
+
+            processID_TextField = new TextField();
+            processID_TextField.setPrefColumnCount(5);
+            processID_TextField.setOnKeyTyped(eventTyped ->
+            {
+                if (processID_TextField.getText().length() > 5)
+                {
+                    processID_TextField.setText(processID_TextField.getText().substring(0, 5));
+                    processID_TextField.selectRange(5, 5);
+                    //processID_TextField.selectPositionCaret(3);
+                }
+            });
+            killProcess_HBox.getChildren().add(killProcess_HBox.getChildren().indexOf(killProcess_RadioButton) + 1, processID_TextField);
+
+            actionDescription = "Kill process with PID: ";
+        });
+
+        killProcess_HBox = new HBox(rem * 0.7D, killProcess_RadioButton);
 
         customCommand_textField = new TextField();
         customCommand_textField.setPromptText(customCommandPromtText_str);
         customCommand_textField.setVisible(false);
 
         ToggleGroup radioToggleGroup = new ToggleGroup();
-        radioToggleGroup.getToggles().addAll(shutdown_radio, suspend_radio, reboot_radio, custom_command);
+        radioToggleGroup.getToggles().addAll(shutdown_radio, suspend_radio, reboot_radio, custom_command, killProcess_RadioButton);
 
-        VBox radioGroup_Box = new VBox(rem * 0.4D, shutdown_radio, suspend_radio, reboot_radio, custom_command, customCommand_textField);
+        radioGroup_Box = new VBox(rem * 0.4D, shutdown_radio, suspend_radio, reboot_radio, custom_command, killProcess_HBox);
         radioGroup_Box.setPadding(new Insets(0.0D, 0.0D, 0.0D, rem * 2.1D));
         //radioGroup_Box.setBorder(new javafx.scene.layout.Border(new BorderStroke(Color.BLACK,BorderStrokeStyle.DOTTED, new CornerRadii(rem * 0.1D),BorderWidths.FULL)));
 
@@ -553,7 +610,7 @@ public class ATimerFX_gui extends Application
                 YALtools.printDebugMessage("getBoundsInParent:" + root.getBoundsInParent().getHeight());
                 YALtools.printDebugMessage("getBoundsInLocal:" + root.getBoundsInLocal().getHeight());
                 YALtools.printDebugMessage("AllPaddings:" + (15 * root.getChildren().size()));
-                scene.getWindow().setHeight(PREFERRED_HEIGHT + ((rem * 1.85D) * radioGroup_Box.getChildren().size()));
+                scene.getWindow().setHeight(PREFERRED_HEIGHT + ((rem * 2.1D) * radioGroup_Box.getChildren().size()));
                 stage.setMinHeight(scene.getWindow().getHeight());
             } else
             {
@@ -684,199 +741,6 @@ public class ATimerFX_gui extends Application
         YALtools.printDebugMessage("Starting: stopTimerButton_Action");
         stopTimerButton_Action(null);
         //scene.setRoot(root);
-    }
-
-    private void performAction()
-    {
-        boolean linux = false;
-        boolean windows = false;
-
-        if (System.getProperty("os.name").indexOf("Windows") != -1)
-        {
-            windows = true;
-        } else if (System.getProperty("os.name").indexOf("Linux") != -1)
-        {
-            linux = true;
-        }
-
-        StringBuilder command_strBuilder = new StringBuilder();
-
-        if (windows)
-        {
-            if (performActionAfterTimerWentOut_checkBox.isSelected())
-            {
-                String[] command_arr = null;
-
-                System.out.println("Windows");
-
-                //command_strBuilder.append("cmd /c start cmd.exe /K \"");
-                if (shutdown_radio.isSelected())
-                {
-                    command_arr = new String[6];
-                    command_arr[0] = "cmd";
-                    command_arr[1] = "/C";
-                    command_arr[2] = "start";
-                    command_arr[3] = "cmd.exe";
-                    command_arr[4] = "/C";
-                    command_arr[5] = "shutdown /p";
-                    //command_strBuilder.append("shutdown /p\"");
-                    //command_arr[3] = "/s /p";
-                } else if (suspend_radio.isSelected())
-                {
-                    command_arr = new String[6];
-                    command_arr[0] = "cmd";
-                    command_arr[1] = "/C";
-                    command_arr[2] = "start";
-                    command_arr[3] = "cmd.exe";
-                    command_arr[4] = "/C";
-                    command_arr[5] = "rundll32 powrprof.dll,SetSuspendState 0,1,0";
-                    //command_arr[1] = "powrprof.dll, SetSuspendState 0,1,0";
-                } else if (custom_command.isSelected())
-                {
-                    command_arr = new String[6];
-                    command_arr[0] = "cmd";
-                    command_arr[1] = "/C";
-                    command_arr[2] = "start";
-                    command_arr[3] = "cmd.exe";
-                    command_arr[4] = "/C";
-                    command_arr[5] = customCommand_textField.getText();
-                } else if (reboot_radio.isSelected())
-                {
-                    command_arr = new String[6];
-                    command_arr[0] = "cmd";
-                    command_arr[1] = "/C";
-                    command_arr[2] = "start";
-                    command_arr[3] = "cmd.exe";
-                    command_arr[4] = "/C";
-                    command_arr[5] = "shutdown /r /t 1 /f";
-                    //command_arr[6] = "/r 1 /f";
-                }
-
-                System.out.println("Windows.Команда: ");
-                for (String tmpStr : command_arr)
-                {
-                    System.out.print(tmpStr);
-                }
-
-                Process proc = null;
-                try
-                {
-                    proc = Runtime.getRuntime().exec(command_arr);
-                    proc.waitFor();
-                    proc.destroy();
-                    YALtools.readInputStream(proc.getErrorStream());
-                }
-                catch (IOException ioException)
-                {
-                    try
-                    {
-                        YALtools.printDebugMessage("Поток ошибок процессае:" + YALtools.readInputStream(proc.getInputStream()).toString());
-
-                    }
-                    catch (IOException ioExc)
-                    {
-                        System.exit(1);
-                    }
-                    YALtools.printDebugMessage("Ошибка ввода-вывода при выполнении команды под Windows: " + ioException.toString());
-                    YALtools.printDebugMessage("================================");
-                    ioException.printStackTrace();
-                    YALtools.printDebugMessage("================================\n\n");
-                }
-                catch (InterruptedException interExc)
-                {
-                    YALtools.printDebugMessage(interExc.toString());
-                }
-            }
-            YALtools.printDebugMessage("Выколнение коды Wind заверешно.");
-        }
-
-
-        if (linux)
-        {
-            YALtools.printDebugMessage("Текущая ОС: Linux");
-
-            boolean isBash = false;
-
-            Process proc = null;
-
-            try
-            {
-                YALtools.printDebugMessage("Имя таймера: " + timerName_textFiels.getText());
-                String[] commandNotify = {"notify-send", "-u", "critical", "Advanced TimerFX", "Timer '" + timerName_textFiels.getText() + "' went out."};
-                String[] commandArray = null;
-                //System.out.println(com);
-                //Runtime.getRuntime().exec(com);
-
-                proc = Runtime.getRuntime().exec(commandNotify);
-                YALtools.printDebugMessage("Поток ошибок команды: " + YALtools.readInputStream(proc.getErrorStream()).toString());
-
-                if (shutdown_radio.isSelected())
-                {
-                    commandArray = new String[3];
-                    commandArray[0] = "bash";
-                    commandArray[1] = "-c";
-                    commandArray[2] = "systemctl poweroff";
-
-                } else if (suspend_radio.isSelected())
-                {
-                    commandArray = new String[3];
-                    commandArray[0] = "bash";
-                    commandArray[1] = "-c";
-                    commandArray[2] = "systemctl suspend";
-                    //command_strBuilder.append(tmpParam);
-                } else if (custom_command.isSelected())
-                {
-                    commandArray = new String[3];
-                    commandArray[0] = "bash";
-                    commandArray[1] = "-c";
-                    commandArray[2] = customCommand_textField.getText();
-                    //command_strBuilder.append(customCommand_textField.getText());
-                } else if (reboot_radio.isSelected())
-                {
-                    commandArray = new String[3];
-                    commandArray[0] = "bash";
-                    commandArray[1] = "-c";
-                    commandArray[2] = "systemctl reboot";
-                    //commandArray[2] = "firefox mail.yahoo.com & audacious /media/yaroslav/Freedom/1.\\ Audio/1996\\ Pure\\ Instinct\\ [1996\\ Japan\\ AMCE-950\\ EW]/1996\\ -\\ Pure\\ Instinct\\ (AMCE-950)/10\\ -\\ You\\ And\\ I.flac & gnome-terminal";
-                }
-
-                if (performActionAfterTimerWentOut_checkBox.isSelected())
-                {
-                    System.out.println("Linux. Команда: '");
-
-                    /*Каждый элемент массива - отдельная команда с параметром, следующими идут аргументы
-                     * */
-                    //String[] commandArray1 = {"bash", "-c" , "audacious /home/yaroslav/10-YouAndI.flac -H", "celluloid '/media/yaroslav/Freedom/2. Videos/Drayv.2011.x264.BDRip.1080p.mkv'"};
-                    for (String tmpStr : commandArray)
-                    {
-                        System.out.print(tmpStr);
-                    }
-                    System.out.println("'\n");
-
-                    //Runtime.getRuntime().exec(command_strBuilder.toString().split(" "));
-                    String[] hren = {"bash", "-c", "firefox"};
-                    //Runtime.getRuntime().exec(command_strBuilder.toString());
-
-                    Process proc_1 = Runtime.getRuntime().exec(commandArray);
-                    YALtools.readInputStream(proc_1.getErrorStream());
-                    proc_1.waitFor();
-                    proc_1.destroy();
-                }
-
-                proc.waitFor();
-                proc.destroy();
-                //proc.destroy();
-            }
-            catch (IOException ioExc)
-            {
-                YALtools.printDebugMessage("Возникла ошибка ввода-вывода при выполнении команды: \n" + ioExc.toString());
-            }
-            catch (InterruptedException iterExc)
-            {
-                YALtools.printDebugMessage(iterExc.toString());
-                return;
-            }
-        }
     }
 
     private void startTimer_Action(ActionEvent event)
@@ -1047,6 +911,10 @@ public class ATimerFX_gui extends Application
                 heightPlus -= rem * 6.3D;
                 heightPlus += rem * 3.1D;
             }
+            if (killProcess_RadioButton.isSelected() && !processID_TextField.getText().equals(""))
+            {
+                actionValue_Label.setText(actionValue_Label.getText() + processID_TextField.getText());
+            }
         }
 
         timerIsRunning_pane.getChildren().add(timerInfoAppearance_GridPane);
@@ -1060,6 +928,215 @@ public class ATimerFX_gui extends Application
 
         startTimerToUpdatingTimeAppearance();
     }
+
+
+    private void performAction()
+    {
+        boolean linux = false;
+        boolean windows = false;
+
+        if (System.getProperty("os.name").indexOf("Windows") != -1)
+        {
+            windows = true;
+        } else if (System.getProperty("os.name").indexOf("Linux") != -1)
+        {
+            linux = true;
+        }
+
+        StringBuilder command_strBuilder = new StringBuilder();
+
+        if (windows)
+        {
+            if (performActionAfterTimerWentOut_checkBox.isSelected())
+            {
+                String[] command_arr = null;
+
+                System.out.println("Windows");
+
+                //command_strBuilder.append("cmd /c start cmd.exe /K \"");
+                if (shutdown_radio.isSelected())
+                {
+                    command_arr = new String[6];
+                    command_arr[0] = "cmd";
+                    command_arr[1] = "/C";
+                    command_arr[2] = "start";
+                    command_arr[3] = "cmd.exe";
+                    command_arr[4] = "/C";
+                    command_arr[5] = "shutdown /p";
+                    //command_strBuilder.append("shutdown /p\"");
+                    //command_arr[3] = "/s /p";
+                } else if (suspend_radio.isSelected())
+                {
+                    command_arr = new String[6];
+                    command_arr[0] = "cmd";
+                    command_arr[1] = "/C";
+                    command_arr[2] = "start";
+                    command_arr[3] = "cmd.exe";
+                    command_arr[4] = "/C";
+                    command_arr[5] = "rundll32 powrprof.dll,SetSuspendState 0,1,0";
+                    //command_arr[1] = "powrprof.dll, SetSuspendState 0,1,0";
+                } else if (custom_command.isSelected())
+                {
+                    command_arr = new String[6];
+                    command_arr[0] = "cmd";
+                    command_arr[1] = "/C";
+                    command_arr[2] = "start";
+                    command_arr[3] = "cmd.exe";
+                    command_arr[4] = "/C";
+                    command_arr[5] = customCommand_textField.getText();
+                } else if (reboot_radio.isSelected())
+                {
+                    command_arr = new String[6];
+                    command_arr[0] = "cmd";
+                    command_arr[1] = "/C";
+                    command_arr[2] = "start";
+                    command_arr[3] = "cmd.exe";
+                    command_arr[4] = "/C";
+                    command_arr[5] = "shutdown /r /t 1 /f";
+                    //command_arr[6] = "/r 1 /f";
+                }
+                else if (killProcess_RadioButton.isSelected())
+                {
+                    command_arr = new String[4];
+                    command_arr[0] = "taskkill";
+                    command_arr[1] = "/PID";
+                    command_arr[2] = processID_TextField.getText();
+                    command_arr[3] = "/F";
+                }
+
+                System.out.println("Windows.Команда: ");
+                for (String tmpStr : command_arr)
+                {
+                    System.out.print(tmpStr);
+                }
+
+                Process proc = null;
+                try
+                {
+                    proc = Runtime.getRuntime().exec(command_arr);
+                    proc.waitFor();
+                    YALtools.readInputStream(proc.getErrorStream());
+                    proc.destroy();
+                }
+                catch (IOException ioException)
+                {
+                    try
+                    {
+                        YALtools.printDebugMessage("Поток ошибок процессае:" + YALtools.readInputStream(proc.getInputStream()).toString());
+
+                    }
+                    catch (IOException ioExc)
+                    {
+                        System.exit(1);
+                    }
+                    YALtools.printDebugMessage("Ошибка ввода-вывода при выполнении команды под Windows: " + ioException.toString());
+                    YALtools.printDebugMessage("================================");
+                    ioException.printStackTrace();
+                    YALtools.printDebugMessage("================================\n\n");
+                }
+                catch (InterruptedException interExc)
+                {
+                    YALtools.printDebugMessage(interExc.toString());
+                }
+            }
+            YALtools.printDebugMessage("Выколнение коды Wind заверешно.");
+        }
+
+
+        if (linux)
+        {
+            YALtools.printDebugMessage("Текущая ОС: Linux");
+
+            boolean isBash = false;
+
+            Process proc = null;
+
+            try
+            {
+                YALtools.printDebugMessage("Имя таймера: " + timerName_textFiels.getText());
+                String[] commandNotify = {"notify-send", "-u", "critical", "Advanced TimerFX", "Timer '" + timerName_textFiels.getText() + "' went out."};
+                String[] commandArray = null;
+                //System.out.println(com);
+                //Runtime.getRuntime().exec(com);
+
+                proc = Runtime.getRuntime().exec(commandNotify);
+                YALtools.printDebugMessage("Поток ошибок команды: " + YALtools.readInputStream(proc.getErrorStream()).toString());
+
+                if (shutdown_radio.isSelected())
+                {
+                    commandArray = new String[3];
+                    commandArray[0] = "bash";
+                    commandArray[1] = "-c";
+                    commandArray[2] = "systemctl poweroff";
+
+                } else if (suspend_radio.isSelected())
+                {
+                    commandArray = new String[3];
+                    commandArray[0] = "bash";
+                    commandArray[1] = "-c";
+                    commandArray[2] = "systemctl suspend";
+                    //command_strBuilder.append(tmpParam);
+                } else if (custom_command.isSelected())
+                {
+                    commandArray = new String[3];
+                    commandArray[0] = "bash";
+                    commandArray[1] = "-c";
+                    commandArray[2] = customCommand_textField.getText();
+                    //command_strBuilder.append(customCommand_textField.getText());
+                } else if (reboot_radio.isSelected())
+                {
+                    commandArray = new String[3];
+                    commandArray[0] = "bash";
+                    commandArray[1] = "-c";
+                    commandArray[2] = "systemctl reboot";
+                    //commandArray[2] = "firefox mail.yahoo.com & audacious /media/yaroslav/Freedom/1.\\ Audio/1996\\ Pure\\ Instinct\\ [1996\\ Japan\\ AMCE-950\\ EW]/1996\\ -\\ Pure\\ Instinct\\ (AMCE-950)/10\\ -\\ You\\ And\\ I.flac & gnome-terminal";
+                } else if (killProcess_RadioButton.isSelected())
+                {
+                    commandArray = new String[3];
+                    commandArray[0] = "kill";
+                    commandArray[1] = "-9";
+                    commandArray[2] = processID_TextField.getText();
+                }
+
+                if (performActionAfterTimerWentOut_checkBox.isSelected())
+                {
+                    System.out.println("Linux. Команда: '");
+
+                    /*Каждый элемент массива - отдельная команда с параметром, следующими идут аргументы
+                     * */
+                    //String[] commandArray1 = {"bash", "-c" , "audacious /home/yaroslav/10-YouAndI.flac -H", "celluloid '/media/yaroslav/Freedom/2. Videos/Drayv.2011.x264.BDRip.1080p.mkv'"};
+                    for (String tmpStr : commandArray)
+                    {
+                        System.out.print(tmpStr);
+                    }
+                    System.out.println("'\n");
+
+                    //Runtime.getRuntime().exec(command_strBuilder.toString().split(" "));
+                    String[] hren = {"bash", "-c", "firefox"};
+                    //Runtime.getRuntime().exec(command_strBuilder.toString());
+
+                    Process proc_1 = Runtime.getRuntime().exec(commandArray);
+                    YALtools.readInputStream(proc_1.getErrorStream());
+                    proc_1.waitFor();
+                    proc_1.destroy();
+                }
+
+                proc.waitFor();
+                proc.destroy();
+                //proc.destroy();
+            }
+            catch (IOException ioExc)
+            {
+                YALtools.printDebugMessage("Возникла ошибка ввода-вывода при выполнении команды: \n" + ioExc.toString());
+            }
+            catch (InterruptedException iterExc)
+            {
+                YALtools.printDebugMessage(iterExc.toString());
+                return;
+            }
+        }
+    }
+
 
     private void startTimerToUpdatingTimeAppearance()
     {
