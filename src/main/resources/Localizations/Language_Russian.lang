@@ -33,6 +33,8 @@
           <entry key="suspendActionDescription" value="Перевести компьютер в сон"/>
           <entry key="rebootActionDescription" value="Перезагрузить компьютер"/>
           <entry key="shutdownActionDescription" value="Завершить работу ПК"/>
+          <entry key="killProcess_radio" value="Убить процесс"/>
+          <entry key="killProcessActionDescription" value="Завершить процесс с PID "/>
         </map>
       </node>
     </node>

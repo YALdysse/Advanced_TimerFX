@@ -140,6 +140,7 @@ public class ATimerFX_gui extends Application
     private String shutdownActionDescription_str = "Shut down the system";
     private String suspendActionDescription_str = "Suspend the system";
     private String rebootActionDescription_str = "Reboot the system";
+    private String killProcessActionDescription_str = "Kill process with PID ";
 
     private Label actionInfo_Label;
     private Label actionValue_Label;
@@ -580,7 +581,7 @@ public class ATimerFX_gui extends Application
             });
             killProcess_HBox.getChildren().add(killProcess_HBox.getChildren().indexOf(killProcess_RadioButton) + 1, processID_TextField);
 
-            actionDescription = "Kill process with PID: ";
+            actionDescription = killProcessActionDescription_str;
         });
 
         killProcess_HBox = new HBox(rem * 0.7D, killProcess_RadioButton);
@@ -929,7 +930,6 @@ public class ATimerFX_gui extends Application
         startTimerToUpdatingTimeAppearance();
     }
 
-
     private void performAction()
     {
         boolean linux = false;
@@ -1227,6 +1227,8 @@ public class ATimerFX_gui extends Application
             suspendActionDescription_str = local.get("suspendActionDescription", "Suspend the System");
             rebootActionDescription_str = local.get("rebootActionDescription", "Reboot the System");
             shutdownActionDescription_str = local.get("shutdownActionDescription", "Shut Down the System");
+            killProcess_RadioButton.setText(local.get("killProcess_radio", "Kill process"));
+            killProcessActionDescription_str = local.get("killProcessActionDescription", "Kill process with PID ");
 
             customCommand_textField.setPromptText(customCommandPromtText_str);
 
@@ -1252,6 +1254,11 @@ public class ATimerFX_gui extends Application
                 {
                     actionDescription = shutdownActionDescription_str;
                     actionValue_Label.setText(shutdownActionDescription_str);
+                }
+                else if(killProcess_RadioButton.isSelected())
+                {
+                    actionDescription = killProcessActionDescription_str + processID_TextField.getText();
+                    actionValue_Label.setText(actionDescription);
                 }
             }
 

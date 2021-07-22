@@ -26,6 +26,13 @@
           <entry key="minutes_Text" value="Minutes"/>
           <entry key="seconds_Text" value="Seconds"/>
           <entry key="TimerName_PromtText" value="Name of timer (optional)"/>
+          <entry key="info_text" value="Info"/>
+          <entry key="customCommandPromtText" value="Enter here command that will be performed"/>
+          <entry key="gitHubRepository_MenuItem" value="Repository on GitHub"/>
+          <entry key="delayBeforeAction_CheckBox" value="Action delay"/>
+          <entry key="suspendActionDescription" value="Suspend the System"/>
+          <entry key="rebootActionDescription" value="Reboot the System"/>
+          <entry key="shutdownActionDescription" value="Shut down the System"/>
         </map>
       </node>
     </node>
