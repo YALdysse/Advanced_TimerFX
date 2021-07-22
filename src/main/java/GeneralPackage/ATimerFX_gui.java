@@ -22,10 +22,13 @@ package GeneralPackage;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.event.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
@@ -102,7 +105,12 @@ public class ATimerFX_gui extends Application
     private MenuItem startTimer_MenuItem;
     private MenuItem stopTimer_MenuItem;
     private MenuItem exit_menuItem;
+    //private CheckMenuItem delayBeforeAction;
+    private CheckBox delayBeforeAction_CheckBox;
     private BorderPane menu_BorderPane;
+    private Spinner delayBeforeAction_Spinner;
+    private Label delayCustomMenuItem_Label;
+    private CustomMenuItem delay_CustomMenuItem;
 
     private static final double rem = new Text("").getBoundsInParent().getHeight();
     private final Label colon_Label = new Label(":");
@@ -172,6 +180,7 @@ public class ATimerFX_gui extends Application
     private Image gitHub_Image;
     private Image startTimer_Image;
     private Image stopTimer_Image;
+    private Image delay_Image;
 
     private void initComponents()
     {
@@ -269,6 +278,8 @@ public class ATimerFX_gui extends Application
             language_Image = new Image(this.getClass().getClassLoader().getResource("Images/language_2.png").openStream());
             startTimer_Image = new Image(this.getClass().getClassLoader().getResource("Images/startTimer_3.png").openStream());
             stopTimer_Image = new Image(this.getClass().getClassLoader().getResource("Images/stopTimer_3.png").openStream());
+            delay_Image = new Image(this.getClass().getClassLoader().getResource("Images/delay_1.png").openStream());
+
         }
         catch (IOException ioExc)
         {
@@ -306,6 +317,10 @@ public class ATimerFX_gui extends Application
         stopTimer_ImageView.setFitHeight(24);
         stopTimer_ImageView.setFitWidth(24);
 
+        ImageView delay_ImageView = new ImageView(delay_Image);
+        delay_ImageView.setFitHeight(24);
+        delay_ImageView.setFitWidth(24);
+
         startTimer_MenuItem = new MenuItem("Start Timer", startTimer_ImageView);
         startTimer_MenuItem.setOnAction(event ->
         {
@@ -320,6 +335,61 @@ public class ATimerFX_gui extends Application
         });
         stopTimer_MenuItem.acceleratorProperty().set(new KeyCodeCombination(KeyCode.SPACE, KeyCodeCombination.CONTROL_DOWN));
         stopTimer_MenuItem.setDisable(true);
+
+
+        HBox delayCustomMenuItem_HBox = new HBox(rem * 0.5D);
+
+        delay_CustomMenuItem = new CustomMenuItem(delayCustomMenuItem_HBox);
+        //delay_CustomMenuItem.setGraphic(delay_ImageView);
+        delay_CustomMenuItem.setOnAction(event ->
+        {
+            timer_Menu.show();
+        });
+
+
+        delayBeforeAction_CheckBox = new CheckBox("Delay before action");
+        delayBeforeAction_CheckBox.setTextFill(Color.BLACK);
+        delayBeforeAction_CheckBox.setGraphic(delay_ImageView);
+        delayBeforeAction_CheckBox.setSelected(true);
+        delayBeforeAction_CheckBox.setOnAction(event ->
+        {
+            if (delayBeforeAction_CheckBox.isSelected())
+            {
+                YALtools.printDebugMessage("Задержка включена");
+                delayCustomMenuItem_HBox.getChildren().add(delayBeforeAction_Spinner);
+
+                timer_Menu.setOnHidden(eventHidden ->
+                {
+                    timer_Menu.show();
+                });
+            } else
+            {
+                timer_Menu.setOnHidden(null);
+                delayCustomMenuItem_HBox.getChildren().remove(delayBeforeAction_Spinner);
+                timer_Menu.show();
+            }
+        });
+
+        delayBeforeAction_Spinner = new Spinner(1, 59, 15);
+        delayBeforeAction_Spinner.setOnScroll(event ->
+        {
+            timer_Menu.setOnHidden(null);
+            int increment = 1;
+
+            YALtools.printDebugMessage("getDeltaY: " + event.getDeltaY());
+
+            if (event.getDeltaY() > 10)
+            {
+                delayBeforeAction_Spinner.getValueFactory().setValue((int) delayBeforeAction_Spinner.getValue() + increment);
+            } else if (event.getDeltaY() < 0)
+            {
+                delayBeforeAction_Spinner.getValueFactory().setValue((int) delayBeforeAction_Spinner.getValue() - increment);
+            }
+        });
+        delayBeforeAction_Spinner.setMinWidth(rem * 1.2D);
+        delayBeforeAction_Spinner.setPrefWidth(rem * 4.0D);
+
+        delayCustomMenuItem_HBox.getChildren().addAll(delayBeforeAction_CheckBox, delayBeforeAction_Spinner);
 
         exit_menuItem = new MenuItem("Exit", exit_ImageView);
         exit_menuItem.acceleratorProperty().set(new KeyCodeCombination(KeyCode.Q, KeyCombination.CONTROL_DOWN));
@@ -348,7 +418,6 @@ public class ATimerFX_gui extends Application
             }
         });
 
-
         russianLanguage_MenuItem = new MenuItem("Русский", russianFlag_ImageView);
         russianLanguage_MenuItem.setOnAction(event ->
         {
@@ -366,11 +435,12 @@ public class ATimerFX_gui extends Application
             initLocalization("English");
         });
 
+
         language_Menu.setGraphic(language_ImageView);
         //timer_Menu.setGraphic(language_ImageView);
         language_Menu.getItems().addAll(russianLanguage_MenuItem, ukrainianLanguage_MenuItem, englishLanguage_MenuItem);
         general_menu.getItems().addAll(language_Menu, gitHubRepository_MenuItem, exit_menuItem);
-        timer_Menu.getItems().addAll(startTimer_MenuItem, stopTimer_MenuItem);
+        timer_Menu.getItems().addAll(startTimer_MenuItem, stopTimer_MenuItem, new SeparatorMenuItem(), delay_CustomMenuItem);
 
         menuBar.getMenus().addAll(general_menu, timer_Menu);
 
@@ -533,30 +603,45 @@ public class ATimerFX_gui extends Application
 
         if (performActionAfterTimerWentOut_checkBox.isSelected())
         {
-            TimerAlert ta = new TimerAlert();
-            ta.initModality(Modality.APPLICATION_MODAL);
-            ta.setAlwaysOnTop(true);
-            ta.setHeight(190);
-            ta.setMinHeight(190);
-            ta.setMinWidth(300);
-            ta.start("Warning", "Do you want to continue ?");
-            //ta.start(new Stage());
+            if (delayBeforeAction_CheckBox.isSelected())
+            {
+                int tmpDelayTime = 0;
+                TimerAlert ta = new TimerAlert();
+                ta.initModality(Modality.APPLICATION_MODAL);
+                ta.setAlwaysOnTop(true);
+                ta.setHeight(190);
+                ta.setMinHeight(190);
+                ta.setMinWidth(300);
 
-            ta.setOnHidden(eventHidden ->
+                if (delayBeforeAction_CheckBox.isSelected())
+                {
+                    tmpDelayTime = (int) delayBeforeAction_Spinner.getValue();
+                }
+
+                ta.start("Warning", "Do you want to continue ?", tmpDelayTime);
+                //ta.start(new Stage());
+
+                ta.setOnHidden(eventHidden ->
+                {
+                    stage.setOpacity(1.0D);
+                    if (ta.getResultButton().getText().equals("No"))
+                    {
+                        YALtools.printDebugMessage("Таймер отменен.");
+                        stopTimerButton_Action(null);
+                        return;
+                    } else
+                    {
+                        performAction();
+                        YALtools.printDebugMessage("Starting: stopTimerButton_Action");
+                        stopTimerButton_Action(null);
+                    }
+                });
+            } else
             {
                 stage.setOpacity(1.0D);
-                if (ta.getResultButton().getText().equals("No"))
-                {
-                    YALtools.printDebugMessage("Таймер отменен.");
-                    stopTimerButton_Action(null);
-                    return;
-                } else
-                {
-                    performAction();
-                    YALtools.printDebugMessage("Starting: stopTimerButton_Action");
-                    stopTimerButton_Action(null);
-                }
-            });
+                performAction();
+                stopTimerButton_Action(null);
+            }
         } else
         {
             //Уведомление

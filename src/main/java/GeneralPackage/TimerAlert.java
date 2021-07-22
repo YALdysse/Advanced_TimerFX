@@ -64,9 +64,9 @@ public class TimerAlert extends Stage
     private Timeline timeLineBeforeAction;
     private LocalTime leaveTime_LocalTime;
 
-    public final double LEFT_TIME = 15.0D;
+   private int delayTime = 15;
 
-    public void start(final String aHeaderText, final String aMessage)
+    public void start(final String aHeaderText, final String aMessage, final int aDelayTime)
     {
         confirm_Label = new Label(aMessage);
 
@@ -127,13 +127,13 @@ public class TimerAlert extends Stage
         buttons_Box.setAlignment(Pos.CENTER_RIGHT);
         root.getChildren().add(buttons_Box);
 
-        timeLineBeforeAction = new Timeline(new KeyFrame(Duration.seconds(LEFT_TIME), event ->
+        timeLineBeforeAction = new Timeline(new KeyFrame(Duration.seconds(aDelayTime), event ->
         {
             YALtools.printDebugMessage("Ожидание действия закончилось. Выполняем действие таймера...");
             resultButton = yes_Button;
             hide();
         }));
-        leaveTime_LocalTime = LocalTime.of(0, 0, (int) LEFT_TIME);
+        leaveTime_LocalTime = LocalTime.of(0, 0,  aDelayTime);
         timeLineBeforeAction.play();
 
         //====== Описываем таймер для отсчета времени
@@ -154,7 +154,7 @@ public class TimerAlert extends Stage
 //                changeColor[0] = true;
 //            }
         }));
-        appearance_TimeLine.setCycleCount((int) LEFT_TIME);
+        appearance_TimeLine.setCycleCount( aDelayTime);
         appearance_TimeLine.play();
 
         Timeline changingWarningColor_TimeLine = new Timeline(new KeyFrame(Duration.millis(800), event ->
@@ -169,7 +169,7 @@ public class TimerAlert extends Stage
                 changeColor[0] = true;
             }
         }));
-        changingWarningColor_TimeLine.setCycleCount((int) (LEFT_TIME * 1000) / 800);
+        changingWarningColor_TimeLine.setCycleCount((int) (aDelayTime * 1000) / 800);
         changingWarningColor_TimeLine.play();
         //===================================================
 
