@@ -125,6 +125,7 @@ public class ATimerFX_gui extends Application
     //---------------- Pane
     private VBox superRoot;
     private HBox killProcess_HBox;
+    private HBox delayCustomMenuItem_HBox;
 
     private LocalTime timerTime_LocalTime;
     Timeline timeline = null;
@@ -350,7 +351,7 @@ public class ATimerFX_gui extends Application
         stopTimer_MenuItem.setDisable(true);
 
 
-        HBox delayCustomMenuItem_HBox = new HBox(rem * 0.5D);
+        delayCustomMenuItem_HBox = new HBox(rem * 0.5D);
 
         delay_CustomMenuItem = new CustomMenuItem(delayCustomMenuItem_HBox);
         //delay_CustomMenuItem.setGraphic(delay_ImageView);
@@ -402,7 +403,7 @@ public class ATimerFX_gui extends Application
         delayBeforeAction_Spinner.setMinWidth(rem * 1.2D);
         delayBeforeAction_Spinner.setPrefWidth(rem * 4.0D);
 
-        delayCustomMenuItem_HBox.getChildren().addAll(delayBeforeAction_CheckBox, delayBeforeAction_Spinner);
+        delayCustomMenuItem_HBox.getChildren().addAll(delayBeforeAction_CheckBox);
 
         exit_menuItem = new MenuItem("Exit", exit_ImageView);
         exit_menuItem.acceleratorProperty().set(new KeyCodeCombination(KeyCode.Q, KeyCombination.CONTROL_DOWN));
@@ -570,6 +571,8 @@ public class ATimerFX_gui extends Application
 
             processID_TextField = new TextField();
             processID_TextField.setPrefColumnCount(5);
+            processID_TextField.setPromptText("PID");
+
             processID_TextField.setOnKeyTyped(eventTyped ->
             {
                 if (processID_TextField.getText().length() > 5)
@@ -585,6 +588,7 @@ public class ATimerFX_gui extends Application
         });
 
         killProcess_HBox = new HBox(rem * 0.7D, killProcess_RadioButton);
+        killProcess_HBox.setAlignment(Pos.BASELINE_LEFT);
 
         customCommand_textField = new TextField();
         customCommand_textField.setPromptText(customCommandPromtText_str);
@@ -994,8 +998,7 @@ public class ATimerFX_gui extends Application
                     command_arr[4] = "/C";
                     command_arr[5] = "shutdown /r /t 1 /f";
                     //command_arr[6] = "/r 1 /f";
-                }
-                else if (killProcess_RadioButton.isSelected())
+                } else if (killProcess_RadioButton.isSelected())
                 {
                     command_arr = new String[4];
                     command_arr[0] = "taskkill";
@@ -1254,8 +1257,7 @@ public class ATimerFX_gui extends Application
                 {
                     actionDescription = shutdownActionDescription_str;
                     actionValue_Label.setText(shutdownActionDescription_str);
-                }
-                else if(killProcess_RadioButton.isSelected())
+                } else if (killProcess_RadioButton.isSelected())
                 {
                     actionDescription = killProcessActionDescription_str + processID_TextField.getText();
                     actionValue_Label.setText(actionDescription);
@@ -1311,6 +1313,8 @@ public class ATimerFX_gui extends Application
         pref.putInt("locX", (int) stage.getX());
         pref.putInt("locY", (int) stage.getY());
         pref.put("Language", currentLanguage_str);
+        pref.putBoolean("delayBeforeAction_CheckBox", delayBeforeAction_CheckBox.isSelected());
+        pref.putInt("delayBeforeAction", (int) delayBeforeAction_Spinner.getValue());
 
 
         try
@@ -1354,6 +1358,13 @@ public class ATimerFX_gui extends Application
             currentLanguage_str = pref.get("Language", "English");
             locX = pref.getInt("locX", 0);
             locY = pref.getInt("locY", 0);
+            delayBeforeAction_CheckBox.setSelected(pref.getBoolean("delayBeforeAction_CheckBox", true));
+            delayBeforeAction_Spinner.getValueFactory().setValue(pref.getInt("delayBeforeAction", 15));
+
+            if(delayBeforeAction_CheckBox.isSelected())
+            {
+                delayCustomMenuItem_HBox.getChildren().add(delayBeforeAction_Spinner );
+            }
 
             pref.clear();
             pref.parent().parent().removeNode();
