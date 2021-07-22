@@ -150,6 +150,7 @@ public class ATimerFX_gui extends Application
         initComponents();
         stage = aStage;
         scene = new Scene(superRoot);
+        stage.getIcons().add(applicationIcon_Image);
 
         //superRoot.prefHeightProperty().bind(scene.heightProperty());
         //superRoot.prefWidthProperty().bind(scene.widthProperty());
@@ -168,7 +169,7 @@ public class ATimerFX_gui extends Application
         stage.setY(locY);
 
         stage.setScene(scene);
-        stage.setTitle("Advanced Timer FX [build 18 Beta]");
+        stage.setTitle("Advanced Timer FX [build 20 Beta]");
 
         scene.getWindow().setWidth(PREFERRED_WIDTH);
         scene.getWindow().setHeight(PREFERRED_HEIGHT);
@@ -185,6 +186,7 @@ public class ATimerFX_gui extends Application
     private Image startTimer_Image;
     private Image stopTimer_Image;
     private Image delay_Image;
+    private Image applicationIcon_Image;
 
     private void initComponents()
     {
@@ -283,6 +285,7 @@ public class ATimerFX_gui extends Application
             startTimer_Image = new Image(this.getClass().getClassLoader().getResource("Images/startTimer_3.png").openStream());
             stopTimer_Image = new Image(this.getClass().getClassLoader().getResource("Images/stopTimer_3.png").openStream());
             delay_Image = new Image(this.getClass().getClassLoader().getResource("Images/delay_1.png").openStream());
+            applicationIcon_Image = new Image(this.getClass().getClassLoader().getResource("Images/timer_1.png").openStream());
 
         }
         catch (IOException ioExc)
