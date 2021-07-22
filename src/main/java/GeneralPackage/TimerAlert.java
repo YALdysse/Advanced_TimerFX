@@ -41,14 +41,15 @@ import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+
 import java.io.IOException;
 import java.time.LocalTime;
 
 public class TimerAlert extends Stage
 {
     private static final double rem = new Text("").getBoundsInParent().getHeight();
-    private static final int PREFERRED_WIDTH = (int)(rem * 22.0D);
-    private static final int PREFERRED_HEIGHT = 300;
+    private static final int PREFERRED_WIDTH = (int) (rem * 22.0D);
+    private static final int PREFERRED_HEIGHT = (int)(rem * 12.8D);
     private VBox root;
 
     private Label confirm_Label = null;
@@ -101,11 +102,12 @@ public class TimerAlert extends Stage
         warning_HBox.getChildren().add(timeLeft_Label);
         warning_HBox.getChildren().add(imgView);
         warning_HBox.setAlignment(Pos.CENTER_RIGHT);
-        warning_HBox.setSpacing(15.0D);
+        warning_HBox.setSpacing(rem * 1.0D);
 
-        root = new VBox(20, warning_HBox, new Separator(), confirm_Label);
+        root = new VBox(rem * 1.2D, warning_HBox, new Separator(), confirm_Label);
         root.setPrefSize(PREFERRED_WIDTH, PREFERRED_HEIGHT);
-        root.setPadding(new Insets(15.0D));
+        root.setPadding(new Insets(rem * 1.0D));
+
 
         yes_Button = new Button("Yes");
         yes_Button.setOnAction(event ->
@@ -121,7 +123,7 @@ public class TimerAlert extends Stage
             hide();
         });
 
-        HBox buttons_Box = new HBox(10, yes_Button, no_Button);
+        HBox buttons_Box = new HBox(rem * 0.8D, yes_Button, no_Button);
         buttons_Box.setAlignment(Pos.CENTER_RIGHT);
         root.getChildren().add(buttons_Box);
 
@@ -157,7 +159,6 @@ public class TimerAlert extends Stage
 
         Timeline changingWarningColor_TimeLine = new Timeline(new KeyFrame(Duration.millis(800), event ->
         {
-
             if (changeColor[0])
             {
                 warning_Label.setTextFill(Color.RED);
@@ -182,8 +183,8 @@ public class TimerAlert extends Stage
         YALtools.printDebugMessage("" + root.getBoundsInParent().getHeight());
 
         this.setScene(new Scene(root));
+        this.getScene().getWindow().setHeight(PREFERRED_HEIGHT);
         this.setTitle("Timer Alert");
-        //this.initModality(Modality.APPLICATION_MODAL);
         this.show();
     }
 

@@ -544,6 +544,7 @@ public class ATimerFX_gui extends Application
 
             ta.setOnHidden(eventHidden ->
             {
+                stage.setOpacity(1.0D);
                 if (ta.getResultButton().getText().equals("No"))
                 {
                     YALtools.printDebugMessage("Таймер отменен.");
