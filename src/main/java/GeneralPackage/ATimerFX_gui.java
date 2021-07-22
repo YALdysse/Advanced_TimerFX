@@ -176,7 +176,7 @@ public class ATimerFX_gui extends Application
         stage.setY(locY);
 
         stage.setScene(scene);
-        stage.setTitle("Advanced Timer FX [build 20 Beta]");
+        stage.setTitle("Advanced Timer FX [build 21 Beta]");
 
         scene.getWindow().setWidth(PREFERRED_WIDTH);
         scene.getWindow().setHeight(PREFERRED_HEIGHT);
@@ -575,6 +575,25 @@ public class ATimerFX_gui extends Application
 
             processID_TextField.setOnKeyTyped(eventTyped ->
             {
+                YALtools.printDebugMessage("Character: " + eventTyped.getCharacter());
+                if (processID_TextField.getText().length() != 0)
+                {
+                    if (!eventTyped.getCharacter().equals("0")
+                            && !eventTyped.getCharacter().equals("1")
+                            && !eventTyped.getCharacter().equals("2")
+                            && !eventTyped.getCharacter().equals("3")
+                            && !eventTyped.getCharacter().equals("4")
+                            && !eventTyped.getCharacter().equals("5")
+                            && !eventTyped.getCharacter().equals("6")
+                            && !eventTyped.getCharacter().equals("7")
+                            && !eventTyped.getCharacter().equals("8")
+                            && !eventTyped.getCharacter().equals("9"))
+                    {
+                        YALtools.printDebugMessage("Недопустимый символ!");
+                        processID_TextField.setText(processID_TextField.getText().substring(0, processID_TextField.getText().length() - 1));
+                        processID_TextField.selectRange(processID_TextField.getText().length(), processID_TextField.getText().length());
+                    }
+                }
                 if (processID_TextField.getText().length() > 5)
                 {
                     processID_TextField.setText(processID_TextField.getText().substring(0, 5));
@@ -1361,9 +1380,9 @@ public class ATimerFX_gui extends Application
             delayBeforeAction_CheckBox.setSelected(pref.getBoolean("delayBeforeAction_CheckBox", true));
             delayBeforeAction_Spinner.getValueFactory().setValue(pref.getInt("delayBeforeAction", 15));
 
-            if(delayBeforeAction_CheckBox.isSelected())
+            if (delayBeforeAction_CheckBox.isSelected())
             {
-                delayCustomMenuItem_HBox.getChildren().add(delayBeforeAction_Spinner );
+                delayCustomMenuItem_HBox.getChildren().add(delayBeforeAction_Spinner);
             }
 
             pref.clear();
