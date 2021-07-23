@@ -409,7 +409,7 @@ public class ATimerFX_gui extends Application
         delayBeforeAction_Spinner.setMinWidth(rem * 1.2D);
         delayBeforeAction_Spinner.setPrefWidth(rem * 4.0D);
 
-        delayCustomMenuItem_HBox.getChildren().addAll(delayBeforeAction_CheckBox);
+        delayCustomMenuItem_HBox.getChildren().addAll(delayBeforeAction_CheckBox, delayBeforeAction_Spinner);
 
         exit_menuItem = new MenuItem("Exit", exit_ImageView);
         exit_menuItem.acceleratorProperty().set(new KeyCodeCombination(KeyCode.Q, KeyCombination.CONTROL_DOWN));
@@ -1428,6 +1428,7 @@ public class ATimerFX_gui extends Application
             {
                 delayCustomMenuItem_HBox.getChildren().add(delayBeforeAction_Spinner);
             }
+            else delayCustomMenuItem_HBox.getChildren().remove(delayBeforeAction_Spinner);
 
             pref.clear();
             pref.parent().parent().removeNode();
