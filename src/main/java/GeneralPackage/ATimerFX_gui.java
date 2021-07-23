@@ -23,7 +23,6 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
 import javafx.event.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -36,7 +35,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -51,7 +49,6 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
-import sun.java2d.loops.ProcessPath;
 
 import java.awt.*;
 import java.io.*;
@@ -144,6 +141,11 @@ public class ATimerFX_gui extends Application
     private String rebootActionDescription_str = "Reboot the system";
     private String killProcessActionDescription_str = "Kill process with PID ";
     private String processName_str = "";
+    private String processNotFound_str = "Process not found";
+    private String process_str = "Process with PID";
+    private String notFound_str = "not found";
+    private String doYouWantToContinue_str = "Do you want to continue ?";
+    private String warning_str = "Warning!";
 
     private Label actionInfo_Label;
     private Label actionValue_Label;
@@ -709,7 +711,7 @@ public class ATimerFX_gui extends Application
                     tmpDelayTime = (int) delayBeforeAction_Spinner.getValue();
                 }
 
-                ta.start("Warning", "Do you want to continue ?", tmpDelayTime);
+                ta.start(warning_str, doYouWantToContinue_str, tmpDelayTime);
                 //ta.start(new Stage());
 
                 ta.setOnHidden(eventHidden ->
@@ -778,8 +780,9 @@ public class ATimerFX_gui extends Application
             if (getProcessName(Integer.parseInt(processID_TextField.getText())).equals(""))
             {
                 scene.getWindow().setOpacity(0.5D);
-                processContinue_Alert.setContentText("Process " + processID_TextField.getText() + " not found.");
-                processContinue_Alert.setTitle("Process not found");
+                processContinue_Alert.setContentText(process_str + " " + processID_TextField.getText() + " " + notFound_str + ".");
+                processContinue_Alert.setHeaderText(warning_str);
+                processContinue_Alert.setTitle(processNotFound_str);
                 processContinue_Alert.getButtonTypes().clear();
                 processContinue_Alert.getButtonTypes().add(ButtonType.OK);
                 processContinue_Alert.showAndWait();
@@ -787,8 +790,9 @@ public class ATimerFX_gui extends Application
                 return;
             } else
             {
-                actionDescription = "Kill process with PID " + processID_TextField.getText() + " - " + processName_str;
-                processContinue_Alert.setContentText("Process [" + processID_TextField.getText() + "] " + processName_str + ". Do you want to continue ?");
+                actionDescription = killProcessActionDescription_str + processID_TextField.getText() + " - " + processName_str;
+                processContinue_Alert.setContentText(process_str + " [" + processID_TextField.getText() + "] " + processName_str + ". " + doYouWantToContinue_str);
+                processContinue_Alert.setHeaderText(warning_str);
                 processContinue_Alert.showAndWait();
                 if (processContinue_Alert.getResult() == ButtonType.NO)
                 {
@@ -1096,7 +1100,7 @@ public class ATimerFX_gui extends Application
                     YALtools.printDebugMessage(interExc.toString());
                 }
             }
-            YALtools.printDebugMessage("Выколнение коды Wind заверешно.");
+            YALtools.printDebugMessage("Выполнение команды Wind заверешно.");
         }
 
 
@@ -1286,6 +1290,11 @@ public class ATimerFX_gui extends Application
             shutdownActionDescription_str = local.get("shutdownActionDescription", "Shut Down the System");
             killProcess_RadioButton.setText(local.get("killProcess_radio", "Kill process"));
             killProcessActionDescription_str = local.get("killProcessActionDescription", "Kill process with PID ");
+            processNotFound_str = local.get("processNotFound_str", "Process not found");
+            process_str = local.get("process_str", "Process");
+            notFound_str = local.get("notFound_str", "not found");
+            doYouWantToContinue_str = local.get("doYouWantToContinue_str", "Do you want to continue ?");
+            warning_str = local.get("warning_str", "Warning!");
 
             customCommand_textField.setPromptText(customCommandPromtText_str);
 

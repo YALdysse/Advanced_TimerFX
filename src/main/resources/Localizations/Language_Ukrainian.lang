@@ -35,6 +35,11 @@
           <entry key="shutdownActionDescription" value="Вимкнути комп'ютер"/>
           <entry key="killProcess_radio" value="Вбити процес"/>
           <entry key="killProcessActionDescription" value="Вбити процес з PID "/>
+          <entry key="processNotFound_str" value="Процес не був знайдений"/>
+          <entry key="process_str" value="Процес з номером"/>
+          <entry key="notFound_str" value="не був знайдений"/>
+          <entry key="doYouWantToContinue_str" value="Бажаєте продовжити ?"/>
+          <entry key="warning_str" value="Увага!"/>
         </map>
       </node>
     </node>
