@@ -163,6 +163,11 @@ public class ATimerFX_gui extends Application
         initComponents();
         stage = aStage;
         scene = new Scene(superRoot);
+        scene.setOnMouseClicked(eventClicked ->
+        {
+            timer_Menu.setOnHidden(null);
+            timer_Menu.hide();
+        });
         stage.getIcons().add(applicationIcon_Image);
 
         //superRoot.prefHeightProperty().bind(scene.heightProperty());
@@ -406,6 +411,7 @@ public class ATimerFX_gui extends Application
                 delayBeforeAction_Spinner.getValueFactory().setValue((int) delayBeforeAction_Spinner.getValue() - increment);
             }
         });
+        delayBeforeAction_Spinner.getValueFactory().valueProperty().addListener(event -> {timer_Menu.setOnHidden(null);});
         delayBeforeAction_Spinner.setMinWidth(rem * 1.2D);
         delayBeforeAction_Spinner.setPrefWidth(rem * 4.0D);
 
