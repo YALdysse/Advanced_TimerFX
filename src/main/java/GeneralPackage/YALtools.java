@@ -235,6 +235,7 @@ public class YALtools
         while (tmpStr != null)
         {
             strBuilder_obj.append(tmpStr);
+            strBuilder_obj.append("\n");
             tmpStr = br.readLine();
         }
         return strBuilder_obj;

@@ -51,6 +51,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
+import sun.java2d.loops.ProcessPath;
 
 import java.awt.*;
 import java.io.*;
@@ -142,6 +143,7 @@ public class ATimerFX_gui extends Application
     private String suspendActionDescription_str = "Suspend the system";
     private String rebootActionDescription_str = "Reboot the system";
     private String killProcessActionDescription_str = "Kill process with PID ";
+    private String processName_str = "";
 
     private Label actionInfo_Label;
     private Label actionValue_Label;
@@ -151,6 +153,8 @@ public class ATimerFX_gui extends Application
 
     private static final int PREFERRED_WIDTH = 360;
     private static final int PREFERRED_HEIGHT = (int) (rem * 17.4D);
+
+    private boolean processHaveChildren = false;
 
     public void start(Stage aStage)
     {
@@ -176,7 +180,7 @@ public class ATimerFX_gui extends Application
         stage.setY(locY);
 
         stage.setScene(scene);
-        stage.setTitle("Advanced Timer FX [build 21 Beta]");
+        stage.setTitle("Advanced Timer FX [build 22 Beta]");
 
         scene.getWindow().setWidth(PREFERRED_WIDTH);
         scene.getWindow().setHeight(PREFERRED_HEIGHT);
@@ -598,7 +602,6 @@ public class ATimerFX_gui extends Application
                 {
                     processID_TextField.setText(processID_TextField.getText().substring(0, 5));
                     processID_TextField.selectRange(5, 5);
-                    //processID_TextField.selectPositionCaret(3);
                 }
             });
             killProcess_HBox.getChildren().add(killProcess_HBox.getChildren().indexOf(killProcess_RadioButton) + 1, processID_TextField);
@@ -769,6 +772,31 @@ public class ATimerFX_gui extends Application
 
     private void startTimer_Action(ActionEvent event)
     {
+        if (killProcess_RadioButton.isSelected())
+        {
+            Alert processContinue_Alert = new Alert(Alert.AlertType.WARNING, "", ButtonType.YES, ButtonType.NO);
+            if (getProcessName(Integer.parseInt(processID_TextField.getText())).equals(""))
+            {
+                scene.getWindow().setOpacity(0.5D);
+                processContinue_Alert.setContentText("Process " + processID_TextField.getText() + " not found.");
+                processContinue_Alert.setTitle("Process not found");
+                processContinue_Alert.getButtonTypes().clear();
+                processContinue_Alert.getButtonTypes().add(ButtonType.OK);
+                processContinue_Alert.showAndWait();
+                scene.getWindow().setOpacity(1.0D);
+                return;
+            } else
+            {
+                actionDescription = "Kill process with PID " + processID_TextField.getText() + " - " + processName_str;
+                processContinue_Alert.setContentText("Process [" + processID_TextField.getText() + "] " + processName_str + ". Do you want to continue ?");
+                processContinue_Alert.showAndWait();
+                if (processContinue_Alert.getResult() == ButtonType.NO)
+                {
+                    return;
+                }
+            }
+        }
+
         int timerHours = Integer.parseInt(hours_Spinner.getValue().toString());
         int timerMinutes = Integer.parseInt(minutes_Spinner.getValue().toString());
         int timerSeconds = Integer.parseInt(seconds_Spinner.getValue().toString());
@@ -937,7 +965,7 @@ public class ATimerFX_gui extends Application
             }
             if (killProcess_RadioButton.isSelected() && !processID_TextField.getText().equals(""))
             {
-                actionValue_Label.setText(actionValue_Label.getText() + processID_TextField.getText());
+                actionValue_Label.setText(actionValue_Label.getText());
             }
         }
 
@@ -1020,10 +1048,17 @@ public class ATimerFX_gui extends Application
                 } else if (killProcess_RadioButton.isSelected())
                 {
                     command_arr = new String[4];
+
                     command_arr[0] = "taskkill";
                     command_arr[1] = "/PID";
                     command_arr[2] = processID_TextField.getText();
                     command_arr[3] = "/F";
+
+                    if (processHaveChildren)
+                    {
+                        command_arr[1] = "/IM";
+                        command_arr[2] = processName_str;
+                    }
                 }
 
                 System.out.println("Windows.Команда: ");
@@ -1404,5 +1439,97 @@ public class ATimerFX_gui extends Application
         {
             YALtools.printDebugMessage("Возникла ошибка ввода-вывода узла настроек.\n" + ioExc.toString());
         }
+    }
+
+    private String getProcessName(final int aPID)
+    {
+        if (System.getProperty("os.name").indexOf("Linux") != -1)
+        {
+            try
+            {
+                String[] commandArr = {"bash", "-c", "ps", "ax", "|", "grep", "-i ", String.valueOf(aPID)};
+                Process proc = Runtime.getRuntime().exec(commandArr);
+                StringBuilder result_strBuilder = YALtools.readInputStream(proc.getInputStream());
+                YALtools.printDebugMessage("ErrorStream: " + YALtools.readInputStream(proc.getErrorStream()));
+
+                YALtools.printDebugMessage("InputStream: " + result_strBuilder.toString());
+
+                //Разбиваем
+                String[] splitted = result_strBuilder.toString().split("\n");
+                String result_str = "";
+                for (String tmpStr : splitted)
+                {
+                    if (tmpStr.indexOf(processID_TextField.getText()) != -1)
+                    {
+                        result_str = tmpStr;
+                    }
+                }
+                YALtools.printDebugMessage("Информация о процессе: " + result_str);
+
+                splitted = result_str.split(" ");
+                processName_str = splitted[splitted.length - 1];
+                YALtools.printDebugMessage("Имя процесса: " + processName_str);
+                return processName_str;
+            }
+            catch (IOException ioExc)
+            {
+                YALtools.printDebugMessage("Возникла ошибка ввода вывода при выкоплнении команды поиска процесса.\n" + ioExc.toString());
+            }
+        } else if (System.getProperty("os.name").indexOf("Windows") != -1)
+        {
+            try
+            {
+                YALtools.printDebugMessage("Поиск процесса в windows " + aPID);
+
+                String[] commandArr = {"tasklist"};
+                Process proc = Runtime.getRuntime().exec(commandArr);
+                StringBuilder result_strBuilder = YALtools.readInputStream(proc.getInputStream());
+                YALtools.printDebugMessage("ErrorStream: " + YALtools.readInputStream(proc.getErrorStream()));
+
+                YALtools.printDebugMessage("InputStream: " + result_strBuilder.toString());
+
+                //Разбиваем
+                String[] splitted = result_strBuilder.toString().split("\n");
+                String result_str = "";
+                for (String tmpStr : splitted)
+                {
+                    if (tmpStr.indexOf(String.valueOf(aPID)) != -1)
+                    {
+                        result_str = tmpStr;
+                    }
+                }
+                YALtools.printDebugMessage("Информация о процессе: " + result_str);
+
+                String[] curProcess_splitted_str = result_str.split(" ");
+                processName_str = curProcess_splitted_str[0];
+                YALtools.printDebugMessage("Имя процесса: " + processName_str);
+
+                //Есть ли еще процессы с таким именем
+                String tmpStr = "";
+                int countEquals = 0;
+
+                for (int k = 0; k < splitted.length; k++)
+                {
+                    tmpStr = splitted[k].split(" ")[0];
+                    if (tmpStr.equals(processName_str))
+                    {
+                        countEquals++;
+                    }
+                }
+
+                if (countEquals >= 2)
+                {
+                    processHaveChildren = true;
+                    YALtools.printDebugMessage("У процеса имеются потомки.");
+                }
+
+                return processName_str;
+            }
+            catch (IOException ioExc)
+            {
+                YALtools.printDebugMessage("Возникла ошибка ввода вывода при выкоплнении команды поиска процесса.\n" + ioExc.toString());
+            }
+        }
+        return null;
     }
 }
