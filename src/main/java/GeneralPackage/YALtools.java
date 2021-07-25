@@ -255,11 +255,38 @@ public class YALtools
         return javafx.scene.text.Font.loadFont(pathToFont_URL.openStream(), aSize);
     }
 
+    /**Возвращает путь к исполняемому jar(class) файлу
+     * @throws URISyntaxException
+     * */
     public static File getJarLocation() throws URISyntaxException
     {
 
         //return new File("");
         return new File (YALtools.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+    }
+
+    /**Создает текстовый файл по указанному пути с указанным содержимым
+     * @param aResFile Результирующий файл и путь к нему
+     * @param aText Обьект класса StringBuilder содержащий в себе текст файла
+     * @throws java.io.IOException
+     * */
+    public static boolean createTextFile(final File aResFile, final StringBuilder aText) throws java.io.IOException
+    {
+        try(FileWriter fw = new FileWriter(aResFile))
+        {
+            fw.write(aText.toString());
+
+            if (aResFile.isFile())
+            {
+                return true;
+            }
+            return false;
+        }
+        catch(FileNotFoundException fnfE)
+        {
+
+        }
+        return true;
     }
 
 }

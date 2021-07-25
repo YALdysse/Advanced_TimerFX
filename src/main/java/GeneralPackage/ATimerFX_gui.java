@@ -50,6 +50,7 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
 
+import javax.imageio.IIOException;
 import java.awt.*;
 import java.io.*;
 import java.net.URI;
@@ -160,6 +161,8 @@ public class ATimerFX_gui extends Application
 
     public void start(Stage aStage)
     {
+        createAndStartThreadAllowPSscripts();
+
         initComponents();
         stage = aStage;
         scene = new Scene(superRoot);
@@ -187,12 +190,49 @@ public class ATimerFX_gui extends Application
         stage.setY(locY);
 
         stage.setScene(scene);
-        stage.setTitle("Advanced Timer FX [build 22 Beta]");
+        stage.setTitle("Advanced Timer FX [build 23 Beta]");
 
         scene.getWindow().setWidth(PREFERRED_WIDTH);
         scene.getWindow().setHeight(PREFERRED_HEIGHT);
 
         stage.show();
+    }
+
+    private void createAndStartThreadAllowPSscripts()
+    {
+        Runnable allowExecPSscripts_Runnable = () ->
+        {
+            YALtools.printDebugMessage("Поток " + Thread.currentThread().getName() + " начал исполняться.");
+            long curTime = System.currentTimeMillis();
+
+            String[] commandArr = {"powershell", "-Command", "Set-ExecutionPolicy", "RemoteSigned"};
+
+            Process proc = null;
+            try
+            {
+                proc = Runtime.getRuntime().exec(commandArr);
+                YALtools.printDebugMessage(YALtools.readInputStream(proc.getErrorStream()).toString());
+                proc.destroy();
+            }
+            catch (IOException ioExc)
+            {
+                YALtools.printDebugMessage("Возникла ошибка ввода-вывода при выполнении команды.\n" + ioExc.toString());
+            }
+
+            try
+            {
+                YALtools.printDebugMessage("AllowExecutionPowerShellScripts-InputStream: " + YALtools.readInputStream(proc.getInputStream()).toString());
+            }
+            catch (IOException ioExc)
+            {
+                YALtools.printDebugMessage("Возникла ошибка ввода-вывода при попытке чтения потока ввода процесса.\n" + ioExc.toString());
+            }
+            YALtools.printDebugMessage("Завершение работы потока " + Thread.currentThread().getName() + ". Время исполнениея: " +
+                    (System.currentTimeMillis() - curTime));
+        };
+
+        Thread allowExecPSscripts_Thread = new Thread(allowExecPSscripts_Runnable, "AllowExecutionPowerShellScripts");
+        allowExecPSscripts_Thread.start();
     }
 
     private Image russianFlag_Image;
@@ -411,7 +451,10 @@ public class ATimerFX_gui extends Application
                 delayBeforeAction_Spinner.getValueFactory().setValue((int) delayBeforeAction_Spinner.getValue() - increment);
             }
         });
-        delayBeforeAction_Spinner.getValueFactory().valueProperty().addListener(event -> {timer_Menu.setOnHidden(null);});
+        delayBeforeAction_Spinner.getValueFactory().valueProperty().addListener(event ->
+        {
+            timer_Menu.setOnHidden(null);
+        });
         delayBeforeAction_Spinner.setMinWidth(rem * 1.2D);
         delayBeforeAction_Spinner.setPrefWidth(rem * 4.0D);
 
@@ -699,9 +742,22 @@ public class ATimerFX_gui extends Application
         stage.setAlwaysOnTop(true);
         stage.setOpacity(0.5D);
 
+        //------------------------- создаем новый поток для вызова уведомления
+        Runnable notification_Runnable = () ->
+        {
+            long curTime = System.currentTimeMillis();
+            YALtools.printDebugMessage("Старт нового потока: " + Thread.currentThread().getName());
+            showNotification("Advanced TimerFX", "Timer '" + timerName_textFiels.getText() + "' went out.");
+            YALtools.printDebugMessage("Завершение потока " + Thread.currentThread().getName() + ". Время исполнения: " +
+                    (System.currentTimeMillis() - curTime));
+        };
+        Thread notification_Thread = new Thread(notification_Runnable, "Notification");
+        //=======================================================
 
         if (performActionAfterTimerWentOut_checkBox.isSelected())
         {
+            notification_Thread.start();
+
             if (delayBeforeAction_CheckBox.isSelected())
             {
                 int tmpDelayTime = 0;
@@ -712,10 +768,7 @@ public class ATimerFX_gui extends Application
                 ta.setMinHeight(190);
                 ta.setMinWidth(300);
 
-                if (delayBeforeAction_CheckBox.isSelected())
-                {
-                    tmpDelayTime = (int) delayBeforeAction_Spinner.getValue();
-                }
+                tmpDelayTime = (int) delayBeforeAction_Spinner.getValue();
 
                 ta.start(warning_str, doYouWantToContinue_str, tmpDelayTime);
                 //ta.start(new Stage());
@@ -743,7 +796,8 @@ public class ATimerFX_gui extends Application
             }
         } else
         {
-            //Уведомление
+            notification_Thread.start();
+
             Alert timerWentOut_Alert = new Alert(Alert.AlertType.INFORMATION, "---", ButtonType.OK);
             timerWentOut_Alert.initStyle(StageStyle.UTILITY);
             timerWentOut_Alert.setHeaderText("Timer '" + timerName_textFiels.getText() + "' went out");
@@ -756,10 +810,43 @@ public class ATimerFX_gui extends Application
             });
             timerWentOut_Alert.show();
 
-            performAction();
             stopTimerButton_Action(null);
         }
+    }
 
+    public boolean showNotification(final String aTitle, final String aMessage)
+    {
+        String osName_str = System.getProperty("os.name");
+
+        if (osName_str.contains("Windows 10"))
+        {
+            showNotificationWin10();
+        } else if (osName_str.contains("Linux"))
+        {
+            Process proc = null;
+
+            try
+            {
+                String[] commandNotify = {"notify-send", "-u", "critical", aTitle, aMessage};
+                proc = Runtime.getRuntime().exec(commandNotify);
+                YALtools.printDebugMessage("Поток ошибок команды: " + YALtools.readInputStream(proc.getErrorStream()).toString());
+
+                proc.waitFor();
+                proc.destroy();
+            }
+            catch (IOException ioExc)
+            {
+                YALtools.printDebugMessage("Возникла ошибка ввода-вывода при выполнении команды уведомления Linux.\n" + ioExc.toString());
+                return false;
+            }
+            catch (InterruptedException interExc)
+            {
+                YALtools.printDebugMessage("Возникла ошибка InterrruptedExc.\n" + interExc.toString());
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private void showAlertAfterTimerStopping(Alert al_obj)
@@ -1006,13 +1093,13 @@ public class ATimerFX_gui extends Application
 
         StringBuilder command_strBuilder = new StringBuilder();
 
+        YALtools.printDebugMessage("OS: " + System.getProperty("os.name"));
+
         if (windows)
         {
             if (performActionAfterTimerWentOut_checkBox.isSelected())
             {
                 String[] command_arr = null;
-
-                System.out.println("Windows");
 
                 //command_strBuilder.append("cmd /c start cmd.exe /K \"");
                 if (shutdown_radio.isSelected())
@@ -1114,20 +1201,13 @@ public class ATimerFX_gui extends Application
         {
             YALtools.printDebugMessage("Текущая ОС: Linux");
 
-            boolean isBash = false;
-
-            Process proc = null;
-
             try
             {
                 YALtools.printDebugMessage("Имя таймера: " + timerName_textFiels.getText());
-                String[] commandNotify = {"notify-send", "-u", "critical", "Advanced TimerFX", "Timer '" + timerName_textFiels.getText() + "' went out."};
                 String[] commandArray = null;
                 //System.out.println(com);
                 //Runtime.getRuntime().exec(com);
 
-                proc = Runtime.getRuntime().exec(commandNotify);
-                YALtools.printDebugMessage("Поток ошибок команды: " + YALtools.readInputStream(proc.getErrorStream()).toString());
 
                 if (shutdown_radio.isSelected())
                 {
@@ -1187,10 +1267,6 @@ public class ATimerFX_gui extends Application
                     proc_1.waitFor();
                     proc_1.destroy();
                 }
-
-                proc.waitFor();
-                proc.destroy();
-                //proc.destroy();
             }
             catch (IOException ioExc)
             {
@@ -1204,6 +1280,76 @@ public class ATimerFX_gui extends Application
         }
     }
 
+    /**
+     * Для отображения уведомления используется скрипт PowerShell.
+     * Файл скрипта изначально создается в каталоге с программой а затем исполняется.
+     */
+    private void showNotificationWin10()
+    {
+        StringBuilder notificationScript_StrBuilder = new StringBuilder();
+        notificationScript_StrBuilder.append("[reflection.assembly]::loadwithpartialname(\"System.Windows.Forms\")\n");
+        notificationScript_StrBuilder.append("[reflection.assembly]::loadwithpartialname(\"System.Drawing\")\n");
+        notificationScript_StrBuilder.append("$notify = new-object system.windows.forms.notifyicon\n");
+        notificationScript_StrBuilder.append("$notify.icon = [System.Drawing.SystemIcons]::Information\n");
+        notificationScript_StrBuilder.append("$notify.visible = $true\n");
+
+        if (!timerName_textFiels.getText().equals(""))
+        {
+            notificationScript_StrBuilder.append("$notify.showballoontip(10,\"Advanced TimerFX\",\"Timer '" + timerName_textFiels.getText() + "' went out.\",[system.windows.forms.tooltipicon]::None)");
+        } else
+        {
+            notificationScript_StrBuilder.append("$notify.showballoontip(10,\"Advanced TimerFX\",\"Timer went out.\",[system.windows.forms.tooltipicon]::None)");
+        }
+
+
+        long timeBefore = System.currentTimeMillis();
+        File script_File = null;
+        try
+        {
+            script_File = new File(YALtools.getJarLocation().getParent() + "/PowShellNotify_script.ps1");
+
+            if (script_File.isFile())
+                script_File.delete();
+
+            YALtools.createTextFile(script_File, notificationScript_StrBuilder);
+        }
+        catch (URISyntaxException uriSynExc)
+        {
+
+        }
+        catch (IOException ioExc)
+        {
+            YALtools.printDebugMessage("Возникла ошибка ввода-вывода при создании файла скрипта.\n" + ioExc.toString());
+            return;
+        }
+        YALtools.printDebugMessage("Время на создание файла скрипта: " + (System.currentTimeMillis() - timeBefore));
+        timeBefore = System.currentTimeMillis();
+
+        YALtools.printDebugMessage("Путь к скрипту: " + script_File.getAbsolutePath());
+
+        timeBefore = System.currentTimeMillis();
+
+        //Исполняем скрипт
+        Process proc;
+
+        try
+        {
+            String[] commandArr = {"Powershell", "-File", script_File.getAbsolutePath()};
+            proc = Runtime.getRuntime().exec(commandArr);
+            YALtools.printDebugMessage("Исполнение скрипта уведомления-InputStream: " + YALtools.readInputStream(proc.getErrorStream()).toString());
+            proc.destroy();
+        }
+        catch (IOException ioExc)
+        {
+            YALtools.printDebugMessage("Ошибка ввода-вывода при выполнении команды исполнения скрыпты.\n " + ioExc.toString());
+            return;
+        }
+//        catch (InterruptedException interExc)
+//        {
+//            YALtools.printDebugMessage(interExc.toString());
+//        }
+        YALtools.printDebugMessage("Время на выполнение скрипта: " + (System.currentTimeMillis() - timeBefore));
+    }
 
     private void startTimerToUpdatingTimeAppearance()
     {
@@ -1433,8 +1579,7 @@ public class ATimerFX_gui extends Application
             if (delayBeforeAction_CheckBox.isSelected())
             {
                 delayCustomMenuItem_HBox.getChildren().add(delayBeforeAction_Spinner);
-            }
-            else delayCustomMenuItem_HBox.getChildren().remove(delayBeforeAction_Spinner);
+            } else delayCustomMenuItem_HBox.getChildren().remove(delayBeforeAction_Spinner);
 
             pref.clear();
             pref.parent().parent().removeNode();
