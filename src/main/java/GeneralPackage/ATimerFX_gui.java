@@ -572,6 +572,8 @@ public class ATimerFX_gui extends Application
                 killProcess_HBox.getChildren().remove(processID_TextField);
             }
             actionDescription = shutdownActionDescription_str;
+            startTimer_button.setDisable(false);
+            startTimer_MenuItem.setDisable(false);
         });
 
         suspend_radio = new RadioButton("Suspend the System");
@@ -586,6 +588,8 @@ public class ATimerFX_gui extends Application
                 killProcess_HBox.getChildren().remove(processID_TextField);
             }
             actionDescription = suspendActionDescription_str;
+            startTimer_button.setDisable(false);
+            startTimer_MenuItem.setDisable(false);
         });
 
         custom_command = new RadioButton("Custom command");
@@ -600,6 +604,8 @@ public class ATimerFX_gui extends Application
             {
                 killProcess_HBox.getChildren().remove(processID_TextField);
             }
+            startTimer_button.setDisable(false);
+            startTimer_MenuItem.setDisable(false);
         });
 
         reboot_radio = new RadioButton("Reboot");
@@ -614,6 +620,8 @@ public class ATimerFX_gui extends Application
                 killProcess_HBox.getChildren().remove(processID_TextField);
             }
             actionDescription = rebootActionDescription_str;
+            startTimer_button.setDisable(false);
+            startTimer_MenuItem.setDisable(false);
         });
 
         killProcess_RadioButton = new RadioButton("Kill Process");
@@ -658,6 +666,8 @@ public class ATimerFX_gui extends Application
             killProcess_HBox.getChildren().add(killProcess_HBox.getChildren().indexOf(killProcess_RadioButton) + 1, processID_TextField);
 
             actionDescription = killProcessActionDescription_str;
+            startTimer_button.setDisable(false);
+            startTimer_MenuItem.setDisable(false);
         });
 
         killProcess_HBox = new HBox(rem * 0.7D, killProcess_RadioButton);
@@ -690,12 +700,25 @@ public class ATimerFX_gui extends Application
                 YALtools.printDebugMessage("AllPaddings:" + (15 * root.getChildren().size()));
                 scene.getWindow().setHeight(PREFERRED_HEIGHT + ((rem * 2.1D) * radioGroup_Box.getChildren().size()));
                 stage.setMinHeight(scene.getWindow().getHeight());
+
+                if (!shutdown_radio.isSelected() &&
+                        !reboot_radio.isSelected()
+                        && !suspend_radio.isSelected()
+                        && !killProcess_RadioButton.isSelected()
+                        && !custom_command.isSelected())
+                {
+                    startTimer_button.setDisable(true);
+                    startTimer_MenuItem.setDisable(true);
+                }
             } else
             {
                 action = false;
                 root.getChildren().remove(radioGroup_Box);
                 scene.getWindow().setHeight(PREFERRED_HEIGHT);
                 stage.setMinHeight(PREFERRED_HEIGHT);
+
+                startTimer_button.setDisable(false);
+                startTimer_MenuItem.setDisable(false);
             }
         });
         //===================================================
