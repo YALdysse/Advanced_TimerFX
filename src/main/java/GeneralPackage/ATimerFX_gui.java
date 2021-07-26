@@ -85,6 +85,7 @@ public class ATimerFX_gui extends Application
     private RadioButton reboot_radio;
     private RadioButton custom_command;
     private RadioButton killProcess_RadioButton;
+    private RadioButton logOut_RadioButton;
     private VBox radioGroup_Box;
     private TextField customCommand_textField;
     private TextField processID_TextField;
@@ -147,6 +148,7 @@ public class ATimerFX_gui extends Application
     private String notFound_str = "not found";
     private String doYouWantToContinue_str = "Do you want to continue ?";
     private String warning_str = "Warning!";
+    private String logOutActionDescription_str = "Log out";
 
     private Label actionInfo_Label;
     private Label actionValue_Label;
@@ -677,10 +679,21 @@ public class ATimerFX_gui extends Application
         customCommand_textField.setPromptText(customCommandPromtText_str);
         customCommand_textField.setVisible(false);
 
-        ToggleGroup radioToggleGroup = new ToggleGroup();
-        radioToggleGroup.getToggles().addAll(shutdown_radio, suspend_radio, reboot_radio, custom_command, killProcess_RadioButton);
+        logOut_RadioButton = new RadioButton("Log out");
+        logOut_RadioButton.setOnAction(event ->
+        {
+            killProcess_HBox.getChildren().remove(processID_TextField);
+            radioGroup_Box.getChildren().remove(customCommand_textField);
 
-        radioGroup_Box = new VBox(rem * 0.4D, shutdown_radio, suspend_radio, reboot_radio, custom_command, killProcess_HBox);
+            actionDescription = logOutActionDescription_str;
+            startTimer_button.setDisable(false);
+            startTimer_MenuItem.setDisable(false);
+        });
+
+        ToggleGroup radioToggleGroup = new ToggleGroup();
+        radioToggleGroup.getToggles().addAll(shutdown_radio, suspend_radio, reboot_radio, logOut_RadioButton, custom_command, killProcess_RadioButton);
+
+        radioGroup_Box = new VBox(rem * 0.4D, shutdown_radio, suspend_radio, reboot_radio, logOut_RadioButton, custom_command, killProcess_HBox);
         radioGroup_Box.setPadding(new Insets(0.0D, 0.0D, 0.0D, rem * 2.1D));
         //radioGroup_Box.setBorder(new javafx.scene.layout.Border(new BorderStroke(Color.BLACK,BorderStrokeStyle.DOTTED, new CornerRadii(rem * 0.1D),BorderWidths.FULL)));
 
@@ -705,7 +718,8 @@ public class ATimerFX_gui extends Application
                         !reboot_radio.isSelected()
                         && !suspend_radio.isSelected()
                         && !killProcess_RadioButton.isSelected()
-                        && !custom_command.isSelected())
+                        && !custom_command.isSelected()
+                        && !logOut_RadioButton.isSelected())
                 {
                     startTimer_button.setDisable(true);
                     startTimer_MenuItem.setDisable(true);
@@ -1179,6 +1193,10 @@ public class ATimerFX_gui extends Application
                         command_arr[1] = "/IM";
                         command_arr[2] = processName_str;
                     }
+                } else if (logOut_RadioButton.isSelected())
+                {
+                    command_arr = new String[1];
+                    command_arr[0] = "logoff";
                 }
 
                 System.out.println("Windows.Команда: ");
@@ -1266,6 +1284,13 @@ public class ATimerFX_gui extends Application
                     commandArray[0] = "kill";
                     commandArray[1] = "-9";
                     commandArray[2] = processID_TextField.getText();
+                } else if (logOut_RadioButton.isSelected())
+                {
+                    commandArray = new String[4];
+                    commandArray[0] = "killall";
+                    commandArray[1] = "-w";
+                    commandArray[2] = "-u";
+                    commandArray[3] = "$USER";
                 }
 
                 if (performActionAfterTimerWentOut_checkBox.isSelected())
@@ -1470,6 +1495,8 @@ public class ATimerFX_gui extends Application
             notFound_str = local.get("notFound_str", "not found");
             doYouWantToContinue_str = local.get("doYouWantToContinue_str", "Do you want to continue ?");
             warning_str = local.get("warning_str", "Warning!");
+            logOut_RadioButton.setText(local.get("logOut_RadioButton", "Log out"));
+            logOutActionDescription_str = local.get("logOut_ActionDescription_str", "Log out");
 
             customCommand_textField.setPromptText(customCommandPromtText_str);
 
@@ -1498,6 +1525,10 @@ public class ATimerFX_gui extends Application
                 } else if (killProcess_RadioButton.isSelected())
                 {
                     actionDescription = killProcessActionDescription_str + processID_TextField.getText();
+                    actionValue_Label.setText(actionDescription);
+                } else if (logOut_RadioButton.isSelected())
+                {
+                    actionDescription = logOutActionDescription_str;
                     actionValue_Label.setText(actionDescription);
                 }
             }

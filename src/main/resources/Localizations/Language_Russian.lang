@@ -40,6 +40,8 @@
           <entry key="notFound_str" value="не был найден"/>
           <entry key="doYouWantToContinue_str" value="Желаете продолжить ?"/>
           <entry key="warning_str" value="Внимание!"/>
+          <entry key="logOut_RadioButton" value="Завершить сеанс (Log out)"/>
+          <entry key="logOut_ActionDescription_str" value="Завершить сеанс текущего пользователя"/>
         </map>
       </node>
     </node>

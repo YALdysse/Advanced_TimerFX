@@ -12,7 +12,7 @@
           <entry key="performActionAfterTimerWentOut_checkBox" value="Виконати дiю після закінчення відведеного часу"/>
           <entry key="shutdown_radio" value="Вимкнути комп'ютер"/>
           <entry key="suspend_radio" value="Перевести комп'ютер в сон"/>
-          <entry key="reboot_radio" value="Перезагрузити комп'ютер"/>
+          <entry key="reboot_radio" value="Перезавантажити комп'ютер"/>
           <entry key="customCommand_Label" value="Команда"/>
           <entry key="timerName_Label" value="Назва таймеру:"/>
           <entry key="timerAction_Label" value="Дiя:"/>
@@ -40,6 +40,8 @@
           <entry key="notFound_str" value="не був знайдений"/>
           <entry key="doYouWantToContinue_str" value="Бажаєте продовжити ?"/>
           <entry key="warning_str" value="Увага!"/>
+          <entry key="logOut_RadioButton" value="Закінчити сеанс (Log out)"/>
+          <entry key="logOut_ActionDescription_str" value="Завершити сеанс поточного користувача"/>
         </map>
       </node>
     </node>
