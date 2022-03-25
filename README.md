@@ -2,7 +2,7 @@
 
 ![screen](screen_0.png)
 
-###It is a free, open-source timer with some useful features, such as shut down and reboot when time is up.
+### It is a free, open-source timer with some useful features, such as shut down and reboot when time is up.
 
 Features:
 * Operation:
@@ -20,7 +20,7 @@ System Requirements:
 * [Java Runtime Environment](https://java.com/en/download/manual.jsp) version 8 (or newer)
 
 
-***[Download](https://github.com/YALdysse/Advanced_TimerFX/releases)
+*** [Download](https://github.com/YALdysse/Advanced_TimerFX/releases)
 
 
 ## Building from Source
