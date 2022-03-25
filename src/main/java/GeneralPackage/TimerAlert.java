@@ -21,24 +21,18 @@ package GeneralPackage;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -48,7 +42,7 @@ import java.time.LocalTime;
 public class TimerAlert extends Stage
 {
     private static final double rem = new Text("").getBoundsInParent().getHeight();
-    private static final int PREFERRED_WIDTH = (int) (rem * 22.0D);
+    private static final int PREFERRED_WIDTH = (int) (rem * 20.0D);
     private static final int PREFERRED_HEIGHT = (int)(rem * 12.8D);
     private VBox root;
 
@@ -69,6 +63,7 @@ public class TimerAlert extends Stage
     public void start(final String aHeaderText, final String aMessage, final int aDelayTime)
     {
         confirm_Label = new Label(aMessage);
+        confirm_Label.setWrapText(true);
 
         HBox warning_HBox = new HBox();
 
@@ -80,10 +75,20 @@ public class TimerAlert extends Stage
         }
         catch (IOException ioException)
         {
-
+            ioException.printStackTrace();
         }
 
-        timeLeft_Label = new Label();
+        //Для того, чтобы текст не был сжат
+        Text temporaryText = new Text(warning_Label.getText());
+        temporaryText.setFont(warning_Label.getFont());
+        System.out.println("Text: " + temporaryText.getBoundsInParent().getWidth());
+        warning_Label.setMinWidth(temporaryText.getBoundsInParent().getWidth());
+
+        timeLeft_Label = new Label("99:99:99");
+        temporaryText.setText(timeLeft_Label.getText());
+        temporaryText.setFont(timeLeft_Label.getFont());
+        timeLeft_Label.setMinWidth(temporaryText.getBoundsInParent().getWidth());
+        timeLeft_Label.setText(LocalTime.of(0,0,aDelayTime).toString());
 
         try
         {
@@ -91,23 +96,20 @@ public class TimerAlert extends Stage
         }
         catch (IOException ioExc)
         {
-
+            ioExc.printStackTrace();
         }
 
         ImageView imgView = new ImageView(img);
+        imgView.setPreserveRatio(true);
         imgView.setFitWidth(32.0D);
-        imgView.setFitHeight(32.0D);
+        //imgView.setFitHeight(32.0D);
 
-        warning_HBox.getChildren().add(warning_Label);
-        warning_HBox.getChildren().add(timeLeft_Label);
-        warning_HBox.getChildren().add(imgView);
+        warning_HBox.getChildren().addAll(warning_Label,timeLeft_Label,imgView);
         warning_HBox.setAlignment(Pos.CENTER_RIGHT);
         warning_HBox.setSpacing(rem * 1.0D);
 
         root = new VBox(rem * 1.2D, warning_HBox, new Separator(), confirm_Label);
-        root.setPrefSize(PREFERRED_WIDTH, PREFERRED_HEIGHT);
         root.setPadding(new Insets(rem * 1.0D));
-
 
         yes_Button = new Button("Yes");
         yes_Button.setOnAction(event ->
@@ -183,7 +185,11 @@ public class TimerAlert extends Stage
         YALtools.printDebugMessage("" + root.getBoundsInParent().getHeight());
 
         this.setScene(new Scene(root));
-        this.getScene().getWindow().setHeight(PREFERRED_HEIGHT);
+        this.show();
+        this.hide();
+        this.getScene().getWindow().sizeToScene();
+        this.setMinWidth(getScene().getWindow().getWidth()-2);
+        this.setMinHeight(getScene().getWindow().getHeight()-2);
         this.setTitle("Timer Alert");
         this.show();
     }

@@ -22,11 +22,12 @@ package GeneralPackage;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.event.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Group;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -41,23 +42,25 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
-import javafx.scene.shape.Box;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontPosture;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
+import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
+import org.yaldysse.tools.notification.AnimationType;
+import org.yaldysse.tools.notification.Notification;
+import org.yaldysse.tools.notification.NotificationType;
 
-import javax.imageio.IIOException;
 import java.awt.*;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.LocalTime;
-import java.util.*;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.InvalidPreferencesFormatException;
 import java.util.prefs.Preferences;
@@ -90,7 +93,7 @@ public class ATimerFX_gui extends Application
     private TextField customCommand_textField;
     private TextField processID_TextField;
     private Timeline timer_obj;
-    private Pane root;
+    private VBox root;
     private Pane timerIsRunning_pane;
     private Label hoursAppearance_Label;
     private Label minutesAppearance_Label;
@@ -134,6 +137,7 @@ public class ATimerFX_gui extends Application
     private Stage stage;
 
     private Text textToDefineWidth;
+    public static final String NAME_OF_PROGRAM = "Advanced TimerFX";
     private String timerName_str = "Name of Timer: ";
     private String action_str = "Action: ";
     private String info_str = "Info";
@@ -149,6 +153,8 @@ public class ATimerFX_gui extends Application
     private String doYouWantToContinue_str = "Do you want to continue ?";
     private String warning_str = "Warning!";
     private String logOutActionDescription_str = "Log out";
+    private String popup_str = "To stop click left button twice.";
+    private String theTimerHasExpired_str = "The timer has expired.";
 
     private Label actionInfo_Label;
     private Label actionValue_Label;
@@ -156,16 +162,29 @@ public class ATimerFX_gui extends Application
     private int locY = 0;
     private String currentLanguage_str = "English";
 
-    private static final int PREFERRED_WIDTH = 360;
-    private static final int PREFERRED_HEIGHT = (int) (rem * 17.4D);
+    private static final int PREFERRED_WIDTH = (int) (rem * 19.2D);
+    private static final int PREFERRED_HEIGHT = (int) (rem * 15.6D);
 
     private boolean processHaveChildren = false;
 
+    private Popup popup;
+    private Notification notify;
+
     public void start(Stage aStage)
     {
-        createAndStartThreadAllowPSscripts();
+        long startTime = System.currentTimeMillis();
+
+        System.out.println(System.getProperty("os.name"));
+
+        //Поток для инициализации меню
+        Thread initializeMenu_Thread = new Thread(() ->
+        {
+            initializeMenu();
+        }, "Initializing Menu");
+        initializeMenu_Thread.start();
 
         initComponents();
+
         stage = aStage;
         scene = new Scene(superRoot);
         scene.setOnMouseClicked(eventClicked ->
@@ -173,6 +192,7 @@ public class ATimerFX_gui extends Application
             timer_Menu.setOnHidden(null);
             timer_Menu.hide();
         });
+
         stage.getIcons().add(applicationIcon_Image);
 
         //superRoot.prefHeightProperty().bind(scene.heightProperty());
@@ -184,156 +204,60 @@ public class ATimerFX_gui extends Application
         });
 
         importSettings();
-        initLocalization(currentLanguage_str);
 
-        stage.setMinHeight(PREFERRED_HEIGHT);
-        stage.setMinWidth(PREFERRED_WIDTH);
+        /*Использование вместе с многократным вызовом метода scene.getWindow().sizeToScene();
+         * приводит к появлению артефактов. Исправляется установкой ограничения
+         * на минимальную ширину корневого узла сцены таким образом, чтобы корневой узел
+         * был больше, чем такое же ограничение на stage.*/
+        stage.setMinWidth(PREFERRED_WIDTH - 2);
+        stage.setMinHeight(PREFERRED_HEIGHT - 2);
+        //stage.setWidth(PREFERRED_WIDTH);
         stage.setX(locX);
         stage.setY(locY);
 
         stage.setScene(scene);
-        stage.setTitle("Advanced Timer FX [build 23 Beta]");
+        stage.setTitle(NAME_OF_PROGRAM + " [build 31 pre-RC]");
 
-        scene.getWindow().setWidth(PREFERRED_WIDTH);
-        scene.getWindow().setHeight(PREFERRED_HEIGHT);
+        menu_BorderPane.setTop(menuBar);
+
+        if (initializeMenu_Thread.isAlive())
+        {
+            try
+            {
+                initializeMenu_Thread.join();
+            }
+            catch (InterruptedException interruptedException)
+            {
+                interruptedException.printStackTrace();
+            }
+        }
+        initLocalization(currentLanguage_str);
+
+        scene.getWindow().sizeToScene();
+        //stage.minHeightProperty().bind(scene.heightProperty().multiply(1.1D));
+        //stage.setHeight(scene.heightProperty().get());
+        //stage.setHeight(PREFERRED_HEIGHT);
+        //scene.getWindow().setWidth(PREFERRED_WIDTH);
+        //scene.getWindow().setHeight(PREFERRED_HEIGHT);
 
         stage.show();
+        System.out.println("Времени прошло: " + (System.currentTimeMillis() - startTime));
     }
 
-    private void createAndStartThreadAllowPSscripts()
+    /**
+     * Производит создание элементов меню: указывает имена, иконки, реализацию обработчиков.
+     * Полностью автономный метод.
+     */
+    private void initializeMenu()
     {
-        Runnable allowExecPSscripts_Runnable = () ->
-        {
-            YALtools.printDebugMessage("Поток " + Thread.currentThread().getName() + " начал исполняться.");
-            long curTime = System.currentTimeMillis();
-
-            String[] commandArr = {"powershell", "-Command", "Set-ExecutionPolicy", "RemoteSigned"};
-
-            Process proc = null;
-            try
-            {
-                proc = Runtime.getRuntime().exec(commandArr);
-                YALtools.printDebugMessage(YALtools.readInputStream(proc.getErrorStream()).toString());
-                proc.destroy();
-            }
-            catch (IOException ioExc)
-            {
-                YALtools.printDebugMessage("Возникла ошибка ввода-вывода при выполнении команды.\n" + ioExc.toString());
-            }
-
-            try
-            {
-                YALtools.printDebugMessage("AllowExecutionPowerShellScripts-InputStream: " + YALtools.readInputStream(proc.getInputStream()).toString());
-            }
-            catch (IOException ioExc)
-            {
-                YALtools.printDebugMessage("Возникла ошибка ввода-вывода при попытке чтения потока ввода процесса.\n" + ioExc.toString());
-            }
-            YALtools.printDebugMessage("Завершение работы потока " + Thread.currentThread().getName() + ". Время исполнениея: " +
-                    (System.currentTimeMillis() - curTime));
-        };
-
-        Thread allowExecPSscripts_Thread = new Thread(allowExecPSscripts_Runnable, "AllowExecutionPowerShellScripts");
-        allowExecPSscripts_Thread.start();
-    }
-
-    private Image russianFlag_Image;
-    private Image ukraineFlag_Image;
-    private Image unitedKingdom_Image;
-    private Image exit_Image;
-    private Image language_Image;
-    private Image gitHub_Image;
-    private Image startTimer_Image;
-    private Image stopTimer_Image;
-    private Image delay_Image;
-    private Image applicationIcon_Image;
-
-    private void initComponents()
-    {
-        YALtools.printDebugMessage("rem: " + rem);
-
-        timerName_textFiels = new TextField();
-        timerName_textFiels.setPromptText("Name of timer (optional)");
-        //timerName_textFiels.setMaxWidth(Double.MAX_VALUE);
-
-        HBox timerName_Box = new HBox(rem * 0.1, timerName_textFiels);
-        timerName_Box.setAlignment(Pos.CENTER);
-
-        hours_Spinner = new Spinner(0, 23, 0);
-        //hours_Spinner.setMaxWidth(10);
-        hours_Spinner.setMaxWidth(70);
-        hours_Spinner.setOnScroll(event ->
-        {
-            int increment = 1;
-
-            YALtools.printDebugMessage("getDeltaY: " + event.getDeltaY());
-
-            if (event.getDeltaY() > 10)
-            {
-                hours_Spinner.getValueFactory().setValue((int) hours_Spinner.getValue() + increment);
-            } else if (event.getDeltaY() < 0)
-            {
-                hours_Spinner.getValueFactory().setValue((int) hours_Spinner.getValue() - increment);
-            }
-        });
-
-        minutes_Spinner = new Spinner(0, 59, 0);
-        minutes_Spinner.setMaxWidth(70);
-        minutes_Spinner.setOnScroll(event ->
-        {
-            int increment = 1;
-
-            YALtools.printDebugMessage("getDeltaY: " + event.getDeltaY());
-
-            if (event.getDeltaY() > 10)
-            {
-                minutes_Spinner.getValueFactory().setValue((int) minutes_Spinner.getValue() + increment);
-            } else if (event.getDeltaY() < 0)
-            {
-                minutes_Spinner.getValueFactory().setValue((int) minutes_Spinner.getValue() - increment);
-            }
-        });
-
-        seconds_Spinner = new Spinner(1, 59, 1);
-        seconds_Spinner.setMaxWidth(70);
-        seconds_Spinner.setOnScroll(event ->
-        {
-            int increment = 1;
-
-            YALtools.printDebugMessage("getDeltaY: " + event.getDeltaY());
-
-            if (event.getDeltaY() > 10)
-            {
-                seconds_Spinner.getValueFactory().setValue((int) seconds_Spinner.getValue() + increment);
-            } else if (event.getDeltaY() < 0)
-            {
-                seconds_Spinner.getValueFactory().setValue((int) seconds_Spinner.getValue() - increment);
-            }
-        });
-
-        hours_text = new Text("Hours");
-        minutes_text = new Text("Minutes");
-        seconds_text = new Text("Seconds");
-
-        javafx.scene.layout.GridPane gp = new GridPane();
-        gp.add(hours_Spinner, 0, 0);
-        gp.add(minutes_Spinner, 1, 0);
-        gp.add(seconds_Spinner, 2, 0);
-        gp.add(hours_text, 0, 1);
-        gp.add(minutes_text, 1, 1);
-        gp.add(seconds_text, 2, 1);
-        gp.setAlignment(Pos.CENTER);
-        //gp.setGridLin
-        // esVisible(true);
-        gp.setHgap(rem * 1.1);
-
+        System.out.println(Thread.currentThread().getName());
         //--------------------------------- Меню
         menuBar = new MenuBar();
         general_menu = new Menu("General");
         language_Menu = new Menu("Language");
         timer_Menu = new Menu("Timer");
 
-        //Загружыем флаги стран
+        //Загружаем флаги стран
         try
         {
             russianFlag_Image = new Image(this.getClass().getClassLoader().getResource("Images/russia.png").openStream());
@@ -345,48 +269,59 @@ public class ATimerFX_gui extends Application
             startTimer_Image = new Image(this.getClass().getClassLoader().getResource("Images/startTimer_3.png").openStream());
             stopTimer_Image = new Image(this.getClass().getClassLoader().getResource("Images/stopTimer_3.png").openStream());
             delay_Image = new Image(this.getClass().getClassLoader().getResource("Images/delay_1.png").openStream());
-            applicationIcon_Image = new Image(this.getClass().getClassLoader().getResource("Images/timer_1.png").openStream());
 
         }
         catch (IOException ioExc)
         {
-
+            ioExc.printStackTrace();
         }
+
+        final double ICON_SIZE = 24.0D;
+
         ImageView russianFlag_ImageView = new ImageView(russianFlag_Image);
-        russianFlag_ImageView.setFitHeight(24);
-        russianFlag_ImageView.setFitWidth(24);
+        russianFlag_ImageView.setPreserveRatio(true);
+        //russianFlag_ImageView.setFitHeight(24);
+        russianFlag_ImageView.setFitWidth(ICON_SIZE);
 
         ImageView ukraineFlag_ImageView = new ImageView(ukraineFlag_Image);
-        ukraineFlag_ImageView.setFitHeight(24);
-        ukraineFlag_ImageView.setFitWidth(24);
+        ukraineFlag_ImageView.setPreserveRatio(true);
+        //ukraineFlag_ImageView.setFitHeight(24);
+        ukraineFlag_ImageView.setFitWidth(ICON_SIZE);
 
         ImageView unitedKingdom_ImageView = new ImageView(unitedKingdom_Image);
-        unitedKingdom_ImageView.setFitHeight(24);
-        unitedKingdom_ImageView.setFitWidth(24);
+        unitedKingdom_ImageView.setPreserveRatio(true);
+        //unitedKingdom_ImageView.setFitHeight(24);
+        unitedKingdom_ImageView.setFitWidth(ICON_SIZE);
 
         ImageView exit_ImageView = new ImageView(exit_Image);
-        exit_ImageView.setFitWidth(24);
-        exit_ImageView.setFitHeight(24);
+        exit_ImageView.setPreserveRatio(true);
+        exit_ImageView.setFitWidth(ICON_SIZE);
+        //exit_ImageView.setFitHeight(24);
 
         ImageView gitHub_ImageView = new ImageView(gitHub_Image);
-        gitHub_ImageView.setFitWidth(24);
-        gitHub_ImageView.setFitHeight(24);
+        gitHub_ImageView.setPreserveRatio(true);
+        gitHub_ImageView.setFitWidth(ICON_SIZE);
+        //gitHub_ImageView.setFitHeight(24);
 
         ImageView language_ImageView = new ImageView(language_Image);
-        language_ImageView.setFitHeight(24);
-        language_ImageView.setFitWidth(24);
+        language_ImageView.setPreserveRatio(true);
+        //language_ImageView.setFitHeight(24);
+        language_ImageView.setFitWidth(ICON_SIZE);
 
         ImageView startTimer_ImageView = new ImageView(startTimer_Image);
-        startTimer_ImageView.setFitHeight(24);
-        startTimer_ImageView.setFitWidth(24);
+        startTimer_ImageView.setPreserveRatio(true);
+        //startTimer_ImageView.setFitHeight(24);
+        startTimer_ImageView.setFitWidth(ICON_SIZE);
 
         ImageView stopTimer_ImageView = new ImageView(stopTimer_Image);
-        stopTimer_ImageView.setFitHeight(24);
-        stopTimer_ImageView.setFitWidth(24);
+        stopTimer_ImageView.setPreserveRatio(true);
+        //stopTimer_ImageView.setFitHeight(24);
+        stopTimer_ImageView.setFitWidth(ICON_SIZE);
 
         ImageView delay_ImageView = new ImageView(delay_Image);
-        delay_ImageView.setFitHeight(24);
-        delay_ImageView.setFitWidth(24);
+        delay_ImageView.setPreserveRatio(true);
+        //delay_ImageView.setFitHeight(24);
+        delay_ImageView.setFitWidth(ICON_SIZE);
 
         startTimer_MenuItem = new MenuItem("Start Timer", startTimer_ImageView);
         startTimer_MenuItem.setOnAction(event ->
@@ -403,18 +338,14 @@ public class ATimerFX_gui extends Application
         stopTimer_MenuItem.acceleratorProperty().set(new KeyCodeCombination(KeyCode.SPACE, KeyCodeCombination.CONTROL_DOWN));
         stopTimer_MenuItem.setDisable(true);
 
-
+        //Нужен для того, чтобы благополучно разместить в одном пункте меню такие
+        //элементы как CheckBox, Spinner и Label
         delayCustomMenuItem_HBox = new HBox(rem * 0.5D);
 
         delay_CustomMenuItem = new CustomMenuItem(delayCustomMenuItem_HBox);
         //delay_CustomMenuItem.setGraphic(delay_ImageView);
-        delay_CustomMenuItem.setOnAction(event ->
-        {
-            timer_Menu.show();
-        });
 
-
-        delayBeforeAction_CheckBox = new CheckBox("Delay before action");
+        delayBeforeAction_CheckBox = new CheckBox("Delay before command execution");
         delayBeforeAction_CheckBox.setTextFill(Color.BLACK);
         delayBeforeAction_CheckBox.setGraphic(delay_ImageView);
         delayBeforeAction_CheckBox.setSelected(true);
@@ -424,23 +355,18 @@ public class ATimerFX_gui extends Application
             {
                 YALtools.printDebugMessage("Задержка включена");
                 delayCustomMenuItem_HBox.getChildren().add(delayBeforeAction_Spinner);
-
-                timer_Menu.setOnHidden(eventHidden ->
-                {
-                    timer_Menu.show();
-                });
-            } else
-            {
-                timer_Menu.setOnHidden(null);
-                delayCustomMenuItem_HBox.getChildren().remove(delayBeforeAction_Spinner);
-                timer_Menu.show();
             }
+            else
+            {
+                delayCustomMenuItem_HBox.getChildren().remove(delayBeforeAction_Spinner);
+            }
+            saveSettings();
         });
 
         delayBeforeAction_Spinner = new Spinner(1, 59, 15);
         delayBeforeAction_Spinner.setOnScroll(event ->
         {
-            timer_Menu.setOnHidden(null);
+            //timer_Menu.setOnHidden(null);
             int increment = 1;
 
             YALtools.printDebugMessage("getDeltaY: " + event.getDeltaY());
@@ -448,15 +374,16 @@ public class ATimerFX_gui extends Application
             if (event.getDeltaY() > 10)
             {
                 delayBeforeAction_Spinner.getValueFactory().setValue((int) delayBeforeAction_Spinner.getValue() + increment);
-            } else if (event.getDeltaY() < 0)
+            }
+            else if (event.getDeltaY() < 0)
             {
                 delayBeforeAction_Spinner.getValueFactory().setValue((int) delayBeforeAction_Spinner.getValue() - increment);
             }
         });
-        delayBeforeAction_Spinner.getValueFactory().valueProperty().addListener(event ->
-        {
-            timer_Menu.setOnHidden(null);
-        });
+//        delayBeforeAction_Spinner.getValueFactory().valueProperty().addListener(event ->
+//        {
+//            timer_Menu.setOnHidden(null);
+//        });
         delayBeforeAction_Spinner.setMinWidth(rem * 1.2D);
         delayBeforeAction_Spinner.setPrefWidth(rem * 4.0D);
 
@@ -514,9 +441,117 @@ public class ATimerFX_gui extends Application
         timer_Menu.getItems().addAll(startTimer_MenuItem, stopTimer_MenuItem, new SeparatorMenuItem(), delay_CustomMenuItem);
 
         menuBar.getMenus().addAll(general_menu, timer_Menu);
+    }
+
+    private Image russianFlag_Image;
+    private Image ukraineFlag_Image;
+    private Image unitedKingdom_Image;
+    private Image exit_Image;
+    private Image language_Image;
+    private Image gitHub_Image;
+    private Image startTimer_Image;
+    private Image stopTimer_Image;
+    private Image delay_Image;
+    private Image applicationIcon_Image;
+
+    private void initComponents()
+    {
+        YALtools.printDebugMessage("rem: " + rem);
+
+        timerName_textFiels = new TextField();
+        timerName_textFiels.setPromptText("Name of timer (optional)");
+        //timerName_textFiels.setPrefWidth(5000.D);
+
+        HBox timerName_Box = new HBox(rem * 0.1, timerName_textFiels);
+        timerName_Box.setAlignment(Pos.CENTER);
+        HBox.setHgrow(timerName_textFiels, Priority.ALWAYS);
+
+        hours_Spinner = new Spinner(0, 23, 0);
+        //hours_Spinner.setMaxWidth(10);
+        hours_Spinner.setMaxWidth(70);
+        hours_Spinner.setOnScroll(event ->
+        {
+            int increment = 1;
+
+            YALtools.printDebugMessage("getDeltaY: " + event.getDeltaY());
+
+            if (event.getDeltaY() > 10)
+            {
+                hours_Spinner.getValueFactory().setValue((int) hours_Spinner.getValue() + increment);
+            }
+            else if (event.getDeltaY() < 0)
+            {
+                hours_Spinner.getValueFactory().setValue((int) hours_Spinner.getValue() - increment);
+            }
+        });
+
+        minutes_Spinner = new Spinner(0, 59, 0);
+        minutes_Spinner.setMaxWidth(70);
+        minutes_Spinner.setOnScroll(event ->
+        {
+            int increment = 1;
+
+            YALtools.printDebugMessage("getDeltaY: " + event.getDeltaY());
+
+            if (event.getDeltaY() > 10)
+            {
+                minutes_Spinner.getValueFactory().setValue((int) minutes_Spinner.getValue() + increment);
+            }
+            else if (event.getDeltaY() < 0)
+            {
+                minutes_Spinner.getValueFactory().setValue((int) minutes_Spinner.getValue() - increment);
+            }
+        });
+
+        seconds_Spinner = new Spinner(1, 59, 1);
+        seconds_Spinner.setMaxWidth(70);
+        seconds_Spinner.setOnScroll(event ->
+        {
+            int increment = 1;
+
+            YALtools.printDebugMessage("getDeltaY: " + event.getDeltaY());
+
+            if (event.getDeltaY() > 10)
+            {
+                seconds_Spinner.getValueFactory().setValue((int) seconds_Spinner.getValue() + increment);
+            }
+            else if (event.getDeltaY() < 0)
+            {
+                seconds_Spinner.getValueFactory().setValue((int) seconds_Spinner.getValue() - increment);
+            }
+        });
+
+        final double TIME_TEXT_OPACITY = 0.55D;
+        hours_text = new Text("Hours");
+        hours_text.setOpacity(TIME_TEXT_OPACITY);
+        minutes_text = new Text("Minutes");
+        minutes_text.setOpacity(TIME_TEXT_OPACITY);
+        seconds_text = new Text("Seconds");
+        seconds_text.setOpacity(TIME_TEXT_OPACITY);
+
+        GridPane gp = new GridPane();
+        gp.add(hours_Spinner, 0, 0);
+        gp.add(minutes_Spinner, 1, 0);
+        gp.add(seconds_Spinner, 2, 0);
+        gp.add(hours_text, 0, 1);
+        gp.add(minutes_text, 1, 1);
+        gp.add(seconds_text, 2, 1);
+        gp.setAlignment(Pos.CENTER);
+        //gp.setGridLin
+        // esVisible(true);
+        gp.setHgap(rem * 1.1);
+
+        try
+        {
+            applicationIcon_Image = new Image(this.getClass().getClassLoader().getResource("Images/timer_1.png").openStream());
+        }
+        catch (IOException ioException)
+        {
+            ioException.printStackTrace();
+        }
 
         menu_BorderPane = new BorderPane();
-        menu_BorderPane.setTop(menuBar);
+        //menu_BorderPane.setTop(menuBar);
         //=========================================
 
 //        Image img = null;
@@ -534,32 +569,41 @@ public class ATimerFX_gui extends Application
 //        //
 
         root = new VBox(rem * 1.05D, timerName_Box, gp);
-        root.setPrefSize(PREFERRED_WIDTH, PREFERRED_HEIGHT);
+        //root.setPrefSize(PREFERRED_WIDTH, PREFERRED_HEIGHT);
         root.setPadding(new Insets(rem * 1.0D));
 
         superRoot = new VBox(menu_BorderPane, root);
-
-        timerName_textFiels.setPrefWidth(root.getPrefWidth() - 15);
-
+        superRoot.setMinWidth(PREFERRED_WIDTH - 1);
+        superRoot.setMaxWidth(PREFERRED_WIDTH + 2);
 
         startTimer_button = new Button("Start");
-        startTimer_button.setPrefWidth(root.getPrefWidth() / 2);
+        startTimer_button.setPrefWidth(PREFERRED_WIDTH * 0.5D);
         startTimer_button.setOnAction(event ->
         {
             startTimer_Action(event);
         });
 
         stopTimer_button = new Button("Stop");
-        startTimer_button.setPrefWidth(root.getPrefWidth() / 2);//Здесь ошибка
+        //startTimer_button.setPrefWidth(root.getPrefWidth() / 2);//Здесь ошибка
         stopTimer_button.setDisable(true);
-        stopTimer_button.setOnAction(event ->
+//        stopTimer_button.setOnAction(event ->
+//        {
+//            stopTimerButton_Action(event);
+//        });
+        stopTimer_button.setOnMouseClicked(event ->
         {
-            stopTimerButton_Action(event);
+            if (event.getClickCount() >= 2)
+            {
+                stopTimerButton_Action(null);
+            }
+            else
+            {
+                popup.show(stopTimer_button, event.getScreenX(), event.getScreenY() + stopTimer_button.getBoundsInParent().getHeight());
+            }
         });
 
         HBox startTimer_Box = new HBox(rem * 1.0D, startTimer_button);
         startTimer_Box.setAlignment(Pos.CENTER);
-        //startTimer_Box.setPrefWidth(root.getPrefWidth()-15);
 
         //Панель с действиями после истечении времени
         shutdown_radio = new RadioButton("Shut Down");
@@ -576,6 +620,7 @@ public class ATimerFX_gui extends Application
             actionDescription = shutdownActionDescription_str;
             startTimer_button.setDisable(false);
             startTimer_MenuItem.setDisable(false);
+            scene.getWindow().sizeToScene();
         });
 
         suspend_radio = new RadioButton("Suspend the System");
@@ -592,6 +637,7 @@ public class ATimerFX_gui extends Application
             actionDescription = suspendActionDescription_str;
             startTimer_button.setDisable(false);
             startTimer_MenuItem.setDisable(false);
+            scene.getWindow().sizeToScene();
         });
 
         custom_command = new RadioButton("Custom command");
@@ -608,6 +654,7 @@ public class ATimerFX_gui extends Application
             }
             startTimer_button.setDisable(false);
             startTimer_MenuItem.setDisable(false);
+            scene.getWindow().sizeToScene();
         });
 
         reboot_radio = new RadioButton("Reboot");
@@ -624,6 +671,7 @@ public class ATimerFX_gui extends Application
             actionDescription = rebootActionDescription_str;
             startTimer_button.setDisable(false);
             startTimer_MenuItem.setDisable(false);
+            scene.getWindow().sizeToScene();
         });
 
         killProcess_RadioButton = new RadioButton("Kill Process");
@@ -670,6 +718,7 @@ public class ATimerFX_gui extends Application
             actionDescription = killProcessActionDescription_str;
             startTimer_button.setDisable(false);
             startTimer_MenuItem.setDisable(false);
+            scene.getWindow().sizeToScene();
         });
 
         killProcess_HBox = new HBox(rem * 0.7D, killProcess_RadioButton);
@@ -688,6 +737,7 @@ public class ATimerFX_gui extends Application
             actionDescription = logOutActionDescription_str;
             startTimer_button.setDisable(false);
             startTimer_MenuItem.setDisable(false);
+            scene.getWindow().sizeToScene();
         });
 
         ToggleGroup radioToggleGroup = new ToggleGroup();
@@ -711,8 +761,8 @@ public class ATimerFX_gui extends Application
                 YALtools.printDebugMessage("getBoundsInParent:" + root.getBoundsInParent().getHeight());
                 YALtools.printDebugMessage("getBoundsInLocal:" + root.getBoundsInLocal().getHeight());
                 YALtools.printDebugMessage("AllPaddings:" + (15 * root.getChildren().size()));
-                scene.getWindow().setHeight(PREFERRED_HEIGHT + ((rem * 2.1D) * radioGroup_Box.getChildren().size()));
-                stage.setMinHeight(scene.getWindow().getHeight());
+                //stage.setHeight(PREFERRED_HEIGHT + ((rem * 2.1D) * radioGroup_Box.getChildren().size()));
+                //stage.setMinHeight(scene.getWindow().getHeight());
 
                 if (!shutdown_radio.isSelected() &&
                         !reboot_radio.isSelected()
@@ -724,23 +774,33 @@ public class ATimerFX_gui extends Application
                     startTimer_button.setDisable(true);
                     startTimer_MenuItem.setDisable(true);
                 }
-            } else
+
+                //System.out.println("abra: " + root.getBoundsInParent().getHeight());
+                //stage.setHeight(stage.getHeight() + root.getBoundsInParent().getHeight());
+            }
+            else
             {
                 action = false;
                 root.getChildren().remove(radioGroup_Box);
-                scene.getWindow().setHeight(PREFERRED_HEIGHT);
-                stage.setMinHeight(PREFERRED_HEIGHT);
+                //stage.setHeight(PREFERRED_HEIGHT);
+                //stage.setMinHeight(PREFERRED_HEIGHT);
 
                 startTimer_button.setDisable(false);
                 startTimer_MenuItem.setDisable(false);
             }
+            System.out.println("Height before: " + scene.getWindow().getHeight());
+            scene.getWindow().sizeToScene();
+            System.out.println("Height after: " + scene.getWindow().getHeight());
+
+            //stage.setWidth(PREFERRED_WIDTH);
+
         });
         //===================================================
 
         root.getChildren().addAll(startTimer_Box, new Separator(), performActionAfterTimerWentOut_checkBox);
         root.setOnRotate(event ->
         {
-            timerWentOutAction(event);
+            timerWentOutAction();
         });
 
 
@@ -754,135 +814,79 @@ public class ATimerFX_gui extends Application
         YALtools.printDebugMessage("PREFERRED_HEIGHT: " + PREFERRED_HEIGHT);
     }
 
-    private void timerWentOutAction(RotateEvent event)
+    private void timerWentOutAction()
     {
-        boolean alertWasHidden = false;
-//        timer_obj.stop();
-//        timeline.stop();
-//        Alert al = new Alert(Alert.AlertType.WARNING, "Do you want to continue ?", ButtonType.YES, ButtonType.NO);
-//        al.setOnHidden(event1 ->
-//        {
-//            showAlertAfterTimerStopping(al);
-//
-//        });
-//
-//        al.show();
+        stage.setIconified(false);
+        //stage.setAlwaysOnTop(true);
 
-        //Окно с таймером на передний план
-        //Это сделано для того, чтобы после исхода времени таймера главное окно программы всегда
-        //поднималось поверх других до тех, пор, пока пользователь не кликнет в окне
-        scene.setOnMouseClicked(evetn ->
+        String message = null;
+        if (!timerName_textFiels.getText().equals(""))
         {
-            YALtools.printDebugMessage("Мышь вошла в окно");
-            stage.setAlwaysOnTop(false);
-        });
-        stage.setAlwaysOnTop(true);
-        stage.setOpacity(0.5D);
+            message = "The timer with name '" + timerName_textFiels.getText() + "' has expired.";
+        }
+        else
+        {
+            message = theTimerHasExpired_str;
+        }
 
-        //------------------------- создаем новый поток для вызова уведомления
-        Runnable notification_Runnable = () ->
-        {
-            long curTime = System.currentTimeMillis();
-            YALtools.printDebugMessage("Старт нового потока: " + Thread.currentThread().getName());
-            showNotification("Advanced TimerFX", "Timer '" + timerName_textFiels.getText() + "' went out.");
-            YALtools.printDebugMessage("Завершение потока " + Thread.currentThread().getName() + ". Время исполнения: " +
-                    (System.currentTimeMillis() - curTime));
-        };
-        Thread notification_Thread = new Thread(notification_Runnable, "Notification");
-        //=======================================================
+        showNotification(NAME_OF_PROGRAM, message);
+
 
         if (performActionAfterTimerWentOut_checkBox.isSelected())
         {
-            notification_Thread.start();
 
             if (delayBeforeAction_CheckBox.isSelected())
             {
-                int tmpDelayTime = 0;
+                stage.setOpacity(0.5D);
+
+                int tmpDelayTime = (int) delayBeforeAction_Spinner.getValue();
                 TimerAlert ta = new TimerAlert();
+                ta.initOwner(scene.getWindow());
                 ta.initModality(Modality.APPLICATION_MODAL);
                 ta.setAlwaysOnTop(true);
-                ta.setHeight(190);
-                ta.setMinHeight(190);
-                ta.setMinWidth(300);
-
-                tmpDelayTime = (int) delayBeforeAction_Spinner.getValue();
-
                 ta.start(warning_str, doYouWantToContinue_str, tmpDelayTime);
-                //ta.start(new Stage());
 
                 ta.setOnHidden(eventHidden ->
                 {
                     stage.setOpacity(1.0D);
+                    stage.setAlwaysOnTop(false);
+
                     if (ta.getResultButton().getText().equals("No"))
                     {
                         YALtools.printDebugMessage("Таймер отменен.");
-                        stopTimerButton_Action(null);
-                        return;
-                    } else
+                    }
+                    else
                     {
                         performAction();
                         YALtools.printDebugMessage("Starting: stopTimerButton_Action");
-                        stopTimerButton_Action(null);
                     }
                 });
-            } else
-            {
-                stage.setOpacity(1.0D);
-                performAction();
-                stopTimerButton_Action(null);
             }
-        } else
-        {
-            notification_Thread.start();
-
-            Alert timerWentOut_Alert = new Alert(Alert.AlertType.INFORMATION, "---", ButtonType.OK);
-            timerWentOut_Alert.initStyle(StageStyle.UTILITY);
-            timerWentOut_Alert.setHeaderText("Timer '" + timerName_textFiels.getText() + "' went out");
-            timerWentOut_Alert.setTitle("Advanced TimerFX");
-            timerWentOut_Alert.initModality(Modality.APPLICATION_MODAL);
-            timerWentOut_Alert.initOwner(stage);
-            timerWentOut_Alert.setOnHiding(eventHiding ->
+            else
             {
                 stage.setOpacity(1.0D);
-            });
-            timerWentOut_Alert.show();
-
-            stopTimerButton_Action(null);
+                stage.setAlwaysOnTop(false);
+                performAction();
+            }
         }
+
+        stopTimerButton_Action(null);
     }
 
     public boolean showNotification(final String aTitle, final String aMessage)
     {
-        String osName_str = System.getProperty("os.name");
+        notify = new Notification(aTitle, aMessage);
+        notify.setNotificationTitle(aTitle);
+        notify.setMessage(aMessage);
+        notify.setWidthPercent(0.25);
+        notify.setHeightPercent(0.1D);
+        notify.setIcon(NotificationType.INFORMATION);
+        notify.setIconSizePercent(0.5D);
+        notify.setDisplayDuration(Duration.seconds(10.0D));
+        notify.setDisappearanceAnimation(AnimationType.FADE, Duration.seconds(1.0D));
+        notify.showNotification();
 
-        if (osName_str.contains("Windows 10"))
-        {
-            showNotificationWin10();
-        } else if (osName_str.contains("Linux"))
-        {
-            Process proc = null;
-
-            try
-            {
-                String[] commandNotify = {"notify-send", "-u", "critical", aTitle, aMessage};
-                proc = Runtime.getRuntime().exec(commandNotify);
-                YALtools.printDebugMessage("Поток ошибок команды: " + YALtools.readInputStream(proc.getErrorStream()).toString());
-
-                proc.waitFor();
-                proc.destroy();
-            }
-            catch (IOException ioExc)
-            {
-                YALtools.printDebugMessage("Возникла ошибка ввода-вывода при выполнении команды уведомления Linux.\n" + ioExc.toString());
-                return false;
-            }
-            catch (InterruptedException interExc)
-            {
-                YALtools.printDebugMessage("Возникла ошибка InterrruptedExc.\n" + interExc.toString());
-                return false;
-            }
-        }
-
+        // new Notification("Advanced TimerFX", "Time is up").showNotification();
         return true;
     }
 
@@ -891,7 +895,8 @@ public class ATimerFX_gui extends Application
         if (al_obj.getResult() == ButtonType.NO)
         {
 
-        } else
+        }
+        else
         {
             performAction();
         }
@@ -902,11 +907,37 @@ public class ATimerFX_gui extends Application
         //scene.setRoot(root);
     }
 
+    //Нужен только для того, чтобы разместить меню строго вверху при помощи BorderPane
+    private VBox timerIsRunning_pane_superRoot;
+    private HBox stopTimer_Box;
+    private HBox timerInformation_Box;
+    private Font numbers_Font;
+    private Label timerInformation_Label;
+    private Font fontForLabels;
+    private Font fontForLabelsValues;
+    private GridPane timerInfoAppearance_GridPane;
+    private Alert processContinue_Alert;
+    private HBox secondMinutesHoursAppearance_Box;
+    private Label timerNameValue_Label;
+
+
     private void startTimer_Action(ActionEvent event)
     {
+        long startTime = System.currentTimeMillis();
+        saveSettings();
+
+        if (notify != null)
+        {
+            notify.hideNotification();
+        }
+
         if (killProcess_RadioButton.isSelected())
         {
-            Alert processContinue_Alert = new Alert(Alert.AlertType.WARNING, "", ButtonType.YES, ButtonType.NO);
+            if (processContinue_Alert == null)
+            {
+                processContinue_Alert = new Alert(Alert.AlertType.WARNING, "", ButtonType.YES, ButtonType.NO);
+            }
+
             if (getProcessName(Integer.parseInt(processID_TextField.getText())).equals(""))
             {
                 scene.getWindow().setOpacity(0.5D);
@@ -918,7 +949,8 @@ public class ATimerFX_gui extends Application
                 processContinue_Alert.showAndWait();
                 scene.getWindow().setOpacity(1.0D);
                 return;
-            } else
+            }
+            else
             {
                 actionDescription = killProcessActionDescription_str + processID_TextField.getText() + " - " + processName_str;
                 processContinue_Alert.setContentText(process_str + " [" + processID_TextField.getText() + "] " + processName_str + ". " + doYouWantToContinue_str);
@@ -950,169 +982,264 @@ public class ATimerFX_gui extends Application
         startTimer_MenuItem.setDisable(true);
         exit_menuItem.setDisable(true);
 
-        //Собственно, наш основной таймер
         timer_obj = new Timeline(new KeyFrame(Duration.seconds(timerTimeInSeconds), ev ->
         {
             YALtools.printDebugMessage("MainTimer_TimeLine was ended.");
-            timerWentOutAction(null);
-            //superRoot.fireEvent(new RotateEvent(RotateEvent.ROTATE, 0, 0, 0, 0, true, true, true, true, true, true, 0, 0, null));
+            timerWentOutAction();
         }));
         timer_obj.play();
 
-
         //Инициализация новых компонентов для отображения информации о запущенном таймере
-        VBox timerIsRunning_pane_superRoot = new VBox(menuBar);
+        if (timerIsRunning_pane_superRoot == null)
+        {
+            timerIsRunning_pane_superRoot = new VBox(menu_BorderPane);
+            timerIsRunning_pane_superRoot.setMaxWidth(PREFERRED_WIDTH + 3);
+            timerIsRunning_pane_superRoot.setPrefWidth(PREFERRED_WIDTH);
+            timerIsRunning_pane_superRoot.setMinWidth(PREFERRED_WIDTH - 1);
+        }
 
-        VBox timerIsRunning_pane = new VBox(rem * 1.0D);
+        if (timerIsRunning_pane == null)
+        {
+            timerIsRunning_pane = new VBox(rem * 1.0D);
+            timerIsRunning_pane.setPadding(new Insets(rem * 1.20D));
+        }
 
         timerTime_LocalTime = LocalTime.of(timerHours, timerMinutes, timerSeconds);
 
-        hoursAppearance_Label = new Label(String.valueOf(timerHours));
-        minutesAppearance_Label = new Label(String.valueOf(timerMinutes));
-        secondsAppearance_Label = new Label(String.valueOf(timerSeconds));
-
-        Font numbers_Font = null;
-
-        try
+        if (numbers_Font == null)
         {
-            URL numbersFont_URL = this.getClass().getClassLoader().getResource("Fonts/Jersey Sharp.ttf");
-            numbers_Font = Font.loadFont(numbersFont_URL.openStream(), 36.0);
-        }
-        catch (IOException ioExc)
-        {
-            YALtools.printDebugMessage("Ошибка ввода-вывода при загрузке шрифта.\n" + ioExc.toString());
+            try
+            {
+                URL numbersFont_URL = this.getClass().getClassLoader().getResource("Fonts/Jersey Sharp.ttf");
+                numbers_Font = Font.loadFont(numbersFont_URL.openStream(), 36.0);
+            }
+            catch (IOException ioExc)
+            {
+                YALtools.printDebugMessage("Ошибка ввода-вывода при загрузке шрифта.\n" + ioExc.toString());
+            }
         }
 
-        hoursAppearance_Label.setFont(numbers_Font);
-        minutesAppearance_Label.setFont(numbers_Font);
-        secondsAppearance_Label.setFont(numbers_Font);
-        colon_Label.setFont(numbers_Font);
-        colon_Label2.setFont(numbers_Font);
-
-        HBox secondMinutesHoursAppearance_Box = new HBox(rem * 0.25D, hoursAppearance_Label, colon_Label, minutesAppearance_Label, colon_Label2, secondsAppearance_Label);
-        secondMinutesHoursAppearance_Box.setAlignment(Pos.CENTER);
-        //secondMinutesHoursAppearance_Box.getChildren().add(colon_Label);
-
-        timerIsRunning_pane_superRoot.getChildren().add(timerIsRunning_pane);
-        timerIsRunning_pane.getChildren().add(secondMinutesHoursAppearance_Box);
-
-        HBox stopTimer_Box = new HBox(stopTimer_button);
-        stopTimer_Box.setAlignment(Pos.CENTER);
-
-        Label timerInformation_Label = new Label(info_str);
-        try
+        if (hoursAppearance_Label == null)
         {
-            timerInformation_Label.setFont(YALtools.createFontFXFromResources("Fonts/Lettres_ombrees_ornees.otf", 26.0D));
-        }
-        catch (java.io.IOException ioExc)
-        {
-            YALtools.printDebugMessage("Ошибка ввода-вывода при загрузке файла шрифта.\n" + ioExc.toString());
+            hoursAppearance_Label = new Label(String.valueOf(timerHours));
+            minutesAppearance_Label = new Label(String.valueOf(timerMinutes));
+            secondsAppearance_Label = new Label(String.valueOf(timerSeconds));
+
+            hoursAppearance_Label.setFont(numbers_Font);
+            minutesAppearance_Label.setFont(numbers_Font);
+            secondsAppearance_Label.setFont(numbers_Font);
+            colon_Label.setFont(numbers_Font);
+            colon_Label2.setFont(numbers_Font);
         }
 
-        HBox timerInformation_Box = new HBox();
-
-        if (!timerName_textFiels.getText().equals("") || performActionAfterTimerWentOut_checkBox.isSelected())
+        if (secondMinutesHoursAppearance_Box == null)
         {
-            timerInformation_Box.getChildren().add(timerInformation_Label);
+            secondMinutesHoursAppearance_Box = new HBox(rem * 0.25D, hoursAppearance_Label, colon_Label, minutesAppearance_Label, colon_Label2, secondsAppearance_Label);
+            secondMinutesHoursAppearance_Box.setAlignment(Pos.CENTER);
+        }
+
+        if (stopTimer_Box == null)
+        {
+            stopTimer_Box = new HBox(stopTimer_button);
+            stopTimer_Box.setAlignment(Pos.CENTER);
+        }
+
+        if (timerInformation_Label == null)
+        {
+            timerInformation_Label = new Label(info_str);
+            try
+            {
+                timerInformation_Label.setFont(YALtools.createFontFXFromResources("Fonts/Lettres_ombrees_ornees.otf", 26.0D));
+            }
+            catch (java.io.IOException ioExc)
+            {
+                YALtools.printDebugMessage("Ошибка ввода-вывода при загрузке файла шрифта.\n" + ioExc.toString());
+            }
+        }
+
+        if (timerInformation_Box == null)
+        {
+            timerInformation_Box = new HBox(timerInformation_Label);
             timerInformation_Box.setAlignment(Pos.CENTER);
         }
 
-
-        timerIsRunning_pane.setPadding(new Insets(rem * 1.20D));
-        timerIsRunning_pane.getChildren().add(stopTimer_Box);
-        timerIsRunning_pane.getChildren().add(new Separator());
-        timerIsRunning_pane.getChildren().add(timerInformation_Box);
-
-        Font fontForLabels = null;
-        Font fontForLabelsValues = null;
-        try
+        if (fontForLabels == null)
         {
-            fontForLabels = YALtools.createFontFXFromResources("Fonts/Kingthings Petrock.ttf", 26.0D);
-            fontForLabelsValues = YALtools.createFontFXFromResources("Fonts/Quicksand_Bold.ttf", 14.0D);
-        }
-        catch (IOException ioExc)
-        {
-
+            try
+            {
+                fontForLabels = YALtools.createFontFXFromResources("Fonts/Kingthings Petrock.ttf", 26.0D);
+                fontForLabelsValues = YALtools.createFontFXFromResources("Fonts/Quicksand_Bold.ttf", 14.0D);
+            }
+            catch (IOException ioExc)
+            {
+                ioExc.printStackTrace();
+            }
         }
 
-        GridPane timerInfoAppearance_GridPane = new GridPane();
-        timerInfoAppearance_GridPane.setHgap(rem * 0.5D);
+        if (timerInfoAppearance_GridPane == null)
+        {
+            timerInfoAppearance_GridPane = new GridPane();
+            timerInfoAppearance_GridPane.setHgap(rem * 0.5D);
+        }
 
-        double heightPlus = 0;
+        if (popup == null)
+        {
+            HBox rootPopup_HBox = new HBox();
+            rootPopup_HBox.setBackground(new Background(new BackgroundFill(Color.BLANCHEDALMOND, new CornerRadii(15.0D), Insets.EMPTY)));
+            rootPopup_HBox.setPadding(new Insets(rem * 0.45D));
+            rootPopup_HBox.setBorder(new Border(new BorderStroke(Color.CHOCOLATE, BorderStrokeStyle.SOLID,
+                    new CornerRadii(15.0D), new BorderWidths(rem * 0.09D))));
 
+            Label textPopup = new Label(popup_str);
+            textPopup.setFont(Font.font(textPopup.getFont().getName(), FontWeight.BOLD, 12.0D));
+
+            rootPopup_HBox.getChildren().add(textPopup);
+
+            popup = new Popup();
+            popup.getContent().add(rootPopup_HBox);
+            popup.setAutoHide(true);
+        }
+
+
+        //Добавить элементы с названием таймера и значением названия
         if (timerName_textFiels.getText() != null &&
                 !timerName_textFiels.getText().equals(""))
         {
-            timerName_Label = new Label(timerName_str);
-            timerName_Label.setFont(fontForLabels);
+            /*Было решено обьеденить в одно условие, т.к. одно без другого
+             * существовать не должны*/
+            if (timerName_Label == null)
+            {
+                timerName_Label = new Label(timerName_str);
+                timerName_Label.setFont(fontForLabels);
 
-            Label timerNameValue_Label = new Label(timerName_textFiels.getText());
-            timerNameValue_Label.setFont(fontForLabelsValues);
-            timerNameValue_Label.setWrapText(true);
+                timerNameValue_Label = new Label(timerName_textFiels.getText());
+                timerNameValue_Label.setFont(fontForLabelsValues);
+                timerNameValue_Label.setWrapText(true);
+            }
+            timerNameValue_Label.setText(timerName_textFiels.getText());
 
             //Это делается для того, чтобы текст этого лейбла не был сокращен
             textToDefineWidth = new Text(timerName_Label.getText());
             textToDefineWidth.setFont(fontForLabels);
             YALtools.printDebugMessage("Ширина текста 'timerNameLabel:': " + textToDefineWidth.getBoundsInParent().getWidth());
             timerName_Label.setMinWidth(textToDefineWidth.getBoundsInParent().getWidth());
-            //
 
-            //HBox timerNameAppearance_Box = new HBox(10, timerName_Label, timerNameValue_Label);
-            //timerNameAppearance_Box.setAlignment(Pos.CENTER_LEFT);
-            //timerIsRunning_pane.getChildren().add(timerNameAppearance_Box);
-            timerInfoAppearance_GridPane.addRow(timerInfoAppearance_GridPane.getRowConstraints().size(), timerName_Label, timerNameValue_Label);
+            if (!timerInfoAppearance_GridPane.getChildren().contains(timerName_Label))
+            {
+                System.out.println("RowCoutn: " + timerInfoAppearance_GridPane.getRowConstraints().size());
 
-            heightPlus += rem * 6.3D;
+                timerInfoAppearance_GridPane.addRow(0, timerName_Label, timerNameValue_Label);
+                System.out.println("RowCoutn: " + timerInfoAppearance_GridPane.getRowConstraints().size());
+
+            }
         }
+        else
+        {
+            if (timerInfoAppearance_GridPane.getChildren().contains(timerName_Label))
+            {
+                timerInfoAppearance_GridPane.getChildren().removeAll(timerName_Label, timerNameValue_Label);
+            }
+        }
+
 
         if (action)
         {
-            actionInfo_Label = new Label(action_str);
-            actionInfo_Label.setFont(fontForLabels);
+            //обьеденены поскольку одно без другого существовать не должны
+            if (actionInfo_Label == null)
+            {
+                actionInfo_Label = new Label(action_str);
+                actionInfo_Label.setFont(fontForLabels);
 
+                actionValue_Label = new Label(actionDescription);
+                actionValue_Label.setFont(fontForLabelsValues);
+                actionValue_Label.setWrapText(true);
+            }
+
+            actionValue_Label.setText(actionDescription);
             //Это делается для того, чтобы текст этого лейбла не был сокращен
             textToDefineWidth = new Text(actionInfo_Label.getText());
             textToDefineWidth.setFont(fontForLabels);
             YALtools.printDebugMessage("Ширина текста 'Action:': " + textToDefineWidth.getBoundsInParent().getWidth());
             actionInfo_Label.setMinWidth(textToDefineWidth.getBoundsInParent().getWidth());
-            //
 
-            //actionInfo_Label.setMinWidth(250);
-            actionValue_Label = new Label(actionDescription);
-            actionValue_Label.setFont(fontForLabelsValues);
-            actionValue_Label.setWrapText(true);
-
-            timerInfoAppearance_GridPane.addRow(timerInfoAppearance_GridPane.getRowConstraints().size() + 1, actionInfo_Label, actionValue_Label);
-
-
-            //YALtools.printDebugMessage(String.valueOf(timerInfoAppearance_GridPane.get));
-            YALtools.printDebugMessage("actionInfo:getBoundsInParent: " + actionInfo_Label.getBoundsInParent().getWidth());
-            YALtools.printDebugMessage("actionInfo:getLayoutBounds: " + actionInfo_Label.getLayoutBounds().getWidth());
-            heightPlus += rem * 6.3D;
-//            HBox actionInfoAppearance_Box = new HBox(10, actionInfo_Label, actionValue_Label);
-//            timerIsRunning_pane.getChildren().add(actionInfoAppearance_Box);              height
-            if (timerName_textFiels.getText() != null &&
-                    !timerName_textFiels.getText().equals(""))
+            if (!timerInfoAppearance_GridPane.getChildren().contains(actionInfo_Label))
             {
-                heightPlus -= rem * 6.3D;
-                heightPlus += rem * 3.1D;
+                System.out.println("RowCoutn: " + timerInfoAppearance_GridPane.getRowConstraints().size());
+                timerInfoAppearance_GridPane.addRow(1, actionInfo_Label, actionValue_Label);
             }
+
+
             if (killProcess_RadioButton.isSelected() && !processID_TextField.getText().equals(""))
             {
                 actionValue_Label.setText(actionValue_Label.getText());
             }
         }
+        else
+        {
+            if (timerInfoAppearance_GridPane.getChildren().contains(actionInfo_Label))
+            {
+                timerInfoAppearance_GridPane.getChildren().removeAll(actionInfo_Label, actionValue_Label);
+            }
+        }
 
-        timerIsRunning_pane.getChildren().add(timerInfoAppearance_GridPane);
+
+        //Если у нас в корне только меню, добавляем остальное
+        if (!timerIsRunning_pane_superRoot.getChildren().contains(timerIsRunning_pane))
+        {
+            timerIsRunning_pane_superRoot.getChildren().add(timerIsRunning_pane);
+        }
+
+        if (!timerIsRunning_pane_superRoot.getChildren().contains(menu_BorderPane))
+        {
+            timerIsRunning_pane_superRoot.getChildren().add(0, menu_BorderPane);
+        }
+
+        if (!timerIsRunning_pane.getChildren().contains(secondMinutesHoursAppearance_Box))
+        {
+            timerIsRunning_pane.getChildren().addAll(secondMinutesHoursAppearance_Box, stopTimer_Box,
+                    new Separator());
+        }
+
+
+        //Контейнер с названием таймера добавляем если есть это самое название или действие
+        if (!timerName_textFiels.getText().equals("") || performActionAfterTimerWentOut_checkBox.isSelected())
+        {
+            if (!timerIsRunning_pane.getChildren().contains(timerInformation_Box))
+            {
+                timerIsRunning_pane.getChildren().add(timerInformation_Box);
+            }
+
+            if (!timerIsRunning_pane.getChildren().contains(timerInfoAppearance_GridPane))
+            {
+                timerIsRunning_pane.getChildren().add(timerInfoAppearance_GridPane);
+            }
+        }
+        else
+        {
+            if (timerIsRunning_pane.getChildren().contains(timerInformation_Box))
+            {
+                timerIsRunning_pane.getChildren().remove(timerInformation_Box);
+            }
+            if (timerIsRunning_pane.getChildren().contains(timerInfoAppearance_GridPane))
+            {
+                timerIsRunning_pane.getChildren().remove(timerInfoAppearance_GridPane);
+            }
+        }
+
+        hoursAppearance_Label.setText(String.valueOf(timerHours));
+        minutesAppearance_Label.setText(String.valueOf(timerMinutes));
+        secondsAppearance_Label.setText(String.valueOf(timerSeconds));
 
         superRoot.setVisible(false);
-        timerIsRunning_pane_superRoot.setVisible(true);
         scene.setRoot(timerIsRunning_pane_superRoot);
+        timerIsRunning_pane_superRoot.setVisible(true);
+        scene.getWindow().sizeToScene();
 
-        stage.setMinHeight((rem * 12.0D) + heightPlus);
-        scene.getWindow().setHeight((rem * 12.0D) + heightPlus);
+        stage.setMinHeight(scene.getWindow().getHeight() - 1);
 
         startTimerToUpdatingTimeAppearance();
+
+        System.out.println("Время после нажатия кнопки старт: " + (System.currentTimeMillis() - startTime));
     }
 
     private void performAction()
@@ -1120,17 +1247,16 @@ public class ATimerFX_gui extends Application
         boolean linux = false;
         boolean windows = false;
 
-        if (System.getProperty("os.name").indexOf("Windows") != -1)
+        if (System.getProperty("os.name").contains("Windows"))
         {
             windows = true;
-        } else if (System.getProperty("os.name").indexOf("Linux") != -1)
+        }
+        else if (System.getProperty("os.name").contains("Linux"))
         {
             linux = true;
         }
 
         StringBuilder command_strBuilder = new StringBuilder();
-
-        YALtools.printDebugMessage("OS: " + System.getProperty("os.name"));
 
         if (windows)
         {
@@ -1141,45 +1267,37 @@ public class ATimerFX_gui extends Application
                 //command_strBuilder.append("cmd /c start cmd.exe /K \"");
                 if (shutdown_radio.isSelected())
                 {
-                    command_arr = new String[6];
+                    command_arr = new String[3];
                     command_arr[0] = "cmd";
                     command_arr[1] = "/C";
-                    command_arr[2] = "start";
-                    command_arr[3] = "cmd.exe";
-                    command_arr[4] = "/C";
-                    command_arr[5] = "shutdown /p";
+                    command_arr[2] = "shutdown /p";
                     //command_strBuilder.append("shutdown /p\"");
                     //command_arr[3] = "/s /p";
-                } else if (suspend_radio.isSelected())
+                }
+                else if (suspend_radio.isSelected())
                 {
-                    command_arr = new String[6];
+                    command_arr = new String[3];
                     command_arr[0] = "cmd";
                     command_arr[1] = "/C";
-                    command_arr[2] = "start";
-                    command_arr[3] = "cmd.exe";
-                    command_arr[4] = "/C";
-                    command_arr[5] = "rundll32 powrprof.dll,SetSuspendState 0,1,0";
+                    command_arr[2] = "rundll32 powrprof.dll,SetSuspendState 0,1,0";
                     //command_arr[1] = "powrprof.dll, SetSuspendState 0,1,0";
-                } else if (custom_command.isSelected())
+                }
+                else if (custom_command.isSelected())
                 {
-                    command_arr = new String[6];
+                    command_arr = new String[3];
                     command_arr[0] = "cmd";
                     command_arr[1] = "/C";
-                    command_arr[2] = "start";
-                    command_arr[3] = "cmd.exe";
-                    command_arr[4] = "/C";
-                    command_arr[5] = customCommand_textField.getText();
-                } else if (reboot_radio.isSelected())
+                    command_arr[2] = customCommand_textField.getText();
+                }
+                else if (reboot_radio.isSelected())
                 {
-                    command_arr = new String[6];
+                    command_arr = new String[3];
                     command_arr[0] = "cmd";
                     command_arr[1] = "/C";
-                    command_arr[2] = "start";
-                    command_arr[3] = "cmd.exe";
-                    command_arr[4] = "/C";
-                    command_arr[5] = "shutdown /r /t 1 /f";
+                    command_arr[2] = "shutdown /r /t 1 /f";
                     //command_arr[6] = "/r 1 /f";
-                } else if (killProcess_RadioButton.isSelected())
+                }
+                else if (killProcess_RadioButton.isSelected())
                 {
                     command_arr = new String[4];
 
@@ -1193,7 +1311,8 @@ public class ATimerFX_gui extends Application
                         command_arr[1] = "/IM";
                         command_arr[2] = processName_str;
                     }
-                } else if (logOut_RadioButton.isSelected())
+                }
+                else if (logOut_RadioButton.isSelected())
                 {
                     command_arr = new String[1];
                     command_arr[0] = "logoff";
@@ -1208,8 +1327,8 @@ public class ATimerFX_gui extends Application
                 Process proc = null;
                 try
                 {
-                    proc = Runtime.getRuntime().exec(command_arr);
-                    proc.waitFor();
+                    proc = new ProcessBuilder(command_arr).start();
+                    //proc.waitFor();
                     YALtools.readInputStream(proc.getErrorStream());
                     proc.destroy();
                 }
@@ -1229,10 +1348,10 @@ public class ATimerFX_gui extends Application
                     ioException.printStackTrace();
                     YALtools.printDebugMessage("================================\n\n");
                 }
-                catch (InterruptedException interExc)
-                {
-                    YALtools.printDebugMessage(interExc.toString());
-                }
+//                catch (InterruptedException interExc)
+//                {
+//                    YALtools.printDebugMessage(interExc.toString());
+//                }
             }
             YALtools.printDebugMessage("Выполнение команды Wind заверешно.");
         }
@@ -1246,9 +1365,6 @@ public class ATimerFX_gui extends Application
             {
                 YALtools.printDebugMessage("Имя таймера: " + timerName_textFiels.getText());
                 String[] commandArray = null;
-                //System.out.println(com);
-                //Runtime.getRuntime().exec(com);
-
 
                 if (shutdown_radio.isSelected())
                 {
@@ -1257,34 +1373,39 @@ public class ATimerFX_gui extends Application
                     commandArray[1] = "-c";
                     commandArray[2] = "systemctl poweroff";
 
-                } else if (suspend_radio.isSelected())
+                }
+                else if (suspend_radio.isSelected())
                 {
                     commandArray = new String[3];
                     commandArray[0] = "bash";
                     commandArray[1] = "-c";
                     commandArray[2] = "systemctl suspend";
                     //command_strBuilder.append(tmpParam);
-                } else if (custom_command.isSelected())
+                }
+                else if (custom_command.isSelected())
                 {
                     commandArray = new String[3];
                     commandArray[0] = "bash";
                     commandArray[1] = "-c";
                     commandArray[2] = customCommand_textField.getText();
                     //command_strBuilder.append(customCommand_textField.getText());
-                } else if (reboot_radio.isSelected())
+                }
+                else if (reboot_radio.isSelected())
                 {
                     commandArray = new String[3];
                     commandArray[0] = "bash";
                     commandArray[1] = "-c";
                     commandArray[2] = "systemctl reboot";
                     //commandArray[2] = "firefox mail.yahoo.com & audacious /media/yaroslav/Freedom/1.\\ Audio/1996\\ Pure\\ Instinct\\ [1996\\ Japan\\ AMCE-950\\ EW]/1996\\ -\\ Pure\\ Instinct\\ (AMCE-950)/10\\ -\\ You\\ And\\ I.flac & gnome-terminal";
-                } else if (killProcess_RadioButton.isSelected())
+                }
+                else if (killProcess_RadioButton.isSelected())
                 {
                     commandArray = new String[3];
                     commandArray[0] = "kill";
                     commandArray[1] = "-9";
                     commandArray[2] = processID_TextField.getText();
-                } else if (logOut_RadioButton.isSelected())
+                }
+                else if (logOut_RadioButton.isSelected())
                 {
                     commandArray = new String[4];
                     commandArray[0] = "killall";
@@ -1306,13 +1427,10 @@ public class ATimerFX_gui extends Application
                     }
                     System.out.println("'\n");
 
-                    //Runtime.getRuntime().exec(command_strBuilder.toString().split(" "));
-                    String[] hren = {"bash", "-c", "firefox"};
-                    //Runtime.getRuntime().exec(command_strBuilder.toString());
 
-                    Process proc_1 = Runtime.getRuntime().exec(commandArray);
+                    Process proc_1 = new ProcessBuilder(commandArray).start();
                     YALtools.readInputStream(proc_1.getErrorStream());
-                    proc_1.waitFor();
+                    //proc_1.waitFor();
                     proc_1.destroy();
                 }
             }
@@ -1320,95 +1438,27 @@ public class ATimerFX_gui extends Application
             {
                 YALtools.printDebugMessage("Возникла ошибка ввода-вывода при выполнении команды: \n" + ioExc.toString());
             }
-            catch (InterruptedException iterExc)
-            {
-                YALtools.printDebugMessage(iterExc.toString());
-                return;
-            }
+//            catch (InterruptedException iterExc)
+//            {
+//                YALtools.printDebugMessage(iterExc.toString());
+//                return;
+//            }
         }
-    }
-
-    /**
-     * Для отображения уведомления используется скрипт PowerShell.
-     * Файл скрипта изначально создается в каталоге с программой а затем исполняется.
-     */
-    private void showNotificationWin10()
-    {
-        StringBuilder notificationScript_StrBuilder = new StringBuilder();
-        notificationScript_StrBuilder.append("[reflection.assembly]::loadwithpartialname(\"System.Windows.Forms\")\n");
-        notificationScript_StrBuilder.append("[reflection.assembly]::loadwithpartialname(\"System.Drawing\")\n");
-        notificationScript_StrBuilder.append("$notify = new-object system.windows.forms.notifyicon\n");
-        notificationScript_StrBuilder.append("$notify.icon = [System.Drawing.SystemIcons]::Information\n");
-        notificationScript_StrBuilder.append("$notify.visible = $true\n");
-
-        if (!timerName_textFiels.getText().equals(""))
-        {
-            notificationScript_StrBuilder.append("$notify.showballoontip(10,\"Advanced TimerFX\",\"Timer '" + timerName_textFiels.getText() + "' went out.\",[system.windows.forms.tooltipicon]::None)");
-        } else
-        {
-            notificationScript_StrBuilder.append("$notify.showballoontip(10,\"Advanced TimerFX\",\"Timer went out.\",[system.windows.forms.tooltipicon]::None)");
-        }
-
-
-        long timeBefore = System.currentTimeMillis();
-        File script_File = null;
-        try
-        {
-            script_File = new File(YALtools.getJarLocation().getParent() + "/PowShellNotify_script.ps1");
-
-            if (script_File.isFile())
-                script_File.delete();
-
-            YALtools.createTextFile(script_File, notificationScript_StrBuilder);
-        }
-        catch (URISyntaxException uriSynExc)
-        {
-
-        }
-        catch (IOException ioExc)
-        {
-            YALtools.printDebugMessage("Возникла ошибка ввода-вывода при создании файла скрипта.\n" + ioExc.toString());
-            return;
-        }
-        YALtools.printDebugMessage("Время на создание файла скрипта: " + (System.currentTimeMillis() - timeBefore));
-        timeBefore = System.currentTimeMillis();
-
-        YALtools.printDebugMessage("Путь к скрипту: " + script_File.getAbsolutePath());
-
-        timeBefore = System.currentTimeMillis();
-
-        //Исполняем скрипт
-        Process proc;
-
-        try
-        {
-            String[] commandArr = {"Powershell", "-File", script_File.getAbsolutePath()};
-            proc = Runtime.getRuntime().exec(commandArr);
-            YALtools.printDebugMessage("Исполнение скрипта уведомления-InputStream: " + YALtools.readInputStream(proc.getErrorStream()).toString());
-            proc.destroy();
-        }
-        catch (IOException ioExc)
-        {
-            YALtools.printDebugMessage("Ошибка ввода-вывода при выполнении команды исполнения скрыпты.\n " + ioExc.toString());
-            return;
-        }
-//        catch (InterruptedException interExc)
-//        {
-//            YALtools.printDebugMessage(interExc.toString());
-//        }
-        YALtools.printDebugMessage("Время на выполнение скрипта: " + (System.currentTimeMillis() - timeBefore));
     }
 
     private void startTimerToUpdatingTimeAppearance()
     {
-        timeline = new Timeline(new KeyFrame(Duration.seconds(1), ev ->
+        if (timeline == null)
         {
-            YALtools.printDebugMessage("TimeLine");
-            timerTime_LocalTime = timerTime_LocalTime.minusSeconds(1);
-            hoursAppearance_Label.setText(String.valueOf(timerTime_LocalTime.getHour()));
-            minutesAppearance_Label.setText(String.valueOf(timerTime_LocalTime.getMinute()));
-            secondsAppearance_Label.setText(String.valueOf(timerTime_LocalTime.getSecond()));
-        }));
+            timeline = new Timeline(new KeyFrame(Duration.seconds(1), ev ->
+            {
+                YALtools.printDebugMessage("TimeLine");
+                timerTime_LocalTime = timerTime_LocalTime.minusSeconds(1);
+                hoursAppearance_Label.setText(String.valueOf(timerTime_LocalTime.getHour()));
+                minutesAppearance_Label.setText(String.valueOf(timerTime_LocalTime.getMinute()));
+                secondsAppearance_Label.setText(String.valueOf(timerTime_LocalTime.getSecond()));
+            }));
+        }
         timeline.setCycleCount(timerTimeInSeconds);
         timeline.play();
     }
@@ -1424,16 +1474,22 @@ public class ATimerFX_gui extends Application
         startTimer_MenuItem.setDisable(false);
         exit_menuItem.setDisable(false);
 
-        //Сделано во избежание пропадания меню после смены корнувого узла
-        menu_BorderPane.setTop(menuBar);
-
         YALtools.printDebugMessage("Кол-во узлов superRoot после остановки: " + superRoot.getChildren().size());
 
+        timerIsRunning_pane_superRoot.setVisible(false);
         scene.setRoot(superRoot);
-
-        scene.getWindow().setHeight(PREFERRED_HEIGHT);
-        stage.setMinHeight(PREFERRED_HEIGHT);
         superRoot.setVisible(true);
+
+        /*Делается это для того, чтобы исключить ситуацию отсутствия меню при смене корневого узла сцены*/
+        if (!superRoot.getChildren().contains(menu_BorderPane))
+        {
+            superRoot.getChildren().add(0, menu_BorderPane);
+        }
+
+        scene.getWindow().sizeToScene();
+
+        stage.setMinHeight(scene.getWindow().getHeight() - 1);
+
     }
 
     public LocalTime getTimerTime()
@@ -1497,8 +1553,14 @@ public class ATimerFX_gui extends Application
             warning_str = local.get("warning_str", "Warning!");
             logOut_RadioButton.setText(local.get("logOut_RadioButton", "Log out"));
             logOutActionDescription_str = local.get("logOut_ActionDescription_str", "Log out");
-
+            popup_str = local.get("popup_str", "To stop timer click left button twice.");
             customCommand_textField.setPromptText(customCommandPromtText_str);
+            theTimerHasExpired_str = local.get("theTimerHasExpired_str", "The timer has expired.");
+
+            if (timerInformation_Label != null)
+            {
+                timerInformation_Label.setText(info_str);
+            }
 
             if (timerName_Label != null)
             {
@@ -1514,19 +1576,23 @@ public class ATimerFX_gui extends Application
                 {
                     actionDescription = rebootActionDescription_str;
                     actionValue_Label.setText(rebootActionDescription_str);
-                } else if (suspend_radio.isSelected())
+                }
+                else if (suspend_radio.isSelected())
                 {
                     actionDescription = suspendActionDescription_str;
                     actionValue_Label.setText(suspendActionDescription_str);
-                } else if (shutdown_radio.isSelected())
+                }
+                else if (shutdown_radio.isSelected())
                 {
                     actionDescription = shutdownActionDescription_str;
                     actionValue_Label.setText(shutdownActionDescription_str);
-                } else if (killProcess_RadioButton.isSelected())
+                }
+                else if (killProcess_RadioButton.isSelected())
                 {
                     actionDescription = killProcessActionDescription_str + processID_TextField.getText();
                     actionValue_Label.setText(actionDescription);
-                } else if (logOut_RadioButton.isSelected())
+                }
+                else if (logOut_RadioButton.isSelected())
                 {
                     actionDescription = logOutActionDescription_str;
                     actionValue_Label.setText(actionDescription);
@@ -1544,6 +1610,13 @@ public class ATimerFX_gui extends Application
                 hours_text.setText(local.get("hours_Text", "Hours"));
                 minutes_text.setText(local.get("minutes_Text", "Minutes"));
                 seconds_text.setText(local.get("seconds_Text", "Seconds"));
+            }
+
+            if (popup != null)
+            {
+                HBox temporary = (HBox) popup.getContent().get(0);
+                Label temporaryLabel = (Label) temporary.getChildren().get(0);
+                temporaryLabel.setText(popup_str);
             }
 
             if (hoursAppearance_Label != null)
@@ -1615,6 +1688,8 @@ public class ATimerFX_gui extends Application
 
     private void importSettings()
     {
+        long startTime = System.currentTimeMillis();
+
         Preferences pref = Preferences.userRoot().node("YALdysse/AdvancedTimerFX/Settings");
 
         try
@@ -1633,7 +1708,8 @@ public class ATimerFX_gui extends Application
             if (delayBeforeAction_CheckBox.isSelected())
             {
                 delayCustomMenuItem_HBox.getChildren().add(delayBeforeAction_Spinner);
-            } else delayCustomMenuItem_HBox.getChildren().remove(delayBeforeAction_Spinner);
+            }
+            else delayCustomMenuItem_HBox.getChildren().remove(delayBeforeAction_Spinner);
 
             pref.clear();
             pref.parent().parent().removeNode();
@@ -1654,6 +1730,7 @@ public class ATimerFX_gui extends Application
         {
             YALtools.printDebugMessage("Возникла ошибка ввода-вывода узла настроек.\n" + ioExc.toString());
         }
+        System.out.println("Settings: " + (System.currentTimeMillis() - startTime));
     }
 
     private String getProcessName(final int aPID)
@@ -1690,7 +1767,8 @@ public class ATimerFX_gui extends Application
             {
                 YALtools.printDebugMessage("Возникла ошибка ввода вывода при выкоплнении команды поиска процесса.\n" + ioExc.toString());
             }
-        } else if (System.getProperty("os.name").indexOf("Windows") != -1)
+        }
+        else if (System.getProperty("os.name").indexOf("Windows") != -1)
         {
             try
             {

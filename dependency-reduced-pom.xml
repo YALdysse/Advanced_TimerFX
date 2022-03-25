@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.YALdysse</groupId>
+  <groupId>org.yaldysse</groupId>
   <artifactId>Advanced_TimerFX</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>build 31 [pre-RC]</version>
   <build>
     <plugins>
       <plugin>
@@ -31,12 +31,7 @@
             <configuration>
               <artifactSet>
                 <includes>
-                  <include>org.openjfx:javafx</include>
-                  <include>org.openjfx:javafx-controls</include>
-                  <include>org.openjfx:javafx-base</include>
-                  <include>org.openjfx:javafx-graphics</include>
-                  <include>org.openjfx:javafx-fxml</include>
-                  <include>org.openjfx:javafx-web</include>
+                  <include>org.yaldysse:YALdysse_Tools</include>
                 </includes>
               </artifactSet>
             </configuration>
@@ -49,8 +44,44 @@
     <dependency>
       <groupId>org.openjfx</groupId>
       <artifactId>javafx</artifactId>
-      <version>11.0.2</version>
+      <version>17.0.2</version>
       <type>pom</type>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-controls</artifactId>
+      <version>17.0.2</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-base</artifactId>
+      <version>17.0.2</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-graphics</artifactId>
+      <version>17.0.2</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-fxml</artifactId>
+      <version>17.0.2</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-web</artifactId>
+      <version>17.0.2</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-media</artifactId>
+      <version>17.0.2</version>
       <scope>compile</scope>
     </dependency>
     <dependency>

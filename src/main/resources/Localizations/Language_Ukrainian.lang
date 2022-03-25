@@ -38,10 +38,12 @@
           <entry key="processNotFound_str" value="Процес не був знайдений"/>
           <entry key="process_str" value="Процес з номером"/>
           <entry key="notFound_str" value="не був знайдений"/>
-          <entry key="doYouWantToContinue_str" value="Бажаєте продовжити ?"/>
+          <entry key="doYouWantToContinue_str" value="Час таймеру сплинув. Виконати вказану операцію ?"/>
           <entry key="warning_str" value="Увага!"/>
           <entry key="logOut_RadioButton" value="Закінчити сеанс (Log out)"/>
           <entry key="logOut_ActionDescription_str" value="Завершити сеанс поточного користувача"/>
+          <entry key="popup_str" value="Щоб зупинити таймер натисніть ліву кнопку двічі."/>
+          <entry key="theTimerHasExpired_str" value="Час таймеру сплинув."/>
         </map>
       </node>
     </node>

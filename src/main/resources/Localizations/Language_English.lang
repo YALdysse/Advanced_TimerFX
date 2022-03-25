@@ -9,7 +9,7 @@
         <map>
           <entry key="startTimer_button" value="Start"/>
           <entry key="stopTimer_button" value="Stop"/>
-          <entry key="performActionAfterTimerWentOut_checkBox" value="Perform action after timer went out"/>
+          <entry key="performActionAfterTimerWentOut_checkBox" value="Execute the command when time is up"/>
           <entry key="shutdown_radio" value="Shut Down the System"/>
           <entry key="suspend_radio" value="Suspend the System"/>
           <entry key="reboot_radio" value="Reboot"/>
@@ -27,12 +27,15 @@
           <entry key="seconds_Text" value="Seconds"/>
           <entry key="TimerName_PromtText" value="Name of timer (optional)"/>
           <entry key="info_text" value="Info"/>
-          <entry key="customCommandPromtText" value="Enter here command that will be performed"/>
+          <entry key="customCommandPromtText" value="Enter here command that will be executed"/>
           <entry key="gitHubRepository_MenuItem" value="Repository on GitHub"/>
           <entry key="delayBeforeAction_CheckBox" value="Action delay"/>
           <entry key="suspendActionDescription" value="Suspend the System"/>
           <entry key="rebootActionDescription" value="Reboot the System"/>
           <entry key="shutdownActionDescription" value="Shut down the System"/>
+          <entry key="popup_str" value="To stop timer click left button twice."/>
+          <entry key="doYouWantToContinue_str" value="Time is up. Execute operation ?"/>
+          <entry key="theTimerHasExpired_str" value="The timer has expired."/>
         </map>
       </node>
     </node>

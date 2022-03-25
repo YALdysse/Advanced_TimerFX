@@ -38,10 +38,12 @@
           <entry key="processNotFound_str" value="Процесс не был найден"/>
           <entry key="process_str" value="Процесс с кодом"/>
           <entry key="notFound_str" value="не был найден"/>
-          <entry key="doYouWantToContinue_str" value="Желаете продолжить ?"/>
+          <entry key="doYouWantToContinue_str" value="Время таймера вышло. Выполнить операцию ?"/>
           <entry key="warning_str" value="Внимание!"/>
           <entry key="logOut_RadioButton" value="Завершить сеанс (Log out)"/>
           <entry key="logOut_ActionDescription_str" value="Завершить сеанс текущего пользователя"/>
+          <entry key="popup_str" value="Для остановки таймера нажмите левую кнопку дважды."/>
+          <entry key="theTimerHasExpired_str" value="Время таймера истекло."/>
         </map>
       </node>
     </node>

@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.YALdysse</groupId>
+    <groupId>org.yaldysse</groupId>
     <artifactId>Advanced_TimerFX</artifactId>
-    <version>build 23</version>
+    <version>build 31 [pre-RC]</version>
 
 
     <dependencies>
@@ -14,7 +14,7 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx</artifactId>
-            <version>11.0.2</version>
+            <version>17.0.2</version>
             <type>pom</type>
         </dependency>
 
@@ -22,35 +22,42 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>11.0.2</version>
+            <version>17.0.2</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-base -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-base</artifactId>
-            <version>11.0.2</version>
+            <version>17.0.2</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-graphics -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-graphics</artifactId>
-            <version>11.0.2</version>
+            <version>17.0.2</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-fxml -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>11.0.2</version>
+            <version>17.0.2</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-web -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-web</artifactId>
-            <version>11.0.2</version>
+            <version>17.0.2</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-media -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-media</artifactId>
+            <version>17.0.2</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-javadoc-plugin -->
@@ -67,12 +74,12 @@
             <version>3.2.4</version>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-media -->
         <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-media</artifactId>
-            <version>11.0.2</version>
+            <groupId>org.yaldysse</groupId>
+            <artifactId>YALdysse_Tools</artifactId>
+            <version>SNAPSHOT 7</version>
         </dependency>
+
 
     </dependencies>
 
@@ -92,34 +99,29 @@
                         </manifest>
                     </archive>
                 </configuration>
+
             </plugin>
 
-
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-shade-plugin</artifactId>-->
-<!--                <version>3.2.4</version>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <phase>package</phase>-->
-<!--                        <goals>-->
-<!--                            <goal>shade</goal>-->
-<!--                        </goals>-->
-<!--                        <configuration>-->
-<!--                            <artifactSet>-->
-<!--                                <includes>-->
-<!--                                    <include>org.openjfx:javafx</include>-->
-<!--                                    <include>org.openjfx:javafx-controls</include>-->
-<!--                                    <include>org.openjfx:javafx-base</include>-->
-<!--                                    <include>org.openjfx:javafx-graphics</include>-->
-<!--                                    <include>org.openjfx:javafx-fxml</include>-->
-<!--                                    <include>org.openjfx:javafx-web</include>-->
-<!--                                </includes>-->
-<!--                            </artifactSet>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.4</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <artifactSet>
+                                <includes>
+                                    <include>org.yaldysse:YALdysse_Tools</include>
+                                </includes>
+                            </artifactSet>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
        </plugins>
     </build>
 
