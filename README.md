@@ -20,7 +20,7 @@ System Requirements:
 * [Java Runtime Environment](https://java.com/en/download/manual.jsp) version 8 (or newer)
 
 
-[<img src="download.png">](https://github.com/YALdysse/Advanced_TimerFX/releases)
+***[Download](https://github.com/YALdysse/Advanced_TimerFX/releases)
 
 
 ## Building from Source
