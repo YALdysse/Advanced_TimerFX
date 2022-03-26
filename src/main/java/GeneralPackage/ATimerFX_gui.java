@@ -61,6 +61,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.LocalTime;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalField;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.InvalidPreferencesFormatException;
 import java.util.prefs.Preferences;
@@ -179,6 +181,8 @@ public class ATimerFX_gui extends Application
     private Popup popup;
     private Notification notify;
 
+    private Thread initializingTimerIsRunningComponent_Thread;
+
     public void start(Stage aStage)
     {
         long startTime = System.currentTimeMillis();
@@ -225,7 +229,7 @@ public class ATimerFX_gui extends Application
         stage.setY(locY);
 
         stage.setScene(scene);
-        stage.setTitle(NAME_OF_PROGRAM + " [build 33 Beta]");
+        stage.setTitle(NAME_OF_PROGRAM + " [build 34 Beta]");
 
         menu_BorderPane.setTop(menuBar);
 
@@ -251,6 +255,12 @@ public class ATimerFX_gui extends Application
 
         stage.show();
         System.out.println("Времени прошло: " + (System.currentTimeMillis() - startTime));
+
+        initializingTimerIsRunningComponent_Thread = new Thread(() ->
+        {
+            initializeTimerIsRunningComponents();
+        });
+        initializingTimerIsRunningComponent_Thread.start();
     }
 
     /**
@@ -1063,7 +1073,7 @@ public class ATimerFX_gui extends Application
             timerSeconds = 1;
         }
 
-        LocalTime countdownTimer = null;
+        LocalTime countdownTimer = LocalTime.of(timerHours, timerMinutes, timerSeconds);
 
         if (specifiedTimeTimer_MenuItem.isSelected())
         {
@@ -1074,20 +1084,13 @@ public class ATimerFX_gui extends Application
             countdownTimer = countdownTimer.minusMinutes(time.getMinute());
             countdownTimer = countdownTimer.minusSeconds(time.getSecond());
 
-            timerHours = countdownTimer.getHour();
-            timerMinutes = countdownTimer.getMinute();
-            timerSeconds = countdownTimer.getSecond();
+            System.out.println("counti: " + countdownTimer.get(ChronoField.SECOND_OF_DAY));
         }
 
-
-        timerTimeInSeconds = (((timerMinutes + 1) * 60) - 60) + timerSeconds;//Минуты
-        timerTimeInSeconds += (((timerHours + 1) * 3600) - 3600);//Добавляем часы
+        timerTimeInSeconds = countdownTimer.get(ChronoField.SECOND_OF_DAY);
         System.out.println(timerHours + ":" + timerMinutes + ":" + timerSeconds);
         System.out.println("Время таймера в секундах: " + timerTimeInSeconds);
 
-        long timerTime = timerTimeInSeconds * 1000;
-        System.out.println("Время таймера в миллисекундах: " + timerTime);
-        //timer_obj.schedule(timerTask_obj, timerTime);
 
         stopTimer_button.setDisable(false);
         stopTimer_MenuItem.setDisable(false);
@@ -1102,115 +1105,19 @@ public class ATimerFX_gui extends Application
         }));
         timer_obj.play();
 
-        //Инициализация новых компонентов для отображения информации о запущенном таймере
-        if (timerIsRunning_pane_superRoot == null)
-        {
-            timerIsRunning_pane_superRoot = new VBox(menu_BorderPane);
-            timerIsRunning_pane_superRoot.setMaxWidth(PREFERRED_WIDTH + 3);
-            timerIsRunning_pane_superRoot.setPrefWidth(PREFERRED_WIDTH);
-            timerIsRunning_pane_superRoot.setMinWidth(PREFERRED_WIDTH - 1);
-        }
 
-        if (timerIsRunning_pane == null)
-        {
-            timerIsRunning_pane = new VBox(rem * 1.0D);
-            timerIsRunning_pane.setPadding(new Insets(rem * 1.20D));
-        }
+        timerTime_LocalTime = countdownTimer;
 
-        timerTime_LocalTime = LocalTime.of(timerHours, timerMinutes, timerSeconds);
-
-        if (numbers_Font == null)
+        if (initializingTimerIsRunningComponent_Thread.isAlive())
         {
             try
             {
-                URL numbersFont_URL = this.getClass().getClassLoader().getResource("Fonts/Jersey Sharp.ttf");
-                numbers_Font = Font.loadFont(numbersFont_URL.openStream(), 36.0);
+                initializingTimerIsRunningComponent_Thread.join();
             }
-            catch (IOException ioExc)
+            catch (InterruptedException interruptedException)
             {
-                YALtools.printDebugMessage("Ошибка ввода-вывода при загрузке шрифта.\n" + ioExc.toString());
+                interruptedException.printStackTrace();
             }
-        }
-
-        if (hoursAppearance_Label == null)
-        {
-            hoursAppearance_Label = new Label(String.valueOf(timerHours));
-            minutesAppearance_Label = new Label(String.valueOf(timerMinutes));
-            secondsAppearance_Label = new Label(String.valueOf(timerSeconds));
-
-            hoursAppearance_Label.setFont(numbers_Font);
-            minutesAppearance_Label.setFont(numbers_Font);
-            secondsAppearance_Label.setFont(numbers_Font);
-            colon_Label.setFont(numbers_Font);
-            colon_Label2.setFont(numbers_Font);
-        }
-
-        if (secondMinutesHoursAppearance_Box == null)
-        {
-            secondMinutesHoursAppearance_Box = new HBox(rem * 0.25D, hoursAppearance_Label, colon_Label, minutesAppearance_Label, colon_Label2, secondsAppearance_Label);
-            secondMinutesHoursAppearance_Box.setAlignment(Pos.CENTER);
-        }
-
-        if (stopTimer_Box == null)
-        {
-            stopTimer_Box = new HBox(stopTimer_button);
-            stopTimer_Box.setAlignment(Pos.CENTER);
-        }
-
-        if (timerInformation_Label == null)
-        {
-            timerInformation_Label = new Label(info_str);
-            try
-            {
-                timerInformation_Label.setFont(YALtools.createFontFXFromResources("Fonts/Lettres_ombrees_ornees.otf", 26.0D));
-            }
-            catch (java.io.IOException ioExc)
-            {
-                YALtools.printDebugMessage("Ошибка ввода-вывода при загрузке файла шрифта.\n" + ioExc.toString());
-            }
-        }
-
-        if (timerInformation_Box == null)
-        {
-            timerInformation_Box = new HBox(timerInformation_Label);
-            timerInformation_Box.setAlignment(Pos.CENTER);
-        }
-
-        if (fontForLabels == null)
-        {
-            try
-            {
-                fontForLabels = YALtools.createFontFXFromResources("Fonts/Kingthings Petrock.ttf", 26.0D);
-                fontForLabelsValues = YALtools.createFontFXFromResources("Fonts/Quicksand_Bold.ttf", 14.0D);
-            }
-            catch (IOException ioExc)
-            {
-                ioExc.printStackTrace();
-            }
-        }
-
-        if (timerInfoAppearance_GridPane == null)
-        {
-            timerInfoAppearance_GridPane = new GridPane();
-            timerInfoAppearance_GridPane.setHgap(rem * 0.5D);
-        }
-
-        if (popup == null)
-        {
-            HBox rootPopup_HBox = new HBox();
-            rootPopup_HBox.setBackground(new Background(new BackgroundFill(Color.BLANCHEDALMOND, new CornerRadii(15.0D), Insets.EMPTY)));
-            rootPopup_HBox.setPadding(new Insets(rem * 0.45D));
-            rootPopup_HBox.setBorder(new Border(new BorderStroke(Color.CHOCOLATE, BorderStrokeStyle.SOLID,
-                    new CornerRadii(15.0D), new BorderWidths(rem * 0.09D))));
-
-            Label textPopup = new Label(popup_str);
-            textPopup.setFont(Font.font(textPopup.getFont().getName(), FontWeight.BOLD, 12.0D));
-
-            rootPopup_HBox.getChildren().add(textPopup);
-
-            popup = new Popup();
-            popup.getContent().add(rootPopup_HBox);
-            popup.setAutoHide(true);
         }
 
 
@@ -1353,6 +1260,122 @@ public class ATimerFX_gui extends Application
         startTimerToUpdatingTimeAppearance();
 
         System.out.println("Время после нажатия кнопки старт: " + (System.currentTimeMillis() - startTime));
+    }
+
+    /**
+     * Здесь происходит инициализация компонентов, которые отображаются после старта таймера.
+     */
+    private void initializeTimerIsRunningComponents()
+    {
+        //Инициализация новых компонентов для отображения информации о запущенном таймере
+        if (timerIsRunning_pane_superRoot == null)
+        {
+            timerIsRunning_pane_superRoot = new VBox();
+            timerIsRunning_pane_superRoot.setMaxWidth(PREFERRED_WIDTH + 3);
+            timerIsRunning_pane_superRoot.setPrefWidth(PREFERRED_WIDTH);
+            timerIsRunning_pane_superRoot.setMinWidth(PREFERRED_WIDTH - 1);
+        }
+
+        if (timerIsRunning_pane == null)
+        {
+            timerIsRunning_pane = new VBox(rem * 1.0D);
+            timerIsRunning_pane.setPadding(new Insets(rem * 1.20D));
+        }
+
+        if (numbers_Font == null)
+        {
+            try
+            {
+                URL numbersFont_URL = this.getClass().getClassLoader().getResource("Fonts/Jersey Sharp.ttf");
+                numbers_Font = Font.loadFont(numbersFont_URL.openStream(), 36.0);
+            }
+            catch (IOException ioExc)
+            {
+                YALtools.printDebugMessage("Ошибка ввода-вывода при загрузке шрифта.\n" + ioExc.toString());
+            }
+        }
+
+        if (hoursAppearance_Label == null)
+        {
+            hoursAppearance_Label = new Label();
+            minutesAppearance_Label = new Label();
+            secondsAppearance_Label = new Label();
+
+            hoursAppearance_Label.setFont(numbers_Font);
+            minutesAppearance_Label.setFont(numbers_Font);
+            secondsAppearance_Label.setFont(numbers_Font);
+            colon_Label.setFont(numbers_Font);
+            colon_Label2.setFont(numbers_Font);
+        }
+
+        if (secondMinutesHoursAppearance_Box == null)
+        {
+            secondMinutesHoursAppearance_Box = new HBox(rem * 0.25D, hoursAppearance_Label, colon_Label, minutesAppearance_Label, colon_Label2, secondsAppearance_Label);
+            secondMinutesHoursAppearance_Box.setAlignment(Pos.CENTER);
+        }
+
+        if (stopTimer_Box == null)
+        {
+            stopTimer_Box = new HBox(stopTimer_button);
+            stopTimer_Box.setAlignment(Pos.CENTER);
+        }
+
+        if (timerInformation_Label == null)
+        {
+            timerInformation_Label = new Label(info_str);
+            try
+            {
+                timerInformation_Label.setFont(YALtools.createFontFXFromResources("Fonts/Lettres_ombrees_ornees.otf", 26.0D));
+            }
+            catch (java.io.IOException ioExc)
+            {
+                YALtools.printDebugMessage("Ошибка ввода-вывода при загрузке файла шрифта.\n" + ioExc.toString());
+            }
+        }
+
+        if (timerInformation_Box == null)
+        {
+            timerInformation_Box = new HBox(timerInformation_Label);
+            timerInformation_Box.setAlignment(Pos.CENTER);
+        }
+
+        if (fontForLabels == null)
+        {
+            try
+            {
+                fontForLabels = YALtools.createFontFXFromResources("Fonts/Kingthings Petrock.ttf", 26.0D);
+                fontForLabelsValues = YALtools.createFontFXFromResources("Fonts/Quicksand_Bold.ttf", 14.0D);
+            }
+            catch (IOException ioExc)
+            {
+                ioExc.printStackTrace();
+            }
+        }
+
+        if (timerInfoAppearance_GridPane == null)
+        {
+            timerInfoAppearance_GridPane = new GridPane();
+            timerInfoAppearance_GridPane.setHgap(rem * 0.5D);
+        }
+
+        if (popup == null)
+        {
+            HBox rootPopup_HBox = new HBox();
+            rootPopup_HBox.setBackground(new Background(new BackgroundFill(Color.BLANCHEDALMOND, new CornerRadii(15.0D), Insets.EMPTY)));
+            rootPopup_HBox.setPadding(new Insets(rem * 0.45D));
+            rootPopup_HBox.setBorder(new Border(new BorderStroke(Color.CHOCOLATE, BorderStrokeStyle.SOLID,
+                    new CornerRadii(15.0D), new BorderWidths(rem * 0.09D))));
+
+            Label textPopup = new Label(popup_str);
+            textPopup.setFont(Font.font(textPopup.getFont().getName(), FontWeight.BOLD, 12.0D));
+
+            rootPopup_HBox.getChildren().add(textPopup);
+
+            popup = new Popup();
+            popup.getContent().add(rootPopup_HBox);
+            popup.setAutoHide(true);
+        }
+        System.out.println("Поток инициализации компонентов обратного отчета таймера закончился.");
     }
 
     private void performAction()
