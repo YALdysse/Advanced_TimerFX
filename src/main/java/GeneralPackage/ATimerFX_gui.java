@@ -77,6 +77,7 @@ public class ATimerFX_gui extends Application
     private Text hours_text;
     private Text minutes_text;
     private Text seconds_text;
+    private Label timerType_Label;
 
     private Button startTimer_button;
     private Button stopTimer_button;
@@ -103,6 +104,9 @@ public class ATimerFX_gui extends Application
     private MenuBar menuBar;
     private Menu general_menu;
     private Menu language_Menu;
+    private Menu timerType_Menu;
+    private RadioMenuItem countdownTimer_MenuItem;
+    private RadioMenuItem specifiedTimeTimer_MenuItem;
     private MenuItem russianLanguage_MenuItem;
     private MenuItem ukrainianLanguage_MenuItem;
     private MenuItem englishLanguage_MenuItem;
@@ -155,12 +159,17 @@ public class ATimerFX_gui extends Application
     private String logOutActionDescription_str;
     private String popup_str;
     private String theTimerHasExpired_str;
+    private String inTimerType_str;
+    private String atTimerType_str;
+    private String startButton_str;
+    private String notify_str;
 
     private Label actionInfo_Label;
     private Label actionValue_Label;
     private int locX = 0;
     private int locY = 0;
     private String currentLanguage_str = "English";
+    private GridPane gp;
 
     private static final int PREFERRED_WIDTH = (int) (rem * 19.2D);
     private static final int PREFERRED_HEIGHT = (int) (rem * 15.6D);
@@ -216,7 +225,7 @@ public class ATimerFX_gui extends Application
         stage.setY(locY);
 
         stage.setScene(scene);
-        stage.setTitle(NAME_OF_PROGRAM + " [build 31 pre-RC]");
+        stage.setTitle(NAME_OF_PROGRAM + " [build 33 Beta]");
 
         menu_BorderPane.setTop(menuBar);
 
@@ -256,6 +265,7 @@ public class ATimerFX_gui extends Application
         general_menu = new Menu("General");
         language_Menu = new Menu("Language");
         timer_Menu = new Menu("Timer");
+        timerType_Menu = new Menu("Timer type");
 
         //Загружаем флаги стран
         try
@@ -269,6 +279,7 @@ public class ATimerFX_gui extends Application
             startTimer_Image = new Image(this.getClass().getClassLoader().getResource("Images/startTimer_3.png").openStream());
             stopTimer_Image = new Image(this.getClass().getClassLoader().getResource("Images/stopTimer_3.png").openStream());
             delay_Image = new Image(this.getClass().getClassLoader().getResource("Images/delay_1.png").openStream());
+            timerType_Image = new Image(this.getClass().getClassLoader().getResource("Images/timerType.png").openStream());
 
         }
         catch (IOException ioExc)
@@ -285,43 +296,39 @@ public class ATimerFX_gui extends Application
 
         ImageView ukraineFlag_ImageView = new ImageView(ukraineFlag_Image);
         ukraineFlag_ImageView.setPreserveRatio(true);
-        //ukraineFlag_ImageView.setFitHeight(24);
         ukraineFlag_ImageView.setFitWidth(ICON_SIZE);
 
         ImageView unitedKingdom_ImageView = new ImageView(unitedKingdom_Image);
         unitedKingdom_ImageView.setPreserveRatio(true);
-        //unitedKingdom_ImageView.setFitHeight(24);
         unitedKingdom_ImageView.setFitWidth(ICON_SIZE);
 
         ImageView exit_ImageView = new ImageView(exit_Image);
         exit_ImageView.setPreserveRatio(true);
         exit_ImageView.setFitWidth(ICON_SIZE);
-        //exit_ImageView.setFitHeight(24);
 
         ImageView gitHub_ImageView = new ImageView(gitHub_Image);
         gitHub_ImageView.setPreserveRatio(true);
         gitHub_ImageView.setFitWidth(ICON_SIZE);
-        //gitHub_ImageView.setFitHeight(24);
 
         ImageView language_ImageView = new ImageView(language_Image);
         language_ImageView.setPreserveRatio(true);
-        //language_ImageView.setFitHeight(24);
         language_ImageView.setFitWidth(ICON_SIZE);
 
         ImageView startTimer_ImageView = new ImageView(startTimer_Image);
         startTimer_ImageView.setPreserveRatio(true);
-        //startTimer_ImageView.setFitHeight(24);
         startTimer_ImageView.setFitWidth(ICON_SIZE);
 
         ImageView stopTimer_ImageView = new ImageView(stopTimer_Image);
         stopTimer_ImageView.setPreserveRatio(true);
-        //stopTimer_ImageView.setFitHeight(24);
         stopTimer_ImageView.setFitWidth(ICON_SIZE);
 
         ImageView delay_ImageView = new ImageView(delay_Image);
         delay_ImageView.setPreserveRatio(true);
-        //delay_ImageView.setFitHeight(24);
         delay_ImageView.setFitWidth(ICON_SIZE);
+
+        ImageView timerType_ImageView = new ImageView(timerType_Image);
+        timerType_ImageView.setPreserveRatio(true);
+        timerType_ImageView.setFitWidth(ICON_SIZE);
 
         startTimer_MenuItem = new MenuItem("Start Timer", startTimer_ImageView);
         startTimer_MenuItem.setOnAction(event ->
@@ -433,12 +440,34 @@ public class ATimerFX_gui extends Application
             initLocalization("English");
         });
 
+        specifiedTimeTimer_MenuItem = new RadioMenuItem();
+        specifiedTimeTimer_MenuItem.setOnAction(event ->
+        {
+            countdownTimer_MenuItem.setSelected(false);
+            timerType_Label.setText(atTimerType_str);
+            startTimer_button.setText(notify_str + " " + atTimerType_str + " (" + startButton_str + ")");
+            LocalTime time = LocalTime.now();
+            hours_Spinner.getValueFactory().setValue(time.getHour());
+            minutes_Spinner.getValueFactory().setValue(time.getMinute() + 1);
+            seconds_Spinner.getValueFactory().setValue(time.getSecond());
+        });
+
+        countdownTimer_MenuItem = new RadioMenuItem();
+        countdownTimer_MenuItem.setSelected(true);
+        countdownTimer_MenuItem.setOnAction(event ->
+        {
+            specifiedTimeTimer_MenuItem.setSelected(false);
+            timerType_Label.setText(inTimerType_str);
+            startTimer_button.setText(notify_str + " " + inTimerType_str + " (" + startButton_str + ")");
+        });
 
         language_Menu.setGraphic(language_ImageView);
         //timer_Menu.setGraphic(language_ImageView);
+        timerType_Menu.setGraphic(timerType_ImageView);
+        timerType_Menu.getItems().addAll(countdownTimer_MenuItem, specifiedTimeTimer_MenuItem);
         language_Menu.getItems().addAll(russianLanguage_MenuItem, ukrainianLanguage_MenuItem, englishLanguage_MenuItem);
         general_menu.getItems().addAll(language_Menu, gitHubRepository_MenuItem, exit_menuItem);
-        timer_Menu.getItems().addAll(startTimer_MenuItem, stopTimer_MenuItem, new SeparatorMenuItem(), delay_CustomMenuItem);
+        timer_Menu.getItems().addAll(timerType_Menu, new SeparatorMenuItem(), startTimer_MenuItem, stopTimer_MenuItem, new SeparatorMenuItem(), delay_CustomMenuItem);
 
         menuBar.getMenus().addAll(general_menu, timer_Menu);
     }
@@ -453,6 +482,7 @@ public class ATimerFX_gui extends Application
     private Image stopTimer_Image;
     private Image delay_Image;
     private Image applicationIcon_Image;
+    private Image timerType_Image;
 
     private void initComponents()
     {
@@ -466,7 +496,13 @@ public class ATimerFX_gui extends Application
         timerName_Box.setAlignment(Pos.CENTER);
         HBox.setHgrow(timerName_textFiels, Priority.ALWAYS);
 
-        hours_Spinner = new Spinner(0, 23, 0);
+        timerType_Label = new Label();
+        timerType_Label.setFont(Font.font(timerType_Label.getFont().getName(), FontPosture.ITALIC,
+                timerType_Label.getFont().getSize() - 2.0D));
+        HBox timerType_HBox = new HBox(timerType_Label);
+        timerType_HBox.setAlignment(Pos.CENTER);
+
+        hours_Spinner = new Spinner(-1, 23, 0);
         //hours_Spinner.setMaxWidth(10);
         hours_Spinner.setMaxWidth(70);
         hours_Spinner.setOnScroll(event ->
@@ -484,8 +520,20 @@ public class ATimerFX_gui extends Application
                 hours_Spinner.getValueFactory().setValue((int) hours_Spinner.getValue() - increment);
             }
         });
+        hours_Spinner.valueProperty().addListener(event ->
+        {
+            if ((int) hours_Spinner.getValue() < 0)
+            {
+                hours_Spinner.getValueFactory().setValue(23);
+            }
+            if ((int) hours_Spinner.getValue() > 23)
+            {
+                hours_Spinner.getValueFactory().setValue(0);
+            }
+        });
 
-        minutes_Spinner = new Spinner(0, 59, 0);
+
+        minutes_Spinner = new Spinner(-1, 60, 0);
         minutes_Spinner.setMaxWidth(70);
         minutes_Spinner.setOnScroll(event ->
         {
@@ -501,9 +549,28 @@ public class ATimerFX_gui extends Application
             {
                 minutes_Spinner.getValueFactory().setValue((int) minutes_Spinner.getValue() - increment);
             }
+
+
+        });
+        minutes_Spinner.valueProperty().addListener(event ->
+        {
+            if ((int) minutes_Spinner.getValue() >= 60)
+            {
+                hours_Spinner.increment();
+                minutes_Spinner.getValueFactory().setValue(0);
+            }
+
+            if ((int) minutes_Spinner.getValue() < 0)
+            {
+                if ((int) hours_Spinner.getValue() != 0)
+                {
+                    hours_Spinner.decrement();
+                }
+                minutes_Spinner.getValueFactory().setValue(59);
+            }
         });
 
-        seconds_Spinner = new Spinner(1, 59, 1);
+        seconds_Spinner = new Spinner(-1, 60, 1);
         seconds_Spinner.setMaxWidth(70);
         seconds_Spinner.setOnScroll(event ->
         {
@@ -520,19 +587,43 @@ public class ATimerFX_gui extends Application
                 seconds_Spinner.getValueFactory().setValue((int) seconds_Spinner.getValue() - increment);
             }
         });
+        seconds_Spinner.getValueFactory().valueProperty().addListener(event ->
+        {
+            if ((int) seconds_Spinner.getValue() >= 60)
+            {
+                minutes_Spinner.increment();
+                seconds_Spinner.getValueFactory().setValue(0);
+            }
+            if ((int) seconds_Spinner.getValue() < 0)
+            {
+                if ((int) minutes_Spinner.getValue() != 0)
+                {
+                    minutes_Spinner.decrement();
+                }
+                else if ((int) hours_Spinner.getValue() != 0
+                        && (int) minutes_Spinner.getValue() == 0)
+                {
+                    hours_Spinner.decrement();
+                    minutes_Spinner.getValueFactory().setValue(59);
+                }
+                seconds_Spinner.getValueFactory().setValue(59);
+            }
+        });
 
         final double TIME_TEXT_OPACITY = 0.55D;
-        hours_text = new Text("Hours");
+        hours_text = new Text();
         hours_text.setOpacity(TIME_TEXT_OPACITY);
-        minutes_text = new Text("Minutes");
+        minutes_text = new Text();
         minutes_text.setOpacity(TIME_TEXT_OPACITY);
-        seconds_text = new Text("Seconds");
+        seconds_text = new Text();
         seconds_text.setOpacity(TIME_TEXT_OPACITY);
 
-        GridPane gp = new GridPane();
+        gp = new GridPane();
+        //gp.add(timerType_Label,0,0);
         gp.add(hours_Spinner, 0, 0);
         gp.add(minutes_Spinner, 1, 0);
         gp.add(seconds_Spinner, 2, 0);
+        //gp.add(new Text(), 0, 1);
         gp.add(hours_text, 0, 1);
         gp.add(minutes_text, 1, 1);
         gp.add(seconds_text, 2, 1);
@@ -576,14 +667,14 @@ public class ATimerFX_gui extends Application
         superRoot.setMinWidth(PREFERRED_WIDTH - 1);
         superRoot.setMaxWidth(PREFERRED_WIDTH + 2);
 
-        startTimer_button = new Button("Start");
+        startTimer_button = new Button();
         startTimer_button.setPrefWidth(PREFERRED_WIDTH * 0.5D);
         startTimer_button.setOnAction(event ->
         {
             startTimer_Action(event);
         });
 
-        stopTimer_button = new Button("Stop");
+        stopTimer_button = new Button();
         //startTimer_button.setPrefWidth(root.getPrefWidth() / 2);//Здесь ошибка
         stopTimer_button.setDisable(true);
 //        stopTimer_button.setOnAction(event ->
@@ -966,6 +1057,28 @@ public class ATimerFX_gui extends Application
         int timerHours = Integer.parseInt(hours_Spinner.getValue().toString());
         int timerMinutes = Integer.parseInt(minutes_Spinner.getValue().toString());
         int timerSeconds = Integer.parseInt(seconds_Spinner.getValue().toString());
+
+        if (timerHours == 0 && timerMinutes == 0 && timerSeconds == 0)
+        {
+            timerSeconds = 1;
+        }
+
+        LocalTime countdownTimer = null;
+
+        if (specifiedTimeTimer_MenuItem.isSelected())
+        {
+            LocalTime time = LocalTime.now();
+
+            LocalTime destinationTime = LocalTime.of(timerHours, timerMinutes, timerSeconds);
+            countdownTimer = destinationTime.minusHours(time.getHour());
+            countdownTimer = countdownTimer.minusMinutes(time.getMinute());
+            countdownTimer = countdownTimer.minusSeconds(time.getSecond());
+
+            timerHours = countdownTimer.getHour();
+            timerMinutes = countdownTimer.getMinute();
+            timerSeconds = countdownTimer.getSecond();
+        }
+
 
         timerTimeInSeconds = (((timerMinutes + 1) * 60) - 60) + timerSeconds;//Минуты
         timerTimeInSeconds += (((timerHours + 1) * 3600) - 3600);//Добавляем часы
@@ -1524,8 +1637,20 @@ public class ATimerFX_gui extends Application
 
             local.importPreferences(langNode_URL.openStream());
 
+            startButton_str = local.get("startTimer_button", "Start");
+            inTimerType_str = local.get("timerType_In_Label", "in");
+            atTimerType_str = local.get("timerType_At_Label", "at");
+            notify_str = local.get("notify_str", "Notify");
 
-            startTimer_button.setText(local.get("startTimer_button", "Start"));
+            if (countdownTimer_MenuItem.isSelected())
+            {
+                startTimer_button.setText(notify_str + " " + inTimerType_str + " (" + startButton_str + ")");
+            }
+            else
+            {
+                startTimer_button.setText(notify_str + " " + atTimerType_str + " (" + startButton_str + ")");
+            }
+
             stopTimer_button.setText(local.get("stopTimer_button", "Start"));
             startTimer_MenuItem.setText(local.get("startTimer_MenuItem", "Start"));
             stopTimer_MenuItem.setText(local.get("stopTimer_MenuItem", "Start"));
@@ -1534,6 +1659,9 @@ public class ATimerFX_gui extends Application
             suspend_radio.setText(local.get("suspend_radio", "Suspend the System"));
             custom_command.setText(local.get("customCommand_Label", "Custom command"));
             reboot_radio.setText(local.get("reboot_radio", "Reboot"));
+            timerType_Menu.setText(local.get("timerType_Menu", "Timer type"));
+            specifiedTimeTimer_MenuItem.setText(local.get("specifiedTime_MenuItem", "at specified time"));
+            countdownTimer_MenuItem.setText(local.get("countdownTimer_MenuItem", "in specified time"));
             timerName_textFiels.setPromptText(local.get("TimerName_PromtText", "Name of timer (optional)"));
             timerName_str = local.get("timerName_Label", "Name of timer:");
             action_str = local.get("timerAction_Label", "Action: ");
@@ -1556,6 +1684,7 @@ public class ATimerFX_gui extends Application
             popup_str = local.get("popup_str", "To stop timer click left button twice.");
             customCommand_textField.setPromptText(customCommandPromtText_str);
             theTimerHasExpired_str = local.get("theTimerHasExpired_str", "The timer has expired.");
+
 
             if (timerInformation_Label != null)
             {
@@ -1599,6 +1728,17 @@ public class ATimerFX_gui extends Application
                 }
             }
 
+//            if (timerType_Label != null)
+//            {
+//                if (specifiedTimeTimer_MenuItem.isSelected())
+//                {
+//                    timerType_Label.setText(atTimerType_str);
+//                }
+//                else
+//                {
+//                    timerType_Label.setText(inTimerType_str);
+//                }
+//            }
 
             general_menu.setText(local.get("general_menu", "General"));
             language_Menu.setText(local.get("language_Menu", "Language"));

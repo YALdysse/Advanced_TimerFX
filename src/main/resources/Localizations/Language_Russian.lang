@@ -44,6 +44,12 @@
           <entry key="logOut_ActionDescription_str" value="Завершить сеанс текущего пользователя"/>
           <entry key="popup_str" value="Для остановки таймера нажмите левую кнопку дважды."/>
           <entry key="theTimerHasExpired_str" value="Время таймера истекло."/>
+          <entry key="timerType_Menu" value="Тип таймера"/>
+          <entry key="specifiedTime_MenuItem" value="В указанное время"/>
+          <entry key="countdownTimer_MenuItem" value="Через указанное время"/>
+          <entry key="timerType_In_Label" value="через"/>
+          <entry key="timerType_At_Label" value="в"/>
+          <entry key="notify_str" value="Уведомить"/>
         </map>
       </node>
     </node>

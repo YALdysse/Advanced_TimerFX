@@ -36,6 +36,12 @@
           <entry key="popup_str" value="To stop timer click left button twice."/>
           <entry key="doYouWantToContinue_str" value="Time is up. Execute operation ?"/>
           <entry key="theTimerHasExpired_str" value="The timer has expired."/>
+          <entry key="timerType_Menu" value="Timer type"/>
+          <entry key="specifiedTime_MenuItem" value="at specified time"/>
+          <entry key="countdownTimer_MenuItem" value="in specified time"/>
+          <entry key="timerType_In_Label" value="in"/>
+          <entry key="timerType_At_Label" value="at"/>
+          <entry key="notify_str" value="Notify"/>
         </map>
       </node>
     </node>

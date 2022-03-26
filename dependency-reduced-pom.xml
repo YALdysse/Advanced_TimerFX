@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.yaldysse</groupId>
   <artifactId>Advanced_TimerFX</artifactId>
-  <version>build 31 [pre-RC]</version>
+  <version>build 33 [Beta]</version>
   <build>
     <plugins>
       <plugin>
