@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Yaroslav Lytvynov (aka YALdysse) 2021 <Yaroslav_A_Litvinov@yahoo.com>
+ * Copyright (C) Yaroslav Lytvynov (aka YALdysse) 2021-2022 <Yaroslav_A_Litvinov@yahoo.com>
  *
  * Advanced TimerFX is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -22,13 +22,10 @@ package GeneralPackage;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
+import javafx.application.HostServices;
 import javafx.event.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Cursor;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
@@ -49,7 +46,6 @@ import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import javafx.util.Duration;
 import org.yaldysse.tools.notification.AnimationType;
 import org.yaldysse.tools.notification.Notification;
@@ -62,7 +58,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.LocalTime;
 import java.time.temporal.ChronoField;
-import java.time.temporal.TemporalField;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.InvalidPreferencesFormatException;
 import java.util.prefs.Preferences;
@@ -207,10 +202,6 @@ public class ATimerFX_gui extends Application
         });
 
         stage.getIcons().add(applicationIcon_Image);
-
-        //superRoot.prefHeightProperty().bind(scene.heightProperty());
-        //superRoot.prefWidthProperty().bind(scene.widthProperty());
-
         stage.setOnCloseRequest(event ->
         {
             saveSettings();
@@ -229,7 +220,7 @@ public class ATimerFX_gui extends Application
         stage.setY(locY);
 
         stage.setScene(scene);
-        stage.setTitle(NAME_OF_PROGRAM + " [build 34 Beta]");
+        stage.setTitle(NAME_OF_PROGRAM + " [build 35 Stable]");
 
         menu_BorderPane.setTop(menuBar);
 
@@ -247,11 +238,6 @@ public class ATimerFX_gui extends Application
         initLocalization(currentLanguage_str);
 
         scene.getWindow().sizeToScene();
-        //stage.minHeightProperty().bind(scene.heightProperty().multiply(1.1D));
-        //stage.setHeight(scene.heightProperty().get());
-        //stage.setHeight(PREFERRED_HEIGHT);
-        //scene.getWindow().setWidth(PREFERRED_WIDTH);
-        //scene.getWindow().setHeight(PREFERRED_HEIGHT);
 
         stage.show();
         System.out.println("Времени прошло: " + (System.currentTimeMillis() - startTime));
@@ -418,19 +404,7 @@ public class ATimerFX_gui extends Application
         gitHubRepository_MenuItem = new MenuItem("Repository on GitHub", gitHub_ImageView);
         gitHubRepository_MenuItem.setOnAction(event ->
         {
-            YALtools.printDebugMessage("Переходим к репозиторию GitHub.");
-            try
-            {
-                Desktop.getDesktop().browse(new URI("https://github.com/YALdysse/Advanced_TimerFX"));
-            }
-            catch (URISyntaxException uriSynExc)
-            {
-                YALtools.printDebugMessage("sdk");
-            }
-            catch (IOException ioExc)
-            {
-                YALtools.printDebugMessage("Возникла ошибка ввода-вывода при переходе к репозиторию GitHub.\n" + ioExc.toString());
-            }
+            getHostServices().showDocument("https://github.com/YALdysse/Advanced_TimerFX");
         });
 
         russianLanguage_MenuItem = new MenuItem("Русский", russianFlag_ImageView);
@@ -789,6 +763,7 @@ public class ATimerFX_gui extends Application
 
             processID_TextField.setOnKeyTyped(eventTyped ->
             {
+                long startTime = System.currentTimeMillis();
                 YALtools.printDebugMessage("Character: " + eventTyped.getCharacter());
                 if (processID_TextField.getText().length() != 0)
                 {
@@ -813,6 +788,7 @@ public class ATimerFX_gui extends Application
                     processID_TextField.setText(processID_TextField.getText().substring(0, 5));
                     processID_TextField.selectRange(5, 5);
                 }
+                System.out.println("Время на валидацию: " + (System.currentTimeMillis() - startTime));
             });
             killProcess_HBox.getChildren().add(killProcess_HBox.getChildren().indexOf(killProcess_RadioButton) + 1, processID_TextField);
 
@@ -1083,8 +1059,6 @@ public class ATimerFX_gui extends Application
             countdownTimer = destinationTime.minusHours(time.getHour());
             countdownTimer = countdownTimer.minusMinutes(time.getMinute());
             countdownTimer = countdownTimer.minusSeconds(time.getSecond());
-
-            System.out.println("counti: " + countdownTimer.get(ChronoField.SECOND_OF_DAY));
         }
 
         timerTimeInSeconds = countdownTimer.get(ChronoField.SECOND_OF_DAY);
@@ -1246,9 +1220,9 @@ public class ATimerFX_gui extends Application
             }
         }
 
-        hoursAppearance_Label.setText(String.valueOf(timerHours));
-        minutesAppearance_Label.setText(String.valueOf(timerMinutes));
-        secondsAppearance_Label.setText(String.valueOf(timerSeconds));
+        hoursAppearance_Label.setText(String.valueOf(countdownTimer.getHour()));
+        minutesAppearance_Label.setText(String.valueOf(countdownTimer.getMinute()));
+        secondsAppearance_Label.setText(String.valueOf(countdownTimer.getSecond()));
 
         superRoot.setVisible(false);
         scene.setRoot(timerIsRunning_pane_superRoot);
