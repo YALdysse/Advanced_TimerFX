@@ -26,6 +26,7 @@ import javafx.application.HostServices;
 import javafx.event.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
@@ -51,13 +52,14 @@ import org.yaldysse.tools.notification.AnimationType;
 import org.yaldysse.tools.notification.Notification;
 import org.yaldysse.tools.notification.NotificationType;
 
-import java.awt.*;
 import java.io.*;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoField;
+import java.util.ArrayList;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.InvalidPreferencesFormatException;
 import java.util.prefs.Preferences;
@@ -67,9 +69,9 @@ public class ATimerFX_gui extends Application
 {
     private TextField timerName_textFiels;
 
-    private Spinner hours_Spinner;
-    private Spinner minutes_Spinner;
-    private Spinner seconds_Spinner;
+    private Spinner<Integer> hours_Spinner;
+    private Spinner<Integer> minutes_Spinner;
+    private Spinner<Integer> seconds_Spinner;
 
     private Text hours_text;
     private Text minutes_text;
@@ -108,6 +110,7 @@ public class ATimerFX_gui extends Application
     private MenuItem ukrainianLanguage_MenuItem;
     private MenuItem englishLanguage_MenuItem;
     private MenuItem gitHubRepository_MenuItem;
+    private MenuItem createTimeTemplate_MenuItem;
     private Menu timer_Menu;
     private MenuItem startTimer_MenuItem;
     private MenuItem stopTimer_MenuItem;
@@ -115,7 +118,7 @@ public class ATimerFX_gui extends Application
     //private CheckMenuItem delayBeforeAction;
     private CheckBox delayBeforeAction_CheckBox;
     private BorderPane menu_BorderPane;
-    private Spinner delayBeforeAction_Spinner;
+    private Spinner<Integer> delayBeforeAction_Spinner;
     private Label delayCustomMenuItem_Label;
     private CustomMenuItem delay_CustomMenuItem;
 
@@ -160,6 +163,8 @@ public class ATimerFX_gui extends Application
     private String atTimerType_str;
     private String startButton_str;
     private String notify_str;
+    private String timerTemplateCreated_str;
+    private String allTimerTemplatesRemoved_str;
 
     private Label actionInfo_Label;
     private Label actionValue_Label;
@@ -177,6 +182,22 @@ public class ATimerFX_gui extends Application
     private Notification notify;
 
     private Thread initializingTimerIsRunningComponent_Thread;
+    private ArrayList<TimerTemplate> timerTemplates;
+    private Menu timeTemplates_Menu;
+    private MenuItem removeAllTimeTemplates_MenuItem;
+    private ArrayList<MenuItem> timeTemplate_MenuItemsArray;
+    public final String timerTemplatesFileName = "ATfx_TimerTemplates.templates";
+    private VBox timerIsRunning_pane_superRoot;
+    private HBox stopTimer_Box;
+    private HBox timerInformation_Box;
+    private Font numbers_Font;
+    private Label timerInformation_Label;
+    private Font fontForLabels;
+    private Font fontForLabelsValues;
+    private GridPane timerInfoAppearance_GridPane;
+    private Alert processContinue_Alert;
+    private HBox secondMinutesHoursAppearance_Box;
+    private Label timerNameValue_Label;
 
     public void start(Stage aStage)
     {
@@ -220,7 +241,7 @@ public class ATimerFX_gui extends Application
         stage.setY(locY);
 
         stage.setScene(scene);
-        stage.setTitle(NAME_OF_PROGRAM + " [build 35 Stable]");
+        stage.setTitle(NAME_OF_PROGRAM + " [build 37 Stable]");
 
         menu_BorderPane.setTop(menuBar);
 
@@ -262,8 +283,10 @@ public class ATimerFX_gui extends Application
         language_Menu = new Menu("Language");
         timer_Menu = new Menu("Timer");
         timerType_Menu = new Menu("Timer type");
+        timeTemplates_Menu = new Menu("Templates");
 
-        //Загружаем флаги стран
+        timeTemplate_MenuItemsArray = new ArrayList<>();
+
         try
         {
             russianFlag_Image = new Image(this.getClass().getClassLoader().getResource("Images/russia.png").openStream());
@@ -276,7 +299,8 @@ public class ATimerFX_gui extends Application
             stopTimer_Image = new Image(this.getClass().getClassLoader().getResource("Images/stopTimer_3.png").openStream());
             delay_Image = new Image(this.getClass().getClassLoader().getResource("Images/delay_1.png").openStream());
             timerType_Image = new Image(this.getClass().getClassLoader().getResource("Images/timerType.png").openStream());
-
+            createTemplate_Image = new Image(this.getClass().getResourceAsStream("/Images/plus.png"));
+            removeAllTimeTemplates_Image = new Image(this.getClass().getResourceAsStream("/Images/eraser.png"));
         }
         catch (IOException ioExc)
         {
@@ -287,7 +311,6 @@ public class ATimerFX_gui extends Application
 
         ImageView russianFlag_ImageView = new ImageView(russianFlag_Image);
         russianFlag_ImageView.setPreserveRatio(true);
-        //russianFlag_ImageView.setFitHeight(24);
         russianFlag_ImageView.setFitWidth(ICON_SIZE);
 
         ImageView ukraineFlag_ImageView = new ImageView(ukraineFlag_Image);
@@ -326,18 +349,22 @@ public class ATimerFX_gui extends Application
         timerType_ImageView.setPreserveRatio(true);
         timerType_ImageView.setFitWidth(ICON_SIZE);
 
+        ImageView createTimeTemplate_ImageView = new ImageView(createTemplate_Image);
+        createTimeTemplate_ImageView.setPreserveRatio(true);
+        createTimeTemplate_ImageView.setFitWidth(ICON_SIZE);
+        createTimeTemplate_ImageView.setSmooth(true);
+
+        ImageView removeAllTimeTemplates_ImageView = new ImageView(removeAllTimeTemplates_Image);
+        removeAllTimeTemplates_ImageView.setPreserveRatio(true);
+        removeAllTimeTemplates_ImageView.setFitWidth(ICON_SIZE);
+        removeAllTimeTemplates_ImageView.setSmooth(true);
+
         startTimer_MenuItem = new MenuItem("Start Timer", startTimer_ImageView);
-        startTimer_MenuItem.setOnAction(event ->
-        {
-            startTimer_Action(null);
-        });
+        startTimer_MenuItem.setOnAction(this::startTimer_Action);
         startTimer_MenuItem.acceleratorProperty().set(new KeyCodeCombination(KeyCode.ENTER, KeyCodeCombination.CONTROL_DOWN));
 
         stopTimer_MenuItem = new MenuItem("Stop Timer", stopTimer_ImageView);
-        stopTimer_MenuItem.setOnAction(event ->
-        {
-            stopTimerButton_Action(null);
-        });
+        stopTimer_MenuItem.setOnAction(this::stopTimerButton_Action);
         stopTimer_MenuItem.acceleratorProperty().set(new KeyCodeCombination(KeyCode.SPACE, KeyCodeCombination.CONTROL_DOWN));
         stopTimer_MenuItem.setDisable(true);
 
@@ -352,35 +379,30 @@ public class ATimerFX_gui extends Application
         delayBeforeAction_CheckBox.setTextFill(Color.BLACK);
         delayBeforeAction_CheckBox.setGraphic(delay_ImageView);
         delayBeforeAction_CheckBox.setSelected(true);
-        delayBeforeAction_CheckBox.setOnAction(event ->
+        delayBeforeAction_CheckBox.selectedProperty().addListener(event ->
         {
             if (delayBeforeAction_CheckBox.isSelected())
             {
                 YALtools.printDebugMessage("Задержка включена");
                 delayCustomMenuItem_HBox.getChildren().add(delayBeforeAction_Spinner);
-            }
-            else
+            } else
             {
                 delayCustomMenuItem_HBox.getChildren().remove(delayBeforeAction_Spinner);
             }
             saveSettings();
         });
 
-        delayBeforeAction_Spinner = new Spinner(1, 59, 15);
+        delayBeforeAction_Spinner = new Spinner<>(1, 59, 15);
         delayBeforeAction_Spinner.setOnScroll(event ->
         {
-            //timer_Menu.setOnHidden(null);
-            int increment = 1;
-
             YALtools.printDebugMessage("getDeltaY: " + event.getDeltaY());
 
             if (event.getDeltaY() > 10)
             {
-                delayBeforeAction_Spinner.getValueFactory().setValue((int) delayBeforeAction_Spinner.getValue() + increment);
-            }
-            else if (event.getDeltaY() < 0)
+                delayBeforeAction_Spinner.increment();
+            } else if (event.getDeltaY() < 0)
             {
-                delayBeforeAction_Spinner.getValueFactory().setValue((int) delayBeforeAction_Spinner.getValue() - increment);
+                delayBeforeAction_Spinner.decrement();
             }
         });
 //        delayBeforeAction_Spinner.getValueFactory().valueProperty().addListener(event ->
@@ -409,20 +431,14 @@ public class ATimerFX_gui extends Application
 
         russianLanguage_MenuItem = new MenuItem("Русский", russianFlag_ImageView);
         russianLanguage_MenuItem.setOnAction(event ->
-        {
-            initLocalization("Russian");
-        });
+                initLocalization("Russian"));
         ukrainianLanguage_MenuItem = new MenuItem("Українська", ukraineFlag_ImageView);
         ukrainianLanguage_MenuItem.setOnAction(event ->
-        {
-            initLocalization("Ukrainian");
-        });
+                initLocalization("Ukrainian"));
 
         englishLanguage_MenuItem = new MenuItem("English", unitedKingdom_ImageView);
         englishLanguage_MenuItem.setOnAction(event ->
-        {
-            initLocalization("English");
-        });
+                initLocalization("English"));
 
         specifiedTimeTimer_MenuItem = new RadioMenuItem();
         specifiedTimeTimer_MenuItem.setOnAction(event ->
@@ -445,15 +461,24 @@ public class ATimerFX_gui extends Application
             startTimer_button.setText(notify_str + " " + inTimerType_str + " (" + startButton_str + ")");
         });
 
+        createTimeTemplate_MenuItem = new MenuItem("Create");
+        createTimeTemplate_MenuItem.setOnAction(this::createTimeTemplate_Action);
+        createTimeTemplate_MenuItem.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN));
+        createTimeTemplate_MenuItem.setGraphic(createTimeTemplate_ImageView);
+
+        removeAllTimeTemplates_MenuItem = new MenuItem("Remove All");
+        removeAllTimeTemplates_MenuItem.setOnAction(this::removeAllTimeTemplates_Action);
+        removeAllTimeTemplates_MenuItem.setAccelerator(new KeyCodeCombination(KeyCode.J, KeyCombination.CONTROL_DOWN));
+        removeAllTimeTemplates_MenuItem.setGraphic(removeAllTimeTemplates_ImageView);
+
         language_Menu.setGraphic(language_ImageView);
-        //timer_Menu.setGraphic(language_ImageView);
         timerType_Menu.setGraphic(timerType_ImageView);
         timerType_Menu.getItems().addAll(countdownTimer_MenuItem, specifiedTimeTimer_MenuItem);
         language_Menu.getItems().addAll(russianLanguage_MenuItem, ukrainianLanguage_MenuItem, englishLanguage_MenuItem);
         general_menu.getItems().addAll(language_Menu, gitHubRepository_MenuItem, exit_menuItem);
         timer_Menu.getItems().addAll(timerType_Menu, new SeparatorMenuItem(), startTimer_MenuItem, stopTimer_MenuItem, new SeparatorMenuItem(), delay_CustomMenuItem);
-
-        menuBar.getMenus().addAll(general_menu, timer_Menu);
+        timeTemplates_Menu.getItems().addAll(createTimeTemplate_MenuItem, removeAllTimeTemplates_MenuItem, new SeparatorMenuItem());
+        menuBar.getMenus().addAll(general_menu, timer_Menu, timeTemplates_Menu);
     }
 
     private Image russianFlag_Image;
@@ -467,14 +492,17 @@ public class ATimerFX_gui extends Application
     private Image delay_Image;
     private Image applicationIcon_Image;
     private Image timerType_Image;
+    private Image createTemplate_Image;
+    private Image removeAllTimeTemplates_Image;
 
     private void initComponents()
     {
         YALtools.printDebugMessage("rem: " + rem);
 
+        timerTemplates = new ArrayList<>();
+
         timerName_textFiels = new TextField();
         timerName_textFiels.setPromptText("Name of timer (optional)");
-        //timerName_textFiels.setPrefWidth(5000.D);
 
         HBox timerName_Box = new HBox(rem * 0.1, timerName_textFiels);
         timerName_Box.setAlignment(Pos.CENTER);
@@ -486,106 +514,95 @@ public class ATimerFX_gui extends Application
         HBox timerType_HBox = new HBox(timerType_Label);
         timerType_HBox.setAlignment(Pos.CENTER);
 
-        hours_Spinner = new Spinner(-1, 23, 0);
+        hours_Spinner = new Spinner<>(-1, 23, 0);
         //hours_Spinner.setMaxWidth(10);
         hours_Spinner.setMaxWidth(70);
         hours_Spinner.setOnScroll(event ->
         {
-            int increment = 1;
-
             YALtools.printDebugMessage("getDeltaY: " + event.getDeltaY());
 
             if (event.getDeltaY() > 10)
             {
-                hours_Spinner.getValueFactory().setValue((int) hours_Spinner.getValue() + increment);
-            }
-            else if (event.getDeltaY() < 0)
+                hours_Spinner.increment();
+            } else if (event.getDeltaY() < 0)
             {
-                hours_Spinner.getValueFactory().setValue((int) hours_Spinner.getValue() - increment);
+                hours_Spinner.decrement();
             }
         });
         hours_Spinner.valueProperty().addListener(event ->
         {
-            if ((int) hours_Spinner.getValue() < 0)
+            if (hours_Spinner.getValue() < 0)
             {
                 hours_Spinner.getValueFactory().setValue(23);
             }
-            if ((int) hours_Spinner.getValue() > 23)
+            if (hours_Spinner.getValue() > 23)
             {
                 hours_Spinner.getValueFactory().setValue(0);
             }
         });
+        hours_Spinner.setEditable(true);
 
-
-        minutes_Spinner = new Spinner(-1, 60, 0);
+        minutes_Spinner = new Spinner<>(-1, 60, 0);
         minutes_Spinner.setMaxWidth(70);
         minutes_Spinner.setOnScroll(event ->
         {
-            int increment = 1;
-
             YALtools.printDebugMessage("getDeltaY: " + event.getDeltaY());
 
             if (event.getDeltaY() > 10)
             {
-                minutes_Spinner.getValueFactory().setValue((int) minutes_Spinner.getValue() + increment);
-            }
-            else if (event.getDeltaY() < 0)
+                minutes_Spinner.increment();
+            } else if (event.getDeltaY() < 0)
             {
-                minutes_Spinner.getValueFactory().setValue((int) minutes_Spinner.getValue() - increment);
+                minutes_Spinner.decrement();
             }
-
-
         });
         minutes_Spinner.valueProperty().addListener(event ->
         {
-            if ((int) minutes_Spinner.getValue() >= 60)
+            if (minutes_Spinner.getValue() >= 60)
             {
                 hours_Spinner.increment();
                 minutes_Spinner.getValueFactory().setValue(0);
             }
 
-            if ((int) minutes_Spinner.getValue() < 0)
+            if (minutes_Spinner.getValue() < 0)
             {
-                if ((int) hours_Spinner.getValue() != 0)
+                if (hours_Spinner.getValue() != 0)
                 {
                     hours_Spinner.decrement();
                 }
                 minutes_Spinner.getValueFactory().setValue(59);
             }
         });
+        minutes_Spinner.setEditable(true);
 
-        seconds_Spinner = new Spinner(-1, 60, 1);
+        seconds_Spinner = new Spinner<>(-1, 60, 1);
         seconds_Spinner.setMaxWidth(70);
         seconds_Spinner.setOnScroll(event ->
         {
-            int increment = 1;
-
             YALtools.printDebugMessage("getDeltaY: " + event.getDeltaY());
 
             if (event.getDeltaY() > 10)
             {
-                seconds_Spinner.getValueFactory().setValue((int) seconds_Spinner.getValue() + increment);
-            }
-            else if (event.getDeltaY() < 0)
+                seconds_Spinner.increment();
+            } else if (event.getDeltaY() < 0)
             {
-                seconds_Spinner.getValueFactory().setValue((int) seconds_Spinner.getValue() - increment);
+                seconds_Spinner.decrement();
             }
         });
         seconds_Spinner.getValueFactory().valueProperty().addListener(event ->
         {
-            if ((int) seconds_Spinner.getValue() >= 60)
+            if (seconds_Spinner.getValue() >= 60)
             {
                 minutes_Spinner.increment();
                 seconds_Spinner.getValueFactory().setValue(0);
             }
-            if ((int) seconds_Spinner.getValue() < 0)
+            if (seconds_Spinner.getValue() < 0)
             {
-                if ((int) minutes_Spinner.getValue() != 0)
+                if (minutes_Spinner.getValue() != 0)
                 {
                     minutes_Spinner.decrement();
-                }
-                else if ((int) hours_Spinner.getValue() != 0
-                        && (int) minutes_Spinner.getValue() == 0)
+                } else if (hours_Spinner.getValue() != 0
+                        && minutes_Spinner.getValue() == 0)
                 {
                     hours_Spinner.decrement();
                     minutes_Spinner.getValueFactory().setValue(59);
@@ -593,6 +610,7 @@ public class ATimerFX_gui extends Application
                 seconds_Spinner.getValueFactory().setValue(59);
             }
         });
+        seconds_Spinner.setEditable(true);
 
         final double TIME_TEXT_OPACITY = 0.55D;
         hours_text = new Text();
@@ -612,8 +630,7 @@ public class ATimerFX_gui extends Application
         gp.add(minutes_text, 1, 1);
         gp.add(seconds_text, 2, 1);
         gp.setAlignment(Pos.CENTER);
-        //gp.setGridLin
-        // esVisible(true);
+        //gp.setGridLinesVisible(true);
         gp.setHgap(rem * 1.1);
 
         try
@@ -653,27 +670,26 @@ public class ATimerFX_gui extends Application
 
         startTimer_button = new Button();
         startTimer_button.setPrefWidth(PREFERRED_WIDTH * 0.5D);
-        startTimer_button.setOnAction(event ->
-        {
-            startTimer_Action(event);
-        });
+        startTimer_button.setOnAction(this::startTimer_Action);
 
         stopTimer_button = new Button();
         //startTimer_button.setPrefWidth(root.getPrefWidth() / 2);//Здесь ошибка
         stopTimer_button.setDisable(true);
-//        stopTimer_button.setOnAction(event ->
-//        {
-//            stopTimerButton_Action(event);
-//        });
         stopTimer_button.setOnMouseClicked(event ->
         {
             if (event.getClickCount() >= 2)
             {
                 stopTimerButton_Action(null);
-            }
-            else
+            } else
             {
                 popup.show(stopTimer_button, event.getScreenX(), event.getScreenY() + stopTimer_button.getBoundsInParent().getHeight());
+            }
+        });
+        stopTimer_button.setOnKeyPressed(event ->
+        {
+            if (event.getCode() == KeyCode.ENTER)
+            {
+                stopTimerButton_Action(null);
             }
         });
 
@@ -854,8 +870,7 @@ public class ATimerFX_gui extends Application
 
                 //System.out.println("abra: " + root.getBoundsInParent().getHeight());
                 //stage.setHeight(stage.getHeight() + root.getBoundsInParent().getHeight());
-            }
-            else
+            } else
             {
                 action = false;
                 root.getChildren().remove(radioGroup_Box);
@@ -900,8 +915,7 @@ public class ATimerFX_gui extends Application
         if (!timerName_textFiels.getText().equals(""))
         {
             message = "The timer with name '" + timerName_textFiels.getText() + "' has expired.";
-        }
-        else
+        } else
         {
             message = theTimerHasExpired_str;
         }
@@ -931,15 +945,13 @@ public class ATimerFX_gui extends Application
                     if (ta.getResultButton().getText().equals("No"))
                     {
                         YALtools.printDebugMessage("Таймер отменен.");
-                    }
-                    else
+                    } else
                     {
                         performAction();
                         YALtools.printDebugMessage("Starting: stopTimerButton_Action");
                     }
                 });
-            }
-            else
+            } else
             {
                 stage.setOpacity(1.0D);
                 stage.setAlwaysOnTop(false);
@@ -967,35 +979,8 @@ public class ATimerFX_gui extends Application
         return true;
     }
 
-    private void showAlertAfterTimerStopping(Alert al_obj)
-    {
-        if (al_obj.getResult() == ButtonType.NO)
-        {
-
-        }
-        else
-        {
-            performAction();
-        }
-
-        startTimer_button.setDisable(false);
-        YALtools.printDebugMessage("Starting: stopTimerButton_Action");
-        stopTimerButton_Action(null);
-        //scene.setRoot(root);
-    }
 
     //Нужен только для того, чтобы разместить меню строго вверху при помощи BorderPane
-    private VBox timerIsRunning_pane_superRoot;
-    private HBox stopTimer_Box;
-    private HBox timerInformation_Box;
-    private Font numbers_Font;
-    private Label timerInformation_Label;
-    private Font fontForLabels;
-    private Font fontForLabelsValues;
-    private GridPane timerInfoAppearance_GridPane;
-    private Alert processContinue_Alert;
-    private HBox secondMinutesHoursAppearance_Box;
-    private Label timerNameValue_Label;
 
 
     private void startTimer_Action(ActionEvent event)
@@ -1026,8 +1011,7 @@ public class ATimerFX_gui extends Application
                 processContinue_Alert.showAndWait();
                 scene.getWindow().setOpacity(1.0D);
                 return;
-            }
-            else
+            } else
             {
                 actionDescription = killProcessActionDescription_str + processID_TextField.getText() + " - " + processName_str;
                 processContinue_Alert.setContentText(process_str + " [" + processID_TextField.getText() + "] " + processName_str + ". " + doYouWantToContinue_str);
@@ -1071,6 +1055,7 @@ public class ATimerFX_gui extends Application
         startTimer_button.setDisable(true);
         startTimer_MenuItem.setDisable(true);
         exit_menuItem.setDisable(true);
+        timeTemplates_Menu.setDisable(true);
 
         timer_obj = new Timeline(new KeyFrame(Duration.seconds(timerTimeInSeconds), ev ->
         {
@@ -1126,8 +1111,7 @@ public class ATimerFX_gui extends Application
                 System.out.println("RowCoutn: " + timerInfoAppearance_GridPane.getRowConstraints().size());
 
             }
-        }
-        else
+        } else
         {
             if (timerInfoAppearance_GridPane.getChildren().contains(timerName_Label))
             {
@@ -1167,8 +1151,7 @@ public class ATimerFX_gui extends Application
             {
                 actionValue_Label.setText(actionValue_Label.getText());
             }
-        }
-        else
+        } else
         {
             if (timerInfoAppearance_GridPane.getChildren().contains(actionInfo_Label))
             {
@@ -1207,8 +1190,7 @@ public class ATimerFX_gui extends Application
             {
                 timerIsRunning_pane.getChildren().add(timerInfoAppearance_GridPane);
             }
-        }
-        else
+        } else
         {
             if (timerIsRunning_pane.getChildren().contains(timerInformation_Box))
             {
@@ -1265,7 +1247,7 @@ public class ATimerFX_gui extends Application
             }
             catch (IOException ioExc)
             {
-                YALtools.printDebugMessage("Ошибка ввода-вывода при загрузке шрифта.\n" + ioExc.toString());
+                YALtools.printDebugMessage("Ошибка ввода-вывода при загрузке шрифта.\n" + ioExc);
             }
         }
 
@@ -1354,17 +1336,8 @@ public class ATimerFX_gui extends Application
 
     private void performAction()
     {
-        boolean linux = false;
-        boolean windows = false;
-
-        if (System.getProperty("os.name").contains("Windows"))
-        {
-            windows = true;
-        }
-        else if (System.getProperty("os.name").contains("Linux"))
-        {
-            linux = true;
-        }
+        boolean linux = System.getProperty("os.name").contains("Windows");
+        boolean windows = System.getProperty("os.name").contains("Linux");
 
         StringBuilder command_strBuilder = new StringBuilder();
 
@@ -1383,31 +1356,27 @@ public class ATimerFX_gui extends Application
                     command_arr[2] = "shutdown /p";
                     //command_strBuilder.append("shutdown /p\"");
                     //command_arr[3] = "/s /p";
-                }
-                else if (suspend_radio.isSelected())
+                } else if (suspend_radio.isSelected())
                 {
                     command_arr = new String[3];
                     command_arr[0] = "cmd";
                     command_arr[1] = "/C";
                     command_arr[2] = "rundll32 powrprof.dll,SetSuspendState 0,1,0";
                     //command_arr[1] = "powrprof.dll, SetSuspendState 0,1,0";
-                }
-                else if (custom_command.isSelected())
+                } else if (custom_command.isSelected())
                 {
                     command_arr = new String[3];
                     command_arr[0] = "cmd";
                     command_arr[1] = "/C";
                     command_arr[2] = customCommand_textField.getText();
-                }
-                else if (reboot_radio.isSelected())
+                } else if (reboot_radio.isSelected())
                 {
                     command_arr = new String[3];
                     command_arr[0] = "cmd";
                     command_arr[1] = "/C";
                     command_arr[2] = "shutdown /r /t 1 /f";
                     //command_arr[6] = "/r 1 /f";
-                }
-                else if (killProcess_RadioButton.isSelected())
+                } else if (killProcess_RadioButton.isSelected())
                 {
                     command_arr = new String[4];
 
@@ -1421,8 +1390,7 @@ public class ATimerFX_gui extends Application
                         command_arr[1] = "/IM";
                         command_arr[2] = processName_str;
                     }
-                }
-                else if (logOut_RadioButton.isSelected())
+                } else if (logOut_RadioButton.isSelected())
                 {
                     command_arr = new String[1];
                     command_arr[0] = "logoff";
@@ -1446,14 +1414,14 @@ public class ATimerFX_gui extends Application
                 {
                     try
                     {
-                        YALtools.printDebugMessage("Поток ошибок процессае:" + YALtools.readInputStream(proc.getInputStream()).toString());
+                        YALtools.printDebugMessage("Поток ошибок процессае:" + YALtools.readInputStream(proc.getInputStream()));
 
                     }
                     catch (IOException ioExc)
                     {
                         System.exit(1);
                     }
-                    YALtools.printDebugMessage("Ошибка ввода-вывода при выполнении команды под Windows: " + ioException.toString());
+                    YALtools.printDebugMessage("Ошибка ввода-вывода при выполнении команды под Windows: " + ioException);
                     YALtools.printDebugMessage("================================");
                     ioException.printStackTrace();
                     YALtools.printDebugMessage("================================\n\n");
@@ -1463,7 +1431,7 @@ public class ATimerFX_gui extends Application
 //                    YALtools.printDebugMessage(interExc.toString());
 //                }
             }
-            YALtools.printDebugMessage("Выполнение команды Wind заверешно.");
+            YALtools.printDebugMessage("Выполнение команды Wind завершено.");
         }
 
 
@@ -1483,39 +1451,34 @@ public class ATimerFX_gui extends Application
                     commandArray[1] = "-c";
                     commandArray[2] = "systemctl poweroff";
 
-                }
-                else if (suspend_radio.isSelected())
+                } else if (suspend_radio.isSelected())
                 {
                     commandArray = new String[3];
                     commandArray[0] = "bash";
                     commandArray[1] = "-c";
                     commandArray[2] = "systemctl suspend";
                     //command_strBuilder.append(tmpParam);
-                }
-                else if (custom_command.isSelected())
+                } else if (custom_command.isSelected())
                 {
                     commandArray = new String[3];
                     commandArray[0] = "bash";
                     commandArray[1] = "-c";
                     commandArray[2] = customCommand_textField.getText();
                     //command_strBuilder.append(customCommand_textField.getText());
-                }
-                else if (reboot_radio.isSelected())
+                } else if (reboot_radio.isSelected())
                 {
                     commandArray = new String[3];
                     commandArray[0] = "bash";
                     commandArray[1] = "-c";
                     commandArray[2] = "systemctl reboot";
                     //commandArray[2] = "firefox mail.yahoo.com & audacious /media/yaroslav/Freedom/1.\\ Audio/1996\\ Pure\\ Instinct\\ [1996\\ Japan\\ AMCE-950\\ EW]/1996\\ -\\ Pure\\ Instinct\\ (AMCE-950)/10\\ -\\ You\\ And\\ I.flac & gnome-terminal";
-                }
-                else if (killProcess_RadioButton.isSelected())
+                } else if (killProcess_RadioButton.isSelected())
                 {
                     commandArray = new String[3];
                     commandArray[0] = "kill";
                     commandArray[1] = "-9";
                     commandArray[2] = processID_TextField.getText();
-                }
-                else if (logOut_RadioButton.isSelected())
+                } else if (logOut_RadioButton.isSelected())
                 {
                     commandArray = new String[4];
                     commandArray[0] = "killall";
@@ -1562,7 +1525,6 @@ public class ATimerFX_gui extends Application
         {
             timeline = new Timeline(new KeyFrame(Duration.seconds(1), ev ->
             {
-                YALtools.printDebugMessage("TimeLine");
                 timerTime_LocalTime = timerTime_LocalTime.minusSeconds(1);
                 hoursAppearance_Label.setText(String.valueOf(timerTime_LocalTime.getHour()));
                 minutesAppearance_Label.setText(String.valueOf(timerTime_LocalTime.getMinute()));
@@ -1583,6 +1545,8 @@ public class ATimerFX_gui extends Application
         startTimer_button.setDisable(false);
         startTimer_MenuItem.setDisable(false);
         exit_menuItem.setDisable(false);
+        timeTemplates_Menu.setDisable(false);
+
 
         YALtools.printDebugMessage("Кол-во узлов superRoot после остановки: " + superRoot.getChildren().size());
 
@@ -1624,7 +1588,7 @@ public class ATimerFX_gui extends Application
 
     private void initLocalization(final String aLocale)
     {
-        Preferences local = null;
+        Preferences local;
         try
         {
             local = Preferences.userRoot().node("YALdysse/AdvancedTimerFX");
@@ -1642,8 +1606,7 @@ public class ATimerFX_gui extends Application
             if (countdownTimer_MenuItem.isSelected())
             {
                 startTimer_button.setText(notify_str + " " + inTimerType_str + " (" + startButton_str + ")");
-            }
-            else
+            } else
             {
                 startTimer_button.setText(notify_str + " " + atTimerType_str + " (" + startButton_str + ")");
             }
@@ -1657,6 +1620,10 @@ public class ATimerFX_gui extends Application
             custom_command.setText(local.get("customCommand_Label", "Custom command"));
             reboot_radio.setText(local.get("reboot_radio", "Reboot"));
             timerType_Menu.setText(local.get("timerType_Menu", "Timer type"));
+            removeAllTimeTemplates_MenuItem.setText(local.get("removeAllTimeTemplates_MenuItem", "Remove All"));
+            timeTemplates_Menu.setText(local.get("timeTemplates_Menu", "Templates"));
+            createTimeTemplate_MenuItem.setText(local.get("createTimeTemplate_MenuItem", "Create"));
+
             specifiedTimeTimer_MenuItem.setText(local.get("specifiedTime_MenuItem", "at specified time"));
             countdownTimer_MenuItem.setText(local.get("countdownTimer_MenuItem", "in specified time"));
             timerName_textFiels.setPromptText(local.get("TimerName_PromtText", "Name of timer (optional)"));
@@ -1681,7 +1648,8 @@ public class ATimerFX_gui extends Application
             popup_str = local.get("popup_str", "To stop timer click left button twice.");
             customCommand_textField.setPromptText(customCommandPromtText_str);
             theTimerHasExpired_str = local.get("theTimerHasExpired_str", "The timer has expired.");
-
+            timerTemplateCreated_str = local.get("timerTemplateCreated_str", "Timer Template has been created.");
+            allTimerTemplatesRemoved_str = local.get("allTemplatesRemoved_str", "All Timer Templates have been removed.");
 
             if (timerInformation_Label != null)
             {
@@ -1702,23 +1670,19 @@ public class ATimerFX_gui extends Application
                 {
                     actionDescription = rebootActionDescription_str;
                     actionValue_Label.setText(rebootActionDescription_str);
-                }
-                else if (suspend_radio.isSelected())
+                } else if (suspend_radio.isSelected())
                 {
                     actionDescription = suspendActionDescription_str;
                     actionValue_Label.setText(suspendActionDescription_str);
-                }
-                else if (shutdown_radio.isSelected())
+                } else if (shutdown_radio.isSelected())
                 {
                     actionDescription = shutdownActionDescription_str;
                     actionValue_Label.setText(shutdownActionDescription_str);
-                }
-                else if (killProcess_RadioButton.isSelected())
+                } else if (killProcess_RadioButton.isSelected())
                 {
                     actionDescription = killProcessActionDescription_str + processID_TextField.getText();
                     actionValue_Label.setText(actionDescription);
-                }
-                else if (logOut_RadioButton.isSelected())
+                } else if (logOut_RadioButton.isSelected())
                 {
                     actionDescription = logOutActionDescription_str;
                     actionValue_Label.setText(actionDescription);
@@ -1785,6 +1749,7 @@ public class ATimerFX_gui extends Application
         //YALtools.printDebugMessage(local.absolutePath());
     }
 
+
     private void saveSettings()
     {
         Preferences pref = Preferences.userRoot().node("YALdysse/AdvancedTimerFX/Settings");
@@ -1795,6 +1760,14 @@ public class ATimerFX_gui extends Application
         pref.putBoolean("delayBeforeAction_CheckBox", delayBeforeAction_CheckBox.isSelected());
         pref.putInt("delayBeforeAction", (int) delayBeforeAction_Spinner.getValue());
 
+        try
+        {
+            exportTimerTemplatesToFile(YALtools.getJarLocation().toPath().getParent().resolve(timerTemplatesFileName));
+        }
+        catch (Exception exception)
+        {
+            exception.printStackTrace();
+        }
 
         try
         {
@@ -1811,7 +1784,7 @@ public class ATimerFX_gui extends Application
         }
         catch (BackingStoreException backStoreExc)
         {
-            YALtools.printDebugMessage("Возникла ошиба при удалении узла настроек.\n" + backStoreExc.toString());
+            YALtools.printDebugMessage("Возникла ошибка при удалении узла настроек.\n" + backStoreExc.toString());
         }
         catch (IOException ioExc)
         {
@@ -1842,11 +1815,18 @@ public class ATimerFX_gui extends Application
             delayBeforeAction_CheckBox.setSelected(pref.getBoolean("delayBeforeAction_CheckBox", true));
             delayBeforeAction_Spinner.getValueFactory().setValue(pref.getInt("delayBeforeAction", 15));
 
-            if (delayBeforeAction_CheckBox.isSelected())
+            if (delayBeforeAction_CheckBox.isSelected() &&
+                    !delayCustomMenuItem_HBox.getChildren().contains(delayBeforeAction_Spinner))
             {
                 delayCustomMenuItem_HBox.getChildren().add(delayBeforeAction_Spinner);
+            } else if (!delayBeforeAction_CheckBox.isSelected() &&
+                    delayCustomMenuItem_HBox.getChildren().contains(delayBeforeAction_Spinner))
+            {
+                delayCustomMenuItem_HBox.getChildren().remove(delayBeforeAction_Spinner);
             }
-            else delayCustomMenuItem_HBox.getChildren().remove(delayBeforeAction_Spinner);
+
+            readTimerTemplatesFromFile(YALtools.getJarLocation().toPath().getParent().resolve(timerTemplatesFileName));
+            updateTimeTemplatesMenu();
 
             pref.clear();
             pref.parent().parent().removeNode();
@@ -1857,7 +1837,7 @@ public class ATimerFX_gui extends Application
         }
         catch (BackingStoreException backStoreExc)
         {
-            YALtools.printDebugMessage("Возникла ошиба при удалении узла настроек.\n" + backStoreExc.toString());
+            YALtools.printDebugMessage("Возникла ошибка при удалении узла настроек.\n" + backStoreExc.toString());
         }
         catch (IOException ioExc)
         {
@@ -1904,8 +1884,7 @@ public class ATimerFX_gui extends Application
             {
                 YALtools.printDebugMessage("Возникла ошибка ввода вывода при выкоплнении команды поиска процесса.\n" + ioExc.toString());
             }
-        }
-        else if (System.getProperty("os.name").indexOf("Windows") != -1)
+        } else if (System.getProperty("os.name").indexOf("Windows") != -1)
         {
             try
             {
@@ -1961,5 +1940,139 @@ public class ATimerFX_gui extends Application
             }
         }
         return null;
+    }
+
+    private void createTimeTemplate_Action(ActionEvent event)
+    {
+        timerTemplates.add(new TimerTemplate(timerName_textFiels.getText(),
+                LocalTime.of(hours_Spinner.getValue(), minutes_Spinner.getValue(), seconds_Spinner.getValue()),
+                countdownTimer_MenuItem.isSelected(),
+                delayBeforeAction_CheckBox.isSelected(),
+                delayBeforeAction_Spinner.getValue()));
+
+        showAutoHideTooltip("Timer template has been created.", Duration.millis(1500),
+                timerName_textFiels);
+
+        updateTimeTemplatesMenu();
+    }
+
+    private void updateTimeTemplatesMenu()
+    {
+        timeTemplates_Menu.getItems().remove(3, timeTemplates_Menu.getItems().size());
+        for (int k = 0; k < timerTemplates.size(); k++)
+        {
+            MenuItem temporaryTemplate;
+            //if (timeTemplate_MenuItemsArray.get(k) == null)
+            if (timeTemplate_MenuItemsArray.size() < k + 1)
+            {
+                temporaryTemplate = new MenuItem(timerTemplates.get(k).getTime().format(
+                        DateTimeFormatter.ISO_TIME) + "   [" + timerTemplates.get(k).getName() + "]");
+                int finalK = k;
+                temporaryTemplate.setOnAction(event -> applyTimerTemplate(timerTemplates.get(finalK)));
+                timeTemplate_MenuItemsArray.add(temporaryTemplate);
+                temporaryTemplate.setAccelerator(KeyCodeCombination.valueOf("Alt+" + (k + 1)));
+            } else
+            {
+                temporaryTemplate = timeTemplate_MenuItemsArray.get(k);
+                temporaryTemplate.setOnAction(null);
+                int finalK1 = k;
+                temporaryTemplate.setOnAction(event -> applyTimerTemplate(timerTemplates.get(finalK1)));
+                temporaryTemplate.setText(timerTemplates.get(k).getTime().format(
+                        DateTimeFormatter.ISO_TIME) + "   [" + timerTemplates.get(k).getName() + "]");
+            }
+
+            timeTemplates_Menu.getItems().add(temporaryTemplate);
+        }
+
+    }
+
+    private void removeAllTimeTemplates_Action(ActionEvent event)
+    {
+        timerTemplates.clear();
+        showAutoHideTooltip("All Timer templates have been removed.", Duration.millis(1500),
+                timerName_textFiels);
+        updateTimeTemplatesMenu();
+    }
+
+    private void showAutoHideTooltip(final String message, Duration showDuration,
+                                     Node node)
+    {
+        Tooltip timerTemplateCreated = new Tooltip(message);
+        timerTemplateCreated.setOnShowing(event ->
+        {
+            Timeline timeline1 = new Timeline(new KeyFrame(showDuration,
+                    event2 ->
+                    {
+                        timerTemplateCreated.hide();
+                    }));
+            timeline1.play();
+        });
+        timerTemplateCreated.show(node, node.localToScreen(1, 1).getX(),
+                node.localToScreen(1, 1).getY());
+    }
+
+    private void applyTimerTemplate(TimerTemplate template)
+    {
+        timerName_textFiels.setText(template.getName());
+
+        countdownTimer_MenuItem.setSelected(template.isCountdownTimer());
+        specifiedTimeTimer_MenuItem.setSelected(!template.isCountdownTimer());
+
+        if (template.isCountdownTimer())
+        {
+            Event.fireEvent(countdownTimer_MenuItem, new ActionEvent());
+        } else
+        {
+            Event.fireEvent(specifiedTimeTimer_MenuItem, new ActionEvent());
+        }
+
+        hours_Spinner.getValueFactory().setValue(template.getTime().getHour());
+        minutes_Spinner.getValueFactory().setValue(template.getTime().getMinute());
+        seconds_Spinner.getValueFactory().setValue(template.getTime().getSecond());
+
+        delayBeforeAction_CheckBox.setSelected(template.hasActionDelay());
+        Event.fireEvent(delayBeforeAction_CheckBox, new ActionEvent());
+        delayBeforeAction_Spinner.getValueFactory().setValue((int) template.getActionDelayValue());
+
+    }
+
+    private void exportTimerTemplatesToFile(final Path targetPath)
+    {
+        System.out.println("Експорт");
+        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new BufferedOutputStream(
+                new FileOutputStream(targetPath.toFile()))))
+        {
+            for (TimerTemplate template : timerTemplates)
+            {
+                objectOutputStream.writeObject(template);
+                objectOutputStream.writeUTF("---=== D!ssect!0n ===---");
+            }
+        }
+        catch (IOException ioException)
+        {
+            ioException.printStackTrace();
+        }
+    }
+
+    private void readTimerTemplatesFromFile(final Path targetPath)
+    {
+        try (ObjectInputStream objectInputStream = new ObjectInputStream(new BufferedInputStream(
+                new FileInputStream(targetPath.toFile()))))
+        {
+            do
+            {
+                timerTemplates.add((TimerTemplate) objectInputStream.readObject());
+                System.out.println("Зчитаний розподілювач об`єктів. " + objectInputStream.readUTF());
+            }
+            while (objectInputStream.available() > 0);
+        }
+        catch (IOException ioException)
+        {
+            ioException.printStackTrace();
+        }
+        catch (ClassNotFoundException classNotFoundException)
+        {
+            classNotFoundException.printStackTrace();
+        }
     }
 }

@@ -42,6 +42,11 @@
           <entry key="timerType_In_Label" value="in"/>
           <entry key="timerType_At_Label" value="at"/>
           <entry key="notify_str" value="Notify"/>
+          <entry key="removeAllTimeTemplates_MenuItem" value="Remove All"/>
+          <entry key="timeTemplates_Menu" value="Templates"/>
+          <entry key="createTimeTemplate_MenuItem" value="Create"/>
+          <entry key="timerTemplateCreated_str" value="Timer Template has been created."/>
+          <entry key="allTemplatesRemoved_str" value="All Timer Templates have been removed."/>
         </map>
       </node>
     </node>

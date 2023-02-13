@@ -50,6 +50,11 @@
           <entry key="timerType_In_Label" value="через"/>
           <entry key="timerType_At_Label" value="в"/>
           <entry key="notify_str" value="Уведомить"/>
+          <entry key="removeAllTimeTemplates_MenuItem" value="Удалить все"/>
+          <entry key="timeTemplates_Menu" value="Шаблоны"/>
+          <entry key="createTimeTemplate_MenuItem" value="Создать"/>
+          <entry key="timerTemplateCreated_str" value="Шаблон создан."/>
+          <entry key="allTemplatesRemoved_str" value="Все шаблоны удалены."/>
         </map>
       </node>
     </node>
