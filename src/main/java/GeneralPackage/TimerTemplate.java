@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Yaroslav Lytvynov (aka YALdysse) 2021-2022 <Yaroslav_A_Litvinov@yahoo.com>
+ * Copyright (C) Yaroslav Lytvynov (aka YALdysse) 2021-2023 <Yaroslav_A_Litvinov@yahoo.com>
  *
  * Advanced TimerFX is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -19,8 +19,11 @@
 
 package GeneralPackage;
 
+import javafx.scene.control.RadioButton;
+
 import java.io.Serializable;
 import java.time.LocalTime;
+import java.util.ArrayList;
 
 /**
  * Описывает поведение шаблона настроек таймера: времени,
@@ -33,6 +36,7 @@ public class TimerTemplate implements Serializable
     private boolean countdownTimer;
     private boolean actionDelay;
     private int actionDelayValue;
+    private ArrayList<RadioButton> actions;
 
     public TimerTemplate(final String newName, LocalTime newTime,
                          final boolean countdown, final boolean newActionDelay,
@@ -43,6 +47,7 @@ public class TimerTemplate implements Serializable
         countdownTimer = countdown;
         actionDelay = newActionDelay;
         actionDelayValue = newActionDelayValue;
+        actions = new ArrayList<>();
     }
 
     public boolean hasActionDelay()
@@ -63,6 +68,11 @@ public class TimerTemplate implements Serializable
     public LocalTime getTime()
     {
         return time;
+    }
+
+    public ArrayList<RadioButton> getActions()
+    {
+        return actions;
     }
 
     public boolean isCountdownTimer()
@@ -106,5 +116,10 @@ public class TimerTemplate implements Serializable
                     "less than 60");
         }
         this.actionDelayValue = actionDelayValue;
+    }
+
+    public void setActions(ArrayList<RadioButton> actions)
+    {
+        this.actions = actions;
     }
 }

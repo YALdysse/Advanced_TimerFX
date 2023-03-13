@@ -1,5 +1,5 @@
 /*
- * Copyright (C) Yaroslav Lytvynov (aka YALdysse) 2021-2022 <Yaroslav_A_Litvinov@yahoo.com>
+ * Copyright (C) Yaroslav Lytvynov (aka YALdysse) 2021-2023 <Yaroslav_A_Litvinov@yahoo.com>
  *
  * Advanced TimerFX is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -23,6 +23,8 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.HostServices;
+import javafx.beans.Observable;
+import javafx.beans.value.ChangeListener;
 import javafx.event.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -54,12 +56,15 @@ import org.yaldysse.tools.notification.NotificationType;
 
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoField;
 import java.util.ArrayList;
+import java.util.Properties;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.InvalidPreferencesFormatException;
 import java.util.prefs.Preferences;
@@ -170,7 +175,7 @@ public class ATimerFX_gui extends Application
     private Label actionValue_Label;
     private int locX = 0;
     private int locY = 0;
-    private String currentLanguage_str = "English";
+    private static String currentLanguage_str = "English";
     private GridPane gp;
 
     private static final int PREFERRED_WIDTH = (int) (rem * 19.2D);
@@ -185,7 +190,7 @@ public class ATimerFX_gui extends Application
     private ArrayList<TimerTemplate> timerTemplates;
     private Menu timeTemplates_Menu;
     private MenuItem removeAllTimeTemplates_MenuItem;
-    private ArrayList<MenuItem> timeTemplate_MenuItemsArray;
+    private ArrayList<TemplateMenuItem> timeTemplate_MenuItemsArray;
     public final String timerTemplatesFileName = "ATfx_TimerTemplates.templates";
     private VBox timerIsRunning_pane_superRoot;
     private HBox stopTimer_Box;
@@ -198,6 +203,7 @@ public class ATimerFX_gui extends Application
     private Alert processContinue_Alert;
     private HBox secondMinutesHoursAppearance_Box;
     private Label timerNameValue_Label;
+    public final double ICON_SIZE = 24.0D;
 
     public void start(Stage aStage)
     {
@@ -216,6 +222,14 @@ public class ATimerFX_gui extends Application
 
         stage = aStage;
         scene = new Scene(superRoot);
+
+        scene.setOnKeyPressed(eventClicked ->
+        {
+            if (eventClicked.getCode() == KeyCode.E)
+            {
+                new TemplateToolTip(timerTemplates.get(0)).show(stage);
+            }
+        });
         scene.setOnMouseClicked(eventClicked ->
         {
             timer_Menu.setOnHidden(null);
@@ -241,7 +255,7 @@ public class ATimerFX_gui extends Application
         stage.setY(locY);
 
         stage.setScene(scene);
-        stage.setTitle(NAME_OF_PROGRAM + " [build 37 Stable]");
+        stage.setTitle(NAME_OF_PROGRAM + " [build 39 Stable]");
 
         menu_BorderPane.setTop(menuBar);
 
@@ -301,13 +315,15 @@ public class ATimerFX_gui extends Application
             timerType_Image = new Image(this.getClass().getClassLoader().getResource("Images/timerType.png").openStream());
             createTemplate_Image = new Image(this.getClass().getResourceAsStream("/Images/plus.png"));
             removeAllTimeTemplates_Image = new Image(this.getClass().getResourceAsStream("/Images/eraser.png"));
+            info_Image = new Image(this.getClass().getResourceAsStream("/Images/info.png"));
+            deleteTemplate_Image = new Image(this.getClass().getResourceAsStream("/Images/delete_active.png"));
+            deleteUnActive_Image = new Image(this.getClass().getResourceAsStream("/Images/delete_unActive.png"));
         }
         catch (IOException ioExc)
         {
             ioExc.printStackTrace();
         }
 
-        final double ICON_SIZE = 24.0D;
 
         ImageView russianFlag_ImageView = new ImageView(russianFlag_Image);
         russianFlag_ImageView.setPreserveRatio(true);
@@ -494,6 +510,9 @@ public class ATimerFX_gui extends Application
     private Image timerType_Image;
     private Image createTemplate_Image;
     private Image removeAllTimeTemplates_Image;
+    private Image info_Image;
+    private Image deleteTemplate_Image;
+    private Image deleteUnActive_Image;
 
     private void initComponents()
     {
@@ -541,6 +560,10 @@ public class ATimerFX_gui extends Application
             }
         });
         hours_Spinner.setEditable(true);
+        hours_Spinner.getEditor().textProperty().addListener((event, oldValue, newValue) ->
+        {
+            timeSpinnerVerification(oldValue,newValue,0,23,hours_Spinner);
+        });
 
         minutes_Spinner = new Spinner<>(-1, 60, 0);
         minutes_Spinner.setMaxWidth(70);
@@ -574,6 +597,10 @@ public class ATimerFX_gui extends Application
             }
         });
         minutes_Spinner.setEditable(true);
+        minutes_Spinner.getEditor().textProperty().addListener((event, oldValue, newValue) ->
+        {
+            timeSpinnerVerification(oldValue,newValue,0,59,minutes_Spinner);
+        });
 
         seconds_Spinner = new Spinner<>(-1, 60, 1);
         seconds_Spinner.setMaxWidth(70);
@@ -611,6 +638,10 @@ public class ATimerFX_gui extends Application
             }
         });
         seconds_Spinner.setEditable(true);
+        seconds_Spinner.getEditor().textProperty().addListener((event, oldValue, newValue) ->
+        {
+            timeSpinnerVerification(oldValue,newValue,0,59,seconds_Spinner);
+        });
 
         final double TIME_TEXT_OPACITY = 0.55D;
         hours_text = new Text();
@@ -848,7 +879,10 @@ public class ATimerFX_gui extends Application
             if (performActionAfterTimerWentOut_checkBox.isSelected())
             {
                 action = true;
-                root.getChildren().add(radioGroup_Box);
+                if (!root.getChildren().contains(radioGroup_Box))
+                {
+                    root.getChildren().add(radioGroup_Box);
+                }
 
                 YALtools.printDebugMessage("getLayoutBounds:" + root.getLayoutBounds().getHeight());
                 YALtools.printDebugMessage("getBoundsInParent:" + root.getBoundsInParent().getHeight());
@@ -1588,9 +1622,12 @@ public class ATimerFX_gui extends Application
 
     private void initLocalization(final String aLocale)
     {
+        Properties language_properties = new Properties();
         Preferences local;
         try
         {
+            language_properties.load(this.getClass().getResourceAsStream("/Localizations/Language_Ukrainian.lang"));
+            System.out.println(language_properties.getProperty("killProcessActionDescription", "<suka>"));
             local = Preferences.userRoot().node("YALdysse/AdvancedTimerFX");
 
             URL langNode_URL = this.getClass().getClassLoader().getResource("Localizations/Language_" + aLocale + ".lang");
@@ -1950,23 +1987,47 @@ public class ATimerFX_gui extends Application
                 delayBeforeAction_CheckBox.isSelected(),
                 delayBeforeAction_Spinner.getValue()));
 
+        ArrayList<RadioButton> actions = new ArrayList<>();
+
+        if (shutdown_radio.isSelected())
+        {
+            actions.add(shutdown_radio);
+        } else if (reboot_radio.isSelected())
+        {
+            actions.add(reboot_radio);
+        } else if (logOut_RadioButton.isSelected())
+        {
+            actions.add(logOut_RadioButton);
+        } else if (killProcess_RadioButton.isSelected())
+        {
+            actions.add(killProcess_RadioButton);
+        } else if (custom_command.isSelected())
+        {
+            actions.add(custom_command);
+        } else if (suspend_radio.isSelected())
+        {
+            actions.add(suspend_radio);
+        }
+        timerTemplates.get(timerTemplates.size() - 1).setActions(actions);
+
         showAutoHideTooltip("Timer template has been created.", Duration.millis(1500),
                 timerName_textFiels);
 
         updateTimeTemplatesMenu();
     }
 
-    private void updateTimeTemplatesMenu()
+    public void updateTimeTemplatesMenu()
     {
         timeTemplates_Menu.getItems().remove(3, timeTemplates_Menu.getItems().size());
         for (int k = 0; k < timerTemplates.size(); k++)
         {
-            MenuItem temporaryTemplate;
+            TemplateMenuItem temporaryTemplate;
             //if (timeTemplate_MenuItemsArray.get(k) == null)
             if (timeTemplate_MenuItemsArray.size() < k + 1)
             {
-                temporaryTemplate = new MenuItem(timerTemplates.get(k).getTime().format(
-                        DateTimeFormatter.ISO_TIME) + "   [" + timerTemplates.get(k).getName() + "]");
+//                temporaryTemplate = new MenuItem(timerTemplates.get(k).getTime().format(
+//                        DateTimeFormatter.ISO_TIME) + "   [" + timerTemplates.get(k).getName() + "]");
+                temporaryTemplate = new TemplateMenuItem(timerTemplates.get(k),this);
                 int finalK = k;
                 temporaryTemplate.setOnAction(event -> applyTimerTemplate(timerTemplates.get(finalK)));
                 timeTemplate_MenuItemsArray.add(temporaryTemplate);
@@ -1977,9 +2038,28 @@ public class ATimerFX_gui extends Application
                 temporaryTemplate.setOnAction(null);
                 int finalK1 = k;
                 temporaryTemplate.setOnAction(event -> applyTimerTemplate(timerTemplates.get(finalK1)));
-                temporaryTemplate.setText(timerTemplates.get(k).getTime().format(
+                temporaryTemplate.setName(timerTemplates.get(k).getTime().format(
                         DateTimeFormatter.ISO_TIME) + "   [" + timerTemplates.get(k).getName() + "]");
             }
+
+            ImageView info_ImageView = new ImageView(info_Image);
+            info_ImageView.setSmooth(true);
+            info_ImageView.setPreserveRatio(true);
+            info_ImageView.setFitWidth(ICON_SIZE);
+
+            ImageView deleteActive_ImageView = new ImageView(deleteTemplate_Image);
+            deleteActive_ImageView.setSmooth(true);
+            deleteActive_ImageView.setPreserveRatio(true);
+            deleteActive_ImageView.setFitWidth(ICON_SIZE);
+
+            ImageView deleteUnActive_ImageView = new ImageView(deleteUnActive_Image);
+            deleteUnActive_ImageView.setSmooth(true);
+            deleteUnActive_ImageView.setPreserveRatio(true);
+            deleteUnActive_ImageView.setFitWidth(ICON_SIZE);
+
+            temporaryTemplate.setInfoImageView(info_ImageView);
+            temporaryTemplate.setDeleteActiveImageView(deleteActive_ImageView);
+            temporaryTemplate.setDeleteUnActiveImageView(deleteUnActive_ImageView);
 
             timeTemplates_Menu.getItems().add(temporaryTemplate);
         }
@@ -2034,16 +2114,50 @@ public class ATimerFX_gui extends Application
         Event.fireEvent(delayBeforeAction_CheckBox, new ActionEvent());
         delayBeforeAction_Spinner.getValueFactory().setValue((int) template.getActionDelayValue());
 
+
+        ArrayList<RadioButton> actions = template.getActions();
+
+        if (actions.size() > 0)
+        {
+            if (actions.contains(shutdown_radio))
+            {
+                shutdown_radio.setSelected(true);
+                Event.fireEvent(shutdown_radio, new ActionEvent());
+            } else if (actions.contains(reboot_radio))
+            {
+                reboot_radio.setSelected(true);
+                Event.fireEvent(reboot_radio, new ActionEvent());
+            } else if (actions.contains(logOut_RadioButton))
+            {
+                logOut_RadioButton.setSelected(true);
+                Event.fireEvent(logOut_RadioButton, new ActionEvent());
+            } else if (actions.contains(killProcess_RadioButton))
+            {
+                killProcess_RadioButton.setSelected(true);
+                Event.fireEvent(killProcess_RadioButton, new ActionEvent());
+            } else if (actions.contains(custom_command))
+            {
+                custom_command.setSelected(true);
+                Event.fireEvent(custom_command, new ActionEvent());
+            } else if (actions.contains(suspend_radio))
+            {
+                suspend_radio.setSelected(true);
+                Event.fireEvent(suspend_radio, new ActionEvent());
+            }
+
+            performActionAfterTimerWentOut_checkBox.setSelected(true);
+            Event.fireEvent(performActionAfterTimerWentOut_checkBox, new ActionEvent());
+        }
     }
 
     private void exportTimerTemplatesToFile(final Path targetPath)
     {
-        System.out.println("Експорт");
         try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new BufferedOutputStream(
                 new FileOutputStream(targetPath.toFile()))))
         {
             for (TimerTemplate template : timerTemplates)
             {
+                objectOutputStream.writeUTF("---=== D!ssect!0n ===---");
                 objectOutputStream.writeObject(template);
                 objectOutputStream.writeUTF("---=== D!ssect!0n ===---");
             }
@@ -2059,12 +2173,12 @@ public class ATimerFX_gui extends Application
         try (ObjectInputStream objectInputStream = new ObjectInputStream(new BufferedInputStream(
                 new FileInputStream(targetPath.toFile()))))
         {
-            do
+            while (objectInputStream.available() > 0)
             {
+                objectInputStream.readUTF();
                 timerTemplates.add((TimerTemplate) objectInputStream.readObject());
                 System.out.println("Зчитаний розподілювач об`єктів. " + objectInputStream.readUTF());
             }
-            while (objectInputStream.available() > 0);
         }
         catch (IOException ioException)
         {
@@ -2074,5 +2188,39 @@ public class ATimerFX_gui extends Application
         {
             classNotFoundException.printStackTrace();
         }
+    }
+
+    public static String getCurrentLanguageName()
+    {
+        return currentLanguage_str;
+    }
+
+
+    private void timeSpinnerVerification(String oldValue, String newValue,
+                                         final int minValue, final int maxValue, Spinner<Integer> spinner)
+    {
+        if (newValue.equals(""))
+        {
+            return;
+        }
+
+        try
+        {
+            int value = Integer.parseInt(newValue);
+            if (value > maxValue || value < minValue)
+            {
+                throw new NumberFormatException();
+            }
+        }
+        catch (NumberFormatException numberFormatException)
+        {
+            System.out.println("Введено некорректное значение в часы.");
+            spinner.getEditor().setText(oldValue);
+        }
+    }
+
+    public ArrayList<TimerTemplate> getTimerTemplates()
+    {
+        return timerTemplates;
     }
 }
