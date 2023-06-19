@@ -1,7 +1,6 @@
 # Advanced TimerFX
 
-![screen_2](screen_2.png)
-![screen_3](screen_3.png)
+![screen_2](screen_2.png) ![screen_3](screen_3.png)
 
 ### [Download](https://github.com/YALdysse/Advanced_TimerFX/releases)
 
