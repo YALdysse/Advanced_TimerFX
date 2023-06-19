@@ -1,4 +1,4 @@
-package GeneralPackage;
+package org.yaldysse.atfx;
 
 import javafx.event.Event;
 import javafx.geometry.Pos;
@@ -21,6 +21,7 @@ public class TemplateMenuItem extends CustomMenuItem
     private ATimerFX_gui main_obj;
     private ImageView delete_active;
     private ImageView delete_unActive;
+    private TemplateToolTip ttt;
 
     public TemplateMenuItem(final TimerTemplate newTemplate, ATimerFX_gui gui)
     {
@@ -37,10 +38,13 @@ public class TemplateMenuItem extends CustomMenuItem
         name.setFont(Font.font(Font.getDefault().getName(), FontWeight.BOLD, 12.0D));
 
         info = new Label();
-        info.setTooltip(new TemplateToolTip(timerTemplate));
-        TemplateToolTip tooltip = (TemplateToolTip) info.getTooltip();
-        tooltip.setLanguagePropertiesFileName("Language_"
+
+        ttt = new TemplateToolTip(timerTemplate);
+        ttt.setLanguagePropertiesFileName("Language_"
                 + ATimerFX_gui.getCurrentLanguageName() + ".lang_templateTip");
+        ttt.getRootLayoutNode().setMaxWidth(fxGui.rem * 16.0D);
+
+        info.setTooltip(ttt);
 
         delete = new Label();
         delete.setOnMouseClicked(this::delete_Action);
@@ -102,6 +106,27 @@ public class TemplateMenuItem extends CustomMenuItem
     {
         delete_unActive = aDeleteUnActiveIcon;
         delete.setGraphic(delete_unActive);
+    }
+
+    /**
+     * Запускає процес зміни мови інтерфейсу. На даний момент взаємодіє тільки з
+     * вспливаючою підказкою.
+     */
+    public void requestUpdateLocalization(final String fileName)
+    {
+        TemplateToolTip tooltip = (TemplateToolTip) info.getTooltip();
+        tooltip.setLanguagePropertiesFileName(fileName);
+    }
+
+    public void setTimerTemplate(final TimerTemplate aTemplate)
+    {
+        timerTemplate = aTemplate;
+    }
+
+    public void updateInfoToolTip()
+    {
+        ttt.setTimerTemplate(timerTemplate);
+        ttt.updateInfo();
     }
 
 }

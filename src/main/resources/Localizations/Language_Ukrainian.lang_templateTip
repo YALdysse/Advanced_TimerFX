@@ -2,5 +2,13 @@
 #Fri Mar 10 15:17:19 EET 2023
 delay_caps_str=ЗАТРИМКА
 time_caps_str=ЧАС
+action_caps_str=ДІЯ
 in=Через
 at=В
+KILL_PROCESS_BY_PID_ActionDescription=Примусово завершити процес з PID:
+BRIGHTNESS_ActionDescription=Встановити яскравість дисплею:
+CUSTOM_COMMAND_ActionDescription=Команда:
+SHUTDOWN_ActionDescription=Завершити роботу ОС
+REBOOT_ActionDescription=Перезавантажити ОС
+SUSPEND_ActionDescription=Перевести ОС до сну
+LOGOUT_ActionDescription=Завершити сеанс поточного користувача

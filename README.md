@@ -1,6 +1,7 @@
 # Advanced TimerFX
 
-![screen](screen_0.png)
+![screen_2](screen_2.png)
+![screen_3](screen_3.png)
 
 ### [Download](https://github.com/YALdysse/Advanced_TimerFX/releases)
 
@@ -11,12 +12,13 @@
 
 #### Features:
 * Operation:
-  * Shut down
-  * Reboot
-  * Suspend
+  * Shut down the system
+  * Reboot the system
+  * Suspend the system
   * Log out
   * Custom command
   * Kill The Process with defined PID
+  * Display Brightness
 * Hot keys support
 * Multilanguage (English, Ukrainian and Russian)
 * Templates
@@ -32,12 +34,13 @@ System Requirements:
 
 ## Особливості
 * Операції:
-  * Завершення роботи
-  * Перезавантаження
+  * Завершення роботи ОС
+  * Перезавантаження ОС
   * Режим сну
   * Вихід з системи
   * Виконання системної команди
   * Примусове завершення процесу за PID
+  * Встановлення яскравості дисплею
 * Наявність гарячих клавіш
 * Локалізація (Англійська, Українська та Російська)
 * Підтримка шаблонів

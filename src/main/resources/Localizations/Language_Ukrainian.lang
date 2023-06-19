@@ -1,62 +1,58 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE preferences SYSTEM "http://java.sun.com/dtd/preferences.dtd">
-<preferences EXTERNAL_XML_VERSION="1.0">
-  <root type="user">
-    <map/>
-    <node name="YALdysse">
-      <map/>
-      <node name="AdvancedTimerFX">
-        <map>
-          <entry key="startTimer_button" value="Старт"/>
-          <entry key="stopTimer_button" value="Зупинити"/>
-          <entry key="performActionAfterTimerWentOut_checkBox" value="Виконати дiю після закінчення відведеного часу"/>
-          <entry key="shutdown_radio" value="Вимкнути комп'ютер"/>
-          <entry key="suspend_radio" value="Перевести комп'ютер в сон"/>
-          <entry key="reboot_radio" value="Перезавантажити комп'ютер"/>
-          <entry key="customCommand_Label" value="Команда"/>
-          <entry key="timerName_Label" value="Назва таймеру:"/>
-          <entry key="timerAction_Label" value="Дiя:"/>
-          <entry key="general_menu" value="Головне"/>
-          <entry key="language_Menu" value="Обрати мову"/>
-          <entry key="timer_Menu" value="Таймер"/>
-          <entry key="startTimer_MenuItem" value="Запустити таймер"/>
-          <entry key="stopTimer_MenuItem" value="Зупинити таймер"/>
-          <entry key="exit_MenuItem" value="Закрити програму"/>
-          <entry key="hours_Text" value="Години"/>
-          <entry key="minutes_Text" value="Хвилини"/>
-          <entry key="seconds_Text" value="Секунди"/>
-          <entry key="TimerName_PromtText" value="Назва таймеру (необов'язково)"/>
-          <entry key="info_text" value="Вiдомостi"/>
-          <entry key="customCommandPromtText" value="Вкажіть команду, що буде виконана після закінчення відведеного часу таймеру"/>
-          <entry key="gitHubRepository_MenuItem" value="Репозиторій на GitHub"/>
-          <entry key="delayBeforeAction_CheckBox" value="Затримка дії"/>
-          <entry key="suspendActionDescription" value="Перевести до сну"/>
-          <entry key="rebootActionDescription" value="Перезавантажити комп'ютер"/>
-          <entry key="shutdownActionDescription" value="Вимкнути комп'ютер"/>
-          <entry key="killProcess_radio" value="Вбити процес"/>
-          <entry key="killProcessActionDescription" value="Вбити процес з PID "/>
-          <entry key="processNotFound_str" value="Процес не був знайдений"/>
-          <entry key="process_str" value="Процес з номером"/>
-          <entry key="notFound_str" value="не був знайдений"/>
-          <entry key="doYouWantToContinue_str" value="Час таймеру сплинув. Виконати вказану операцію ?"/>
-          <entry key="warning_str" value="Увага!"/>
-          <entry key="logOut_RadioButton" value="Закінчити сеанс (Log out)"/>
-          <entry key="logOut_ActionDescription_str" value="Завершити сеанс поточного користувача"/>
-          <entry key="popup_str" value="Щоб зупинити таймер натисніть ліву кнопку двічі."/>
-          <entry key="theTimerHasExpired_str" value="Час таймеру сплинув."/>
-		  <entry key="timerType_Menu" value="Тип таймеру"/>
-          <entry key="specifiedTime_MenuItem" value="в вказаний час"/>
-          <entry key="countdownTimer_MenuItem" value="через вказаний час"/>
-          <entry key="notify_str" value="Повідомити"/>
-          <entry key="timerType_In_Label" value="через"/>
-          <entry key="timerType_At_Label" value="в"/>
-          <entry key="removeAllTimeTemplates_MenuItem" value="Видалити всі"/>
-          <entry key="timeTemplates_Menu" value="Шаблони"/>
-          <entry key="createTimeTemplate_MenuItem" value="Створити"/>
-          <entry key="timerTemplateCreated_str" value="Шаблон створено."/>
-          <entry key="allTemplatesRemoved_str" value="Всі шаблони видалено."/>
-        </map>
-      </node>
-    </node>
-  </root>
-</preferences>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>comment</comment>
+<entry key="key">value</entry>
+<entry key="startTimer_button">Старт</entry>
+<entry key="stopTimer_button">Зупинити</entry>
+<entry key="performActionAfterTimerWentOut_checkBox">Виконати дiю після закінчення відведеного часу</entry>
+<entry key="timerName_Label">Назва таймеру:</entry>
+<entry key="timerAction_Label">Дiя:</entry>
+<entry key="general_menu">Головне</entry>
+<entry key="language_Menu">Обрати мову</entry>
+<entry key="timer_Menu">Таймер</entry>
+<entry key="startTimer_MenuItem">Запустити таймер</entry>
+<entry key="stopTimer_MenuItem">Зупинити таймер</entry>
+<entry key="exit_MenuItem">Закрити програму</entry>
+<entry key="hours_Text">Години</entry>
+<entry key="minutes_Text">Хвилини</entry>
+<entry key="seconds_Text">Секунди</entry>
+<entry key="TimerName_PromtText">Назва таймеру (необов'язково)</entry>
+<entry key="info_text">Вiдомостi</entry>
+<entry key="customCommandPromtText">Вкажіть команду, що буде виконана після закінчення відведеного часу таймеру</entry>
+<entry key="gitHubRepository_MenuItem">Репозиторій на GitHub</entry>
+<entry key="delayBeforeAction_CheckBox">Затримка дії</entry>
+<entry key="doYouWantToContinue_str">Час таймеру сплинув. Виконати вказану операцію ?</entry>
+<entry key="warning_str">Увага!</entry>
+<entry key="popup_str">Щоб зупинити таймер натисніть ліву кнопку двічі.</entry>
+<entry key="theTimerHasExpired_str">Час таймеру сплинув.</entry>
+<entry key="timerType_Menu">Тип таймеру</entry>
+<entry key="specifiedTime_MenuItem">в вказаний час</entry>
+<entry key="countdownTimer_MenuItem">через вказаний час</entry>
+<entry key="notify_str">Повідомити</entry>
+<entry key="timerType_In_Label">через</entry>
+<entry key="timerType_At_Label">в</entry>
+<entry key="removeAllTimeTemplates_MenuItem">Видалити всі</entry>
+<entry key="animations_MenuItem">Анімації</entry>
+<entry key="timeTemplates_Menu">Шаблони</entry>
+<entry key="createTimeTemplate_MenuItem">Створити</entry>
+<entry key="timerTemplateCreated_str">Шаблон створено.</entry>
+<entry key="allTemplatesRemoved_str">Всі шаблони видалено.</entry>
+<entry key="timerTemplateApplied_str">Шаблон застосовано.</entry>
+<entry key="needRootPrivilege_str">Для виконання цієї операції необхідні права суперкористувача (Root).</entry>
+<entry key="killProcessWithChildren_CheckBox">Завершити дочірні процеси</entry>
+<entry key="SUSPEND_actionDescription">Перевести ОС до сну</entry>
+<entry key="REBOOT_actionDescription">Перезавантажити ОС</entry>
+<entry key="SHUTDOWN_actionDescription">Завершити роботу ОС</entry>
+<entry key="KILL_PROCESS_BY_PID_actionDescription">Примусово завершити процес з PID:</entry>
+<entry key="BRIGHTNESS_actionDescription">Встановити яскравість дисплею</entry>
+<entry key="LOGOUT_actionDescription">Завершити сеанс поточного користувача</entry>
+<entry key="CUSTOM_COMMAND_actionDescription">Команда</entry>
+<entry key="SHUTDOWN_Button">Вимкнути комп'ютер</entry>
+<entry key="SUSPEND_Button">Перевести комп'ютер в сон</entry>
+<entry key="REBOOT_Button">Перезавантажити комп'ютер</entry>
+<entry key="LOGOUT_Button">Закінчити сеанс користувача</entry>
+<entry key="KILL_PROCESS_BY_PID_Button">Примусово завершити процес</entry>
+<entry key="CUSTOM_COMMAND_Button">Команда</entry>
+<entry key="BRIGHTNESS_Button">Змінити яскравість дисплею</entry>
+</properties>

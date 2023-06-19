@@ -1,0 +1,14 @@
+#commenbt
+#Fri Mar 10 15:17:19 EET 2023
+delay_caps_str=DELAY
+time_caps_str=TIME
+action_caps_str=ACTION
+in=in
+at=at
+KILL_PROCESS_BY_PID_ActionDescription=Kill process with PID:
+BRIGHTNESS_ActionDescription=Set display brightness:
+CUSTOM_COMMAND_ActionDescription=Command:
+SHUTDOWN_ActionDescription=Shutdown the system
+REBOOT_ActionDescription=Reboot the system
+SUSPEND_ActionDescription=Suspend the system
+LOGOUT_ActionDescription=Logout

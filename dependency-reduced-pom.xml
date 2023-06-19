@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.yaldysse</groupId>
   <artifactId>Advanced_TimerFX</artifactId>
-  <version>build 39 [Stable]</version>
+  <version>build 45+2 [Test]</version>
   <build>
     <plugins>
       <plugin>
@@ -14,7 +14,7 @@
             <manifest>
               <addClasspath>true</addClasspath>
               <classpathPrefix>lib/</classpathPrefix>
-              <mainClass>GeneralPackage.ATimerFX_gui</mainClass>
+              <mainClass>org.yaldysse.atfx.StarterDemo</mainClass>
             </manifest>
           </archive>
         </configuration>

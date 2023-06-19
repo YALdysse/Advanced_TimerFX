@@ -6,7 +6,7 @@
 
     <groupId>org.yaldysse</groupId>
     <artifactId>Advanced_TimerFX</artifactId>
-    <version>build 39 [Stable]</version>
+    <version>build 46</version>
 
 
     <dependencies>
@@ -46,6 +46,20 @@
             <version>19.0.2.1</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-fxml -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>19.0.2.1</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-web -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-web</artifactId>
+            <version>19.0.2.1</version>
+        </dependency>
+
         <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-javadoc-plugin -->
         <dependency>
             <groupId>org.apache.maven.plugins</groupId>
@@ -59,13 +73,6 @@
             <artifactId>maven-shade-plugin</artifactId>
             <version>3.2.4</version>
         </dependency>
-
-        <dependency>
-            <groupId>org.yaldysse</groupId>
-            <artifactId>YALdysse_Tools</artifactId>
-            <version>SNAPSHOT 14</version>
-        </dependency>
-
 
     </dependencies>
 
@@ -81,34 +88,35 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>GeneralPackage.ATimerFX_gui</mainClass>
+                            <mainClass>org.yaldysse.atfx.StarterDemo</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
 
             </plugin>
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.4</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <artifactSet>
-                                <includes>
-                                    <include>org.yaldysse:YALdysse_Tools</include>
-                                </includes>
-                            </artifactSet>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-       </plugins>
+<!--            <plugin>-->
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+<!--                <artifactId>maven-shade-plugin</artifactId>-->
+<!--                <version>3.2.4</version>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <phase>package</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>shade</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <artifactSet>-->
+<!--                                <includes>-->
+<!--&lt;!&ndash;                                    <include>org.yaldysse:YALdysse_Tools</include>&ndash;&gt;-->
+<!--                                </includes>-->
+<!--                            </artifactSet>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
+
+        </plugins>
     </build>
 
 

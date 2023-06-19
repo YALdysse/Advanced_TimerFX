@@ -17,7 +17,7 @@
  * @license GPL-3.0+ <https://spdx.org/licenses/GPL-3.0+.html>
  */
 
-package GeneralPackage;
+package org.yaldysse.atfx;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;

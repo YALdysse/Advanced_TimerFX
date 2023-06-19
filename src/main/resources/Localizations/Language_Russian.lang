@@ -1,62 +1,57 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE preferences SYSTEM "http://java.sun.com/dtd/preferences.dtd">
-<preferences EXTERNAL_XML_VERSION="1.0">
-  <root type="user">
-    <map/>
-    <node name="YALdysse">
-      <map/>
-      <node name="AdvancedTimerFX">
-        <map>
-          <entry key="startTimer_button" value="Старт"/>
-          <entry key="stopTimer_button" value="Остановить"/>
-          <entry key="performActionAfterTimerWentOut_checkBox" value="Выполнить операцию после истечения времени таймера"/>
-          <entry key="shutdown_radio" value="Выключить компьютер"/>
-          <entry key="suspend_radio" value="Перевести компьютер в сон"/>
-          <entry key="reboot_radio" value="Перезагрузить компьютер"/>
-          <entry key="customCommand_Label" value="Команда"/>
-          <entry key="timerName_Label" value="Название таймера:"/>
-          <entry key="timerAction_Label" value="Действие:"/>
-          <entry key="general_menu" value="Основное"/>
-          <entry key="language_Menu" value="Сменить язык"/>
-          <entry key="timer_Menu" value="Таймер"/>
-          <entry key="startTimer_MenuItem" value="Запустить таймер"/>
-          <entry key="stopTimer_MenuItem" value="Остановить таймер"/>
-          <entry key="exit_MenuItem" value="Закрыть программу"/>
-          <entry key="hours_Text" value="Часы"/>
-          <entry key="minutes_Text" value="Минуты"/>
-          <entry key="seconds_Text" value="Секунды"/>
-          <entry key="TimerName_PromtText" value="Название таймера (необязательно)"/>
-          <entry key="info_text" value="Информация"/>
-          <entry key="customCommandPromtText" value="Введите команду, которая будет выполнена после истечения времени таймера"/>
-          <entry key="gitHubRepository_MenuItem" value="Репозиторий на GitHub"/>
-          <entry key="delayBeforeAction_CheckBox" value="Задержка действия"/>
-          <entry key="suspendActionDescription" value="Перевести компьютер в сон"/>
-          <entry key="rebootActionDescription" value="Перезагрузить компьютер"/>
-          <entry key="shutdownActionDescription" value="Завершить работу ПК"/>
-          <entry key="killProcess_radio" value="Убить процесс"/>
-          <entry key="killProcessActionDescription" value="Завершить процесс с PID "/>
-          <entry key="processNotFound_str" value="Процесс не был найден"/>
-          <entry key="process_str" value="Процесс с кодом"/>
-          <entry key="notFound_str" value="не был найден"/>
-          <entry key="doYouWantToContinue_str" value="Время таймера вышло. Выполнить операцию ?"/>
-          <entry key="warning_str" value="Внимание!"/>
-          <entry key="logOut_RadioButton" value="Завершить сеанс (Log out)"/>
-          <entry key="logOut_ActionDescription_str" value="Завершить сеанс текущего пользователя"/>
-          <entry key="popup_str" value="Для остановки таймера нажмите левую кнопку дважды."/>
-          <entry key="theTimerHasExpired_str" value="Время таймера истекло."/>
-          <entry key="timerType_Menu" value="Тип таймера"/>
-          <entry key="specifiedTime_MenuItem" value="В указанное время"/>
-          <entry key="countdownTimer_MenuItem" value="Через указанное время"/>
-          <entry key="timerType_In_Label" value="через"/>
-          <entry key="timerType_At_Label" value="в"/>
-          <entry key="notify_str" value="Уведомить"/>
-          <entry key="removeAllTimeTemplates_MenuItem" value="Удалить все"/>
-          <entry key="timeTemplates_Menu" value="Шаблоны"/>
-          <entry key="createTimeTemplate_MenuItem" value="Создать"/>
-          <entry key="timerTemplateCreated_str" value="Шаблон создан."/>
-          <entry key="allTemplatesRemoved_str" value="Все шаблоны удалены."/>
-        </map>
-      </node>
-    </node>
-  </root>
-</preferences>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>comment</comment>
+<entry key="startTimer_button" >Старт</entry>
+<entry key="stopTimer_button" >Остановить</entry>
+<entry key="performActionAfterTimerWentOut_checkBox" >Выполнить операцию после истечения времени таймера</entry>
+<entry key="timerName_Label" >Название таймера:</entry>
+<entry key="timerAction_Label" >Действие:</entry>
+<entry key="general_menu" >Основное</entry>
+<entry key="language_Menu" >Сменить язык</entry>
+<entry key="timer_Menu" >Таймер</entry>
+<entry key="startTimer_MenuItem" >Запустить таймер</entry>
+<entry key="stopTimer_MenuItem" >Остановить таймер</entry>
+<entry key="exit_MenuItem" >Закрыть программу</entry>
+<entry key="hours_Text" >Часы</entry>
+<entry key="minutes_Text" >Минуты</entry>
+<entry key="seconds_Text" >Секунды</entry>
+<entry key="TimerName_PromtText" >Название таймера (необязательно)</entry>
+<entry key="info_text" >Информация</entry>
+<entry key="customCommandPromtText" >Введите команду, которая будет выполнена после истечения времени таймера</entry>
+<entry key="gitHubRepository_MenuItem">Репозиторий на GitHub</entry>
+<entry key="delayBeforeAction_CheckBox">Задержка действия</entry>
+<entry key="doYouWantToContinue_str" >Время таймера вышло. Выполнить операцию ?</entry>
+<entry key="warning_str" >Внимание!</entry>
+<entry key="popup_str" >Для остановки таймера нажмите левую кнопку дважды.</entry>
+<entry key="theTimerHasExpired_str" >Время таймера истекло.</entry>
+<entry key="timerType_Menu" >Тип таймера</entry>
+<entry key="specifiedTime_MenuItem" >В указанное время</entry>
+<entry key="countdownTimer_MenuItem" >Через указанное время</entry>
+<entry key="timerType_In_Label" >через</entry>
+<entry key="timerType_At_Label" >в</entry>
+<entry key="notify_str">Уведомить</entry>
+<entry key="removeAllTimeTemplates_MenuItem">Удалить все</entry>
+<entry key="animations_MenuItem">Анимации</entry>
+<entry key="timeTemplates_Menu" >Шаблоны</entry>
+<entry key="createTimeTemplate_MenuItem">Создать</entry>
+<entry key="timerTemplateCreated_str">Шаблон создан.</entry>
+<entry key="allTemplatesRemoved_str">Все шаблоны удалены.</entry>
+<entry key="timerTemplateApplied_str" >Шаблон применен.</entry>
+<entry key="needRootPrivilege_str">Для выполнения той операции необходимы права суперпользователя (Root).</entry>
+<entry key="killProcessWithChildren_CheckBox" >Завершить дочерние процессы</entry>
+<entry key="SUSPEND_actionDescription">Перевести ОС в сон</entry>
+<entry key="REBOOT_actionDescription">Перезагрузить ОС</entry>
+<entry key="SHUTDOWN_actionDescription">Завершить работу ОС</entry>
+<entry key="KILL_PROCESS_BY_PID_actionDescription" >Убить процесс по PID</entry>
+<entry key="BRIGHTNESS_actionDescription">Изменить яркость дисплея</entry>
+<entry key="LOGOUT_actionDescription">Завершить сеанс текущего пользователя</entry>
+<entry key="CUSTOM_COMMAND_actionDescription">Команда</entry>
+<entry key="SHUTDOWN_Button">Выключить комп'ютер</entry>
+<entry key="SUSPEND_Button">Перевести комп'ютер в сон</entry>
+<entry key="REBOOT_Button">Перезагрузить комп'ютер</entry>
+<entry key="LOGOUT_Button">Завершить сеанс пользователя</entry>
+<entry key="KILL_PROCESS_BY_PID_Button">Завершить процесс</entry>
+<entry key="CUSTOM_COMMAND_Button">Команда</entry>
+<entry key="BRIGHTNESS_Button">Изменить яркость дисплея</entry>
+</properties>

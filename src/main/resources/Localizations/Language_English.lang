@@ -1,54 +1,51 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE preferences SYSTEM "http://java.sun.com/dtd/preferences.dtd">
-<preferences EXTERNAL_XML_VERSION="1.0">
-  <root type="user">
-    <map/>
-    <node name="YALdysse">
-      <map/>
-      <node name="AdvancedTimerFX">
-        <map>
-          <entry key="startTimer_button" value="Start"/>
-          <entry key="stopTimer_button" value="Stop"/>
-          <entry key="performActionAfterTimerWentOut_checkBox" value="Execute the command when time is up"/>
-          <entry key="shutdown_radio" value="Shut Down the System"/>
-          <entry key="suspend_radio" value="Suspend the System"/>
-          <entry key="reboot_radio" value="Reboot"/>
-          <entry key="customCommand_Label" value="Custom command"/>
-          <entry key="timerName_Label" value="Name of timer:"/>
-          <entry key="timerAction_Label" value="Action:"/>
-          <entry key="general_menu" value="General"/>
-          <entry key="language_Menu" value="Language"/>
-          <entry key="timer_Menu" value="Timer"/>
-          <entry key="startTimer_MenuItem" value="Start timer"/>
-          <entry key="stopTimer_MenuItem" value="Stop timer"/>
-          <entry key="exit_MenuItem" value="Exit"/>
-          <entry key="hours_Text" value="Hours"/>
-          <entry key="minutes_Text" value="Minutes"/>
-          <entry key="seconds_Text" value="Seconds"/>
-          <entry key="TimerName_PromtText" value="Name of timer (optional)"/>
-          <entry key="info_text" value="Info"/>
-          <entry key="customCommandPromtText" value="Enter here command that will be executed"/>
-          <entry key="gitHubRepository_MenuItem" value="Repository on GitHub"/>
-          <entry key="delayBeforeAction_CheckBox" value="Action delay"/>
-          <entry key="suspendActionDescription" value="Suspend the System"/>
-          <entry key="rebootActionDescription" value="Reboot the System"/>
-          <entry key="shutdownActionDescription" value="Shut down the System"/>
-          <entry key="popup_str" value="To stop timer click left button twice."/>
-          <entry key="doYouWantToContinue_str" value="Time is up. Execute operation ?"/>
-          <entry key="theTimerHasExpired_str" value="The timer has expired."/>
-          <entry key="timerType_Menu" value="Timer type"/>
-          <entry key="specifiedTime_MenuItem" value="at specified time"/>
-          <entry key="countdownTimer_MenuItem" value="in specified time"/>
-          <entry key="timerType_In_Label" value="in"/>
-          <entry key="timerType_At_Label" value="at"/>
-          <entry key="notify_str" value="Notify"/>
-          <entry key="removeAllTimeTemplates_MenuItem" value="Remove All"/>
-          <entry key="timeTemplates_Menu" value="Templates"/>
-          <entry key="createTimeTemplate_MenuItem" value="Create"/>
-          <entry key="timerTemplateCreated_str" value="Timer Template has been created."/>
-          <entry key="allTemplatesRemoved_str" value="All Timer Templates have been removed."/>
-        </map>
-      </node>
-    </node>
-  </root>
-</preferences>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>comment</comment>
+<entry key="startTimer_button">Start</entry>
+<entry key="stopTimer_button">Stop</entry>
+<entry key="performActionAfterTimerWentOut_checkBox">Execute the command when time is up</entry>
+<entry key="timerName_Label">Name of timer:</entry>
+<entry key="timerAction_Label">Action:</entry>
+<entry key="general_menu">General</entry>
+<entry key="language_Menu">Language</entry>
+<entry key="timer_Menu">Timer</entry>
+<entry key="startTimer_MenuItem">Start timer</entry>
+<entry key="stopTimer_MenuItem">Stop timer</entry>
+<entry key="exit_MenuItem">Exit</entry>
+<entry key="hours_Text">Hours</entry>
+<entry key="minutes_Text">Minutes</entry>
+<entry key="seconds_Text">Seconds</entry>
+<entry key="TimerName_PromtText">Name of timer (optional)</entry>
+<entry key="info_text">Info</entry>
+<entry key="customCommandPromtText">Enter here command that will be executed</entry>
+<entry key="gitHubRepository_MenuItem">Repository on GitHub</entry>
+<entry key="delayBeforeAction_CheckBox">Action delay</entry>
+<entry key="popup_str">To stop timer click left button twice.</entry>
+<entry key="doYouWantToContinue_str">Time is up. Execute operation ?</entry>
+<entry key="theTimerHasExpired_str">The timer has expired.</entry>
+<entry key="timerType_Menu">Timer type</entry>
+<entry key="specifiedTime_MenuItem">at specified time</entry>
+<entry key="countdownTimer_MenuItem">in specified time</entry>
+<entry key="timerType_In_Label">in</entry>
+<entry key="timerType_At_Label">at</entry>
+<entry key="notify_str">Notify</entry>
+<entry key="removeAllTimeTemplates_MenuItem">Remove All</entry>
+<entry key="timeTemplates_Menu">Templates</entry>
+<entry key="createTimeTemplate_MenuItem">Create</entry>
+<entry key="timerTemplateCreated_str">Timer Template has been created.</entry>
+<entry key="allTemplatesRemoved_str">All Timer Templates have been removed.</entry>
+<entry key="SUSPEND_actionDescription">Suspend the system</entry>
+<entry key="REBOOT_actionDescription">Reboot the system</entry>
+<entry key="SHUTDOWN_actionDescription">Shutdown the system</entry>
+<entry key="KILL_PROCESS_BY_PID_actionDescription">Kill process with PID</entry>
+<entry key="BRIGHTNESS_actionDescription">Set brightness</entry>
+<entry key="LOGOUT_actionDescription">Log Out</entry>
+<entry key="SHUTDOWN_Button">Shutdown the system</entry>
+<entry key="SUSPEND_Button">Suspend the system</entry>
+<entry key="REBOOT_Button">Reboot the system</entry>
+<entry key="LOGOUT_Button">Log Out</entry>
+<entry key="KILL_PROCESS_BY_PID_Button">Kill process</entry>
+<entry key="CUSTOM_COMMAND_Button">Custom command</entry>
+<entry key="BRIGHTNESS_Button">Set Display Brightness</entry>
+</properties>
