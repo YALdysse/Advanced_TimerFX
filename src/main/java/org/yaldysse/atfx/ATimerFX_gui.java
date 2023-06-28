@@ -20,9 +20,7 @@
 package org.yaldysse.atfx;
 
 import javafx.beans.Observable;
-import javafx.beans.value.ObservableValue;
 import javafx.scene.effect.DropShadow;
-import javafx.scene.effect.GaussianBlur;
 import org.yaldysse.animation.FallingSnowflakes;
 import org.yaldysse.animation.flowers.FlowersGrowing;
 import org.yaldysse.atfx.action.Action;
@@ -61,9 +59,7 @@ import org.yaldysse.tools.notification.Notification;
 import org.yaldysse.tools.notification.NotificationType;
 
 import java.io.*;
-import java.net.URL;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Month;
@@ -123,8 +119,6 @@ public class ATimerFX_gui extends Application
     private Spinner<Integer> delayBeforeAction_Spinner;
     private int timerTimeInSeconds;
     private String actionDescription = null;
-
-    //---------------- Pane
     private VBox superRoot;
     private HBox delayCustomMenuItem_HBox;
     private LocalTime timerTime_LocalTime;
@@ -153,9 +147,9 @@ public class ATimerFX_gui extends Application
     private Label actionInfo_Label;
     private Label actionValue_Label;
     private String needRootPrivilege_str;
-    private int locX = 0;
-    private int locY = 0;
-    private static String currentLanguage_str = "English";
+    private int locX;
+    private int locY;
+    private static String currentLanguage_str;
     private GridPane gp;
     private static final int PREFERRED_WIDTH = (int) (fxGui.rem * 19.2D);
     private static final int PREFERRED_HEIGHT = (int) (fxGui.rem * 15.6D);
@@ -175,20 +169,8 @@ public class ATimerFX_gui extends Application
     private Button brightnessValue;
     private byte brightness;
     public final double ICON_SIZE = 24.0D;
-    private Image russianFlag_Image;
-    private Image ukraineFlag_Image;
-    private Image unitedKingdom_Image;
-    private Image exit_Image;
-    private Image language_Image;
-    private Image gitHub_Image;
-    private Image startTimer_Image;
-    private Image stopTimer_Image;
-    private Image delay_Image;
-    private Image applicationIcon_Image;
-    private Image timerType_Image;
-    private Image createTemplate_Image;
-    private Image removeAllTimeTemplates_Image;
     private Image info_Image;
+    private Image applicationIcon_Image;
     private Image deleteTemplate_Image;
     private Image deleteUnActive_Image;
     private byte brightnessStep;
@@ -206,6 +188,8 @@ public class ATimerFX_gui extends Application
     private HBox timerInformation_Box;
     private Border brightnessFocusedBorder;
     private DropShadow brighnessDropShadow;
+    private CustomMenuItem loopTimer_CustomMenuItem;
+    private CheckBox timerLoop_CheckBox;
 
     public void start(Stage aStage)
     {
@@ -218,15 +202,9 @@ public class ATimerFX_gui extends Application
 
         initializeComponents();
 
-        stage = aStage;
         scene = new Scene(superRoot);
 
-        scene.setOnMouseClicked(eventClicked ->
-        {
-            timer_Menu.setOnHidden(null);
-            timer_Menu.hide();
-        });
-
+        stage = aStage;
         stage.getIcons().add(applicationIcon_Image);
         stage.setOnCloseRequest(event -> exit());
 
@@ -241,7 +219,6 @@ public class ATimerFX_gui extends Application
         stage.setWidth(PREFERRED_WIDTH);
         stage.setX(locX);
         stage.setY(locY);
-
         stage.setScene(scene);
         stage.setTitle(NAME_OF_PROGRAM + " [build 46 Stable]");
 
@@ -259,7 +236,7 @@ public class ATimerFX_gui extends Application
 
         //Увага: Викликає проблеми з css!!!=======================================
         //Будь-який menubar викликає помилки пов'язані з css, якщо його додавати в BorderPane
-        //Як виявилось, воно гененується також і при додаванни в vbox на перше місце.
+        //Як виявилось, воно генерується також і при  додаванні в vbox на перше місце.
 //        menu_BorderPane.setTop(new MenuBar(new Menu("a"),
 //                new Menu("b")));
         //superRoot.getChildren().add(0,new Label());
@@ -342,95 +319,47 @@ public class ATimerFX_gui extends Application
 
         timeTemplate_MenuItemsArray = new ArrayList<>();
 
-        Image animation_Image = null;
+        Image russianFlag_Image = new Image(getClass().getResourceAsStream("/Images/russia.png"));
+        Image ukraineFlag_Image = new Image(getClass().getResourceAsStream("/Images/ukraine_2.png"));
+        Image unitedKingdom_Image = new Image(getClass().getResourceAsStream("/Images/UK.png"));
+        Image exit_Image = new Image(getClass().getResourceAsStream("/Images/exit.png"));
+        Image gitHub_Image = new Image(getClass().getResourceAsStream("/Images/gitHub.png"));
+        Image language_Image = new Image(getClass().getResourceAsStream("/Images/language_2.png"));
+        Image startTimer_Image = new Image(getClass().getResourceAsStream("/Images/startTimer_3.png"));
+        Image stopTimer_Image = new Image(getClass().getResourceAsStream("/Images/stopTimer_3.png"));
+        Image delay_Image = new Image(getClass().getResourceAsStream("/Images/delay_1.png"));
+        Image timerType_Image = new Image(getClass().getResourceAsStream("/Images/timerType.png"));
+        Image createTemplate_Image = new Image(getClass().getResourceAsStream("/Images/plus.png"));
+        Image removeAllTimeTemplates_Image = new Image(this.getClass().getResourceAsStream("/Images/eraser.png"));
+        info_Image = new Image(this.getClass().getResourceAsStream("/Images/info.png"));
+        deleteTemplate_Image = new Image(this.getClass().getResourceAsStream("/Images/delete_active.png"));
+        deleteUnActive_Image = new Image(this.getClass().getResourceAsStream("/Images/delete_unActive.png"));
+        Image animation_Image = new Image(this.getClass().getResourceAsStream("/Images/Animation.png"));
+        Image loop_Image = new Image(getClass().getResourceAsStream("/Images/Loop_2.png"));
 
-        try
-        {
-            russianFlag_Image = new Image(this.getClass().getClassLoader().getResource("Images/russia.png").openStream());
-            ukraineFlag_Image = new Image(this.getClass().getClassLoader().getResource("Images/ukraine_2.png").openStream());
-            unitedKingdom_Image = new Image(this.getClass().getClassLoader().getResource("Images/UK.png").openStream());
-            exit_Image = new Image(this.getClass().getClassLoader().getResource("Images/exit.png").openStream());
-            gitHub_Image = new Image(this.getClass().getClassLoader().getResource("Images/gitHub.png").openStream());
-            language_Image = new Image(this.getClass().getClassLoader().getResource("Images/language_2.png").openStream());
-            startTimer_Image = new Image(this.getClass().getClassLoader().getResource("Images/startTimer_3.png").openStream());
-            stopTimer_Image = new Image(this.getClass().getClassLoader().getResource("Images/stopTimer_3.png").openStream());
-            delay_Image = new Image(this.getClass().getClassLoader().getResource("Images/delay_1.png").openStream());
-            timerType_Image = new Image(this.getClass().getClassLoader().getResource("Images/timerType.png").openStream());
-            createTemplate_Image = new Image(this.getClass().getResourceAsStream("/Images/plus.png"));
-            removeAllTimeTemplates_Image = new Image(this.getClass().getResourceAsStream("/Images/eraser.png"));
-            info_Image = new Image(this.getClass().getResourceAsStream("/Images/info.png"));
-            deleteTemplate_Image = new Image(this.getClass().getResourceAsStream("/Images/delete_active.png"));
-            deleteUnActive_Image = new Image(this.getClass().getResourceAsStream("/Images/delete_unActive.png"));
-            animation_Image = new Image(this.getClass().getResourceAsStream("/Images/Animation.png"));
-        }
-        catch (IOException ioExc)
-        {
-            ioExc.printStackTrace();
-        }
-
-
-        ImageView russianFlag_ImageView = new ImageView(russianFlag_Image);
-        russianFlag_ImageView.setPreserveRatio(true);
-        russianFlag_ImageView.setFitWidth(ICON_SIZE);
-
-        ImageView ukraineFlag_ImageView = new ImageView(ukraineFlag_Image);
-        ukraineFlag_ImageView.setPreserveRatio(true);
-        ukraineFlag_ImageView.setFitWidth(ICON_SIZE);
-
-        ImageView unitedKingdom_ImageView = new ImageView(unitedKingdom_Image);
-        unitedKingdom_ImageView.setPreserveRatio(true);
-        unitedKingdom_ImageView.setFitWidth(ICON_SIZE);
-
-        ImageView exit_ImageView = new ImageView(exit_Image);
-        exit_ImageView.setPreserveRatio(true);
-        exit_ImageView.setFitWidth(ICON_SIZE);
-
-        ImageView gitHub_ImageView = new ImageView(gitHub_Image);
-        gitHub_ImageView.setPreserveRatio(true);
-        gitHub_ImageView.setFitWidth(ICON_SIZE);
-
-        ImageView language_ImageView = new ImageView(language_Image);
-        language_ImageView.setPreserveRatio(true);
-        language_ImageView.setFitWidth(ICON_SIZE);
-
-        ImageView startTimer_ImageView = new ImageView(startTimer_Image);
-        startTimer_ImageView.setPreserveRatio(true);
-        startTimer_ImageView.setFitWidth(ICON_SIZE);
-
-        ImageView stopTimer_ImageView = new ImageView(stopTimer_Image);
-        stopTimer_ImageView.setPreserveRatio(true);
-        stopTimer_ImageView.setFitWidth(ICON_SIZE);
-
-        ImageView delay_ImageView = new ImageView(delay_Image);
-        delay_ImageView.setPreserveRatio(true);
-        delay_ImageView.setFitWidth(ICON_SIZE);
-
-        ImageView timerType_ImageView = new ImageView(timerType_Image);
-        timerType_ImageView.setPreserveRatio(true);
-        timerType_ImageView.setFitWidth(ICON_SIZE);
 
         startTimer_MenuItem = new MenuItem();
-        startTimer_MenuItem.setGraphic(startTimer_ImageView);
+        startTimer_MenuItem.setGraphic(fxGui.createImageView(startTimer_Image, ICON_SIZE));
         startTimer_MenuItem.setOnAction(this::startTimer_Action);
         startTimer_MenuItem.acceleratorProperty().set(new KeyCodeCombination(KeyCode.ENTER, KeyCodeCombination.CONTROL_DOWN));
         //startTimer_MenuItem.setDisable(true);
 
         stopTimer_MenuItem = new MenuItem();
-        stopTimer_MenuItem.setGraphic(stopTimer_ImageView);
+        stopTimer_MenuItem.setGraphic(fxGui.createImageView(stopTimer_Image, ICON_SIZE));
         stopTimer_MenuItem.setOnAction(this::stopTimerButton_Action);
         stopTimer_MenuItem.acceleratorProperty().set(new KeyCodeCombination(KeyCode.SPACE, KeyCodeCombination.CONTROL_DOWN));
         stopTimer_MenuItem.setDisable(true);
 
         //Нужен для того, чтобы благополучно разместить в одном пункте меню такие
         //элементы как CheckBox, Spinner и Label
-        delayCustomMenuItem_HBox = new HBox(fxGui.rem * 0.5D);
+        delayCustomMenuItem_HBox = new HBox(fxGui.rem * 0.6D);
 
         CustomMenuItem delay_CustomMenuItem = new CustomMenuItem(delayCustomMenuItem_HBox);
         //delay_CustomMenuItem.setGraphic(delay_ImageView);
 
-        delayBeforeAction_CheckBox = new CheckBox("Delay before command execution");
+        delayBeforeAction_CheckBox = new CheckBox();
         delayBeforeAction_CheckBox.setTextFill(Color.BLACK);
-        delayBeforeAction_CheckBox.setGraphic(delay_ImageView);
+        delayBeforeAction_CheckBox.setGraphic(fxGui.createImageView(delay_Image, ICON_SIZE));
         delayBeforeAction_CheckBox.setSelected(true);
         delayBeforeAction_CheckBox.selectedProperty().addListener(event ->
         {
@@ -458,36 +387,33 @@ public class ATimerFX_gui extends Application
                 delayBeforeAction_Spinner.decrement();
             }
         });
-//        delayBeforeAction_Spinner.getValueFactory().valueProperty().addListener(event ->
-//        {
-//            timer_Menu.setOnHidden(null);
-//        });
+
         delayBeforeAction_Spinner.setMinWidth(fxGui.rem * 1.2D);
         delayBeforeAction_Spinner.setPrefWidth(fxGui.rem * 4.0D);
 
         delayCustomMenuItem_HBox.getChildren().addAll(delayBeforeAction_CheckBox, delayBeforeAction_Spinner);
 
         exit_menuItem = new MenuItem();
-        exit_menuItem.setGraphic(exit_ImageView);
+        exit_menuItem.setGraphic(fxGui.createImageView(exit_Image, ICON_SIZE));
         exit_menuItem.acceleratorProperty().set(new KeyCodeCombination(KeyCode.Q, KeyCombination.CONTROL_DOWN));
         exit_menuItem.setOnAction(event -> exit());
-        //exit_menuItem.setDisable(true);
 
         gitHubRepository_MenuItem = new MenuItem();
-        gitHubRepository_MenuItem.setGraphic(gitHub_ImageView);
+        gitHubRepository_MenuItem.setGraphic(fxGui.createImageView(gitHub_Image, ICON_SIZE));
         gitHubRepository_MenuItem.setOnAction(event ->
-        {
-            getHostServices().showDocument("https://github.com/YALdysse/Advanced_TimerFX");
-        });
+                getHostServices().showDocument("https://github.com/YALdysse/Advanced_TimerFX"));
 
-        russianLanguage_MenuItem = new MenuItem("Русский", russianFlag_ImageView);
+        russianLanguage_MenuItem = new MenuItem("Русский",
+                fxGui.createImageView(russianFlag_Image, ICON_SIZE));
         russianLanguage_MenuItem.setOnAction(event ->
                 initLocalization("Russian"));
-        ukrainianLanguage_MenuItem = new MenuItem("Українська", ukraineFlag_ImageView);
+        ukrainianLanguage_MenuItem = new MenuItem("Українська",
+                fxGui.createImageView(ukraineFlag_Image, ICON_SIZE));
         ukrainianLanguage_MenuItem.setOnAction(event ->
                 initLocalization("Ukrainian"));
 
-        englishLanguage_MenuItem = new MenuItem("English", unitedKingdom_ImageView);
+        englishLanguage_MenuItem = new MenuItem("English",
+                fxGui.createImageView(unitedKingdom_Image, ICON_SIZE));
         englishLanguage_MenuItem.setOnAction(event ->
                 initLocalization("English"));
 
@@ -528,13 +454,18 @@ public class ATimerFX_gui extends Application
         playAnimation_MenuItem.setGraphic(fxGui.createImageView(animation_Image,
                 ICON_SIZE));
 
-        language_Menu.setGraphic(language_ImageView);
-        timerType_Menu.setGraphic(timerType_ImageView);
+        timerLoop_CheckBox = new CheckBox();
+        timerLoop_CheckBox.setGraphic(fxGui.createImageView(loop_Image, ICON_SIZE));
+
+        loopTimer_CustomMenuItem = new CustomMenuItem(timerLoop_CheckBox);
+
+        language_Menu.setGraphic(fxGui.createImageView(language_Image, ICON_SIZE));
+        timerType_Menu.setGraphic(fxGui.createImageView(timerType_Image, ICON_SIZE));
         timerType_Menu.getItems().addAll(countdownTimer_MenuItem, specifiedTimeTimer_MenuItem);
         language_Menu.getItems().addAll(russianLanguage_MenuItem, ukrainianLanguage_MenuItem, englishLanguage_MenuItem);
-        general_menu.getItems().addAll(language_Menu, gitHubRepository_MenuItem, exit_menuItem);
+        general_menu.getItems().addAll(playAnimation_MenuItem, language_Menu, gitHubRepository_MenuItem, exit_menuItem);
         timer_Menu.getItems().addAll(timerType_Menu, new SeparatorMenuItem(), startTimer_MenuItem, stopTimer_MenuItem,
-                new SeparatorMenuItem(), delay_CustomMenuItem, playAnimation_MenuItem);
+                new SeparatorMenuItem(), delay_CustomMenuItem);
         timeTemplates_Menu.getItems().addAll(createTimeTemplate_MenuItem, removeAllTimeTemplates_MenuItem, new SeparatorMenuItem());
         menuBar.getMenus().addAll(general_menu, timer_Menu, timeTemplates_Menu);
     }
@@ -546,6 +477,7 @@ public class ATimerFX_gui extends Application
         radioButtonsBoxes = new ArrayList<>();
         actionDescriptionStrings = new ArrayList<>();
         brightnessStep = 1;
+        currentLanguage_str = "English";
 
         final double TIME_TEXT_OPACITY = 0.55D;
         hours_text = new Text();
@@ -647,7 +579,7 @@ public class ATimerFX_gui extends Application
 
         radioGroup_Box = new VBox(fxGui.rem * 0.6D);
         radioGroup_Box.setPadding(new Insets(0.0D, 0.0D,
-                fxGui.rem * 0.3D, fxGui.rem * 0.6D));
+                fxGui.rem * 0.3D, fxGui.rem * 1.2D));
         for (Pane radioHBox : radioButtonsBoxes)
         {
             radioGroup_Box.getChildren().add(radioHBox);
@@ -1037,9 +969,6 @@ public class ATimerFX_gui extends Application
         notify.setDisplayDuration(Duration.seconds(10.0D));
         notify.setDisappearanceAnimation(AnimationType.FADE, Duration.seconds(1.0D));
         notify.showNotification();
-
-        // new Notification("Advanced TimerFX", "Time is up").showNotification();
-        // }
     }
 
     private void startTimer_Action(ActionEvent event)
@@ -1445,10 +1374,6 @@ public class ATimerFX_gui extends Application
         {
             language_properties.loadFromXML(this.getClass().getResourceAsStream("/Localizations/Language_" + aLocale + ".lang"));
 
-            URL langNode_URL = this.getClass().getClassLoader().getResource("Localizations/Language_" + aLocale + ".lang");
-            YALtools.printDebugMessage("Путь к файлу локализации: " + langNode_URL.toExternalForm());
-
-
             startButton_str = language_properties.getProperty("startTimer_button", "Start");
             inTimerType_str = language_properties.getProperty("timerType_In_Label", "in");
             atTimerType_str = language_properties.getProperty("timerType_At_Label", "at");
@@ -1495,7 +1420,7 @@ public class ATimerFX_gui extends Application
 
             actionDescriptionStrings.clear();
 
-            String key = null;
+            String key;
             //ActionRadioButtons
             for (int k = 0; k < radioButtons.size(); k++)
             {
@@ -1593,7 +1518,6 @@ public class ATimerFX_gui extends Application
             return;
         }
         currentLanguage_str = aLocale;
-        //YALtools.printDebugMessage(local.absolutePath());
     }
 
     private void saveSettings()
@@ -1626,7 +1550,7 @@ public class ATimerFX_gui extends Application
         }
         catch (Exception ioExc)
         {
-            YALtools.printDebugMessage("Возникла ошибка ввода-вывода узла настроек.\n" + ioExc.toString());
+            YALtools.printDebugMessage("Возникла ошибка ввода-вывода узла настроек.\n" + ioExc);
         }
     }
 
@@ -1666,11 +1590,11 @@ public class ATimerFX_gui extends Application
         }
         catch (FileNotFoundException fileNFExc)
         {
-            YALtools.printDebugMessage("Возникла ошибка при обнаружении каталога сохранения узла.\n" + fileNFExc.toString());
+            YALtools.printDebugMessage("Возникла ошибка при обнаружении каталога сохранения узла.\n" + fileNFExc);
         }
         catch (Exception ioExc)
         {
-            YALtools.printDebugMessage("Возникла ошибка ввода-вывода узла настроек.\n" + ioExc.toString());
+            YALtools.printDebugMessage("Возникла ошибка ввода-вывода узла настроек.\n" + ioExc);
         }
         System.out.println("Settings: " + (System.currentTimeMillis() - startTime));
     }
@@ -1791,10 +1715,7 @@ public class ATimerFX_gui extends Application
         timerTemplateCreated.setOnShowing(event ->
         {
             Timeline timeline1 = new Timeline(new KeyFrame(showDuration,
-                    event2 ->
-                    {
-                        timerTemplateCreated.hide();
-                    }));
+                    event2 -> timerTemplateCreated.hide()));
             timeline1.play();
         });
         timerTemplateCreated.show(node, node.localToScreen(1, 1).getX(),
@@ -1838,7 +1759,7 @@ public class ATimerFX_gui extends Application
                 actionRadioButton = findActionRadioButtonByRadioButtonAction(radioButtons, ta);
                 actionRadioButton.setSelected(true);
             }
-            Event.fireEvent(actionRadioButton, new ActionEvent());
+            actionRadioButton.fireEvent(new ActionEvent());
         }
 
         if (actions.contains(TimerAction.KILL_PROCESS_BY_PID))
@@ -1973,7 +1894,7 @@ public class ATimerFX_gui extends Application
 
     private void createAndShowTimerDelayAlert()
     {
-        int tmpDelayTime = (int) delayBeforeAction_Spinner.getValue();
+        int tmpDelayTime = delayBeforeAction_Spinner.getValue();
         TimerAlert ta = new TimerAlert();
         ta.initOwner(scene.getWindow());
         ta.initModality(Modality.APPLICATION_MODAL);

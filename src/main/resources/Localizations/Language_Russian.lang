@@ -27,7 +27,7 @@
 <entry key="theTimerHasExpired_str" >Время таймера истекло.</entry>
 <entry key="timerType_Menu" >Тип таймера</entry>
 <entry key="specifiedTime_MenuItem" >В указанное время</entry>
-<entry key="countdownTimer_MenuItem" >Через указанное время</entry>
+<entry key="countdownTimer_MenuItem" >Обратный отсч'т</entry>
 <entry key="timerType_In_Label" >через</entry>
 <entry key="timerType_At_Label" >в</entry>
 <entry key="notify_str">Уведомить</entry>
@@ -47,9 +47,9 @@
 <entry key="BRIGHTNESS_actionDescription">Изменить яркость дисплея</entry>
 <entry key="LOGOUT_actionDescription">Завершить сеанс текущего пользователя</entry>
 <entry key="CUSTOM_COMMAND_actionDescription">Команда</entry>
-<entry key="SHUTDOWN_Button">Выключить комп'ютер</entry>
-<entry key="SUSPEND_Button">Перевести комп'ютер в сон</entry>
-<entry key="REBOOT_Button">Перезагрузить комп'ютер</entry>
+<entry key="SHUTDOWN_Button">Выключить компьютер</entry>
+<entry key="SUSPEND_Button">Перевести Компьютер в сон</entry>
+<entry key="REBOOT_Button">Перезагрузить Компьютер</entry>
 <entry key="LOGOUT_Button">Завершить сеанс пользователя</entry>
 <entry key="KILL_PROCESS_BY_PID_Button">Завершить процесс</entry>
 <entry key="CUSTOM_COMMAND_Button">Команда</entry>

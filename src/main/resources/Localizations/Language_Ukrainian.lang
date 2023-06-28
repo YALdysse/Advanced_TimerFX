@@ -28,7 +28,7 @@
 <entry key="theTimerHasExpired_str">Час таймеру сплинув.</entry>
 <entry key="timerType_Menu">Тип таймеру</entry>
 <entry key="specifiedTime_MenuItem">в вказаний час</entry>
-<entry key="countdownTimer_MenuItem">через вказаний час</entry>
+<entry key="countdownTimer_MenuItem">Зворотній відлік</entry>
 <entry key="notify_str">Повідомити</entry>
 <entry key="timerType_In_Label">через</entry>
 <entry key="timerType_At_Label">в</entry>
