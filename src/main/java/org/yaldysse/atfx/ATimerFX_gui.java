@@ -19,6 +19,10 @@
 
 package org.yaldysse.atfx;
 
+import javafx.beans.Observable;
+import javafx.beans.value.ObservableValue;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.effect.GaussianBlur;
 import org.yaldysse.animation.FallingSnowflakes;
 import org.yaldysse.animation.flowers.FlowersGrowing;
 import org.yaldysse.atfx.action.Action;
@@ -117,9 +121,7 @@ public class ATimerFX_gui extends Application
     private CheckMenuItem playAnimation_MenuItem;
     private CheckBox delayBeforeAction_CheckBox;
     private Spinner<Integer> delayBeforeAction_Spinner;
-    private CustomMenuItem delay_CustomMenuItem;
     private int timerTimeInSeconds;
-    private boolean action = false;
     private String actionDescription = null;
 
     //---------------- Pane
@@ -170,7 +172,7 @@ public class ATimerFX_gui extends Application
     private Font fontForLabels;
     private Font fontForLabelsValues;
     private Label timerNameValue_Label;
-    private Label brightnessValue_Label;
+    private Button brightnessValue;
     private byte brightness;
     public final double ICON_SIZE = 24.0D;
     private Image russianFlag_Image;
@@ -202,6 +204,8 @@ public class ATimerFX_gui extends Application
     private Background wingterBackground;
     private Background springBackground;
     private HBox timerInformation_Box;
+    private Border brightnessFocusedBorder;
+    private DropShadow brighnessDropShadow;
 
     public void start(Stage aStage)
     {
@@ -421,7 +425,7 @@ public class ATimerFX_gui extends Application
         //элементы как CheckBox, Spinner и Label
         delayCustomMenuItem_HBox = new HBox(fxGui.rem * 0.5D);
 
-        delay_CustomMenuItem = new CustomMenuItem(delayCustomMenuItem_HBox);
+        CustomMenuItem delay_CustomMenuItem = new CustomMenuItem(delayCustomMenuItem_HBox);
         //delay_CustomMenuItem.setGraphic(delay_ImageView);
 
         delayBeforeAction_CheckBox = new CheckBox("Delay before command execution");
@@ -607,18 +611,28 @@ public class ATimerFX_gui extends Application
         timerType_HBox.setAlignment(Pos.CENTER);
 
         brightness = 50;
-        brightnessValue_Label = new Label("" + brightness);
-        brightnessValue_Label.setOpacity(0.9D);
-        brightnessValue_Label.setOnScroll(this::brightnessScroll_Action);
-        brightnessValue_Label.setBackground(new Background(new BackgroundFill(
+        brightnessValue = new Button("" + brightness);
+        brightnessValue.setContentDisplay(ContentDisplay.TEXT_ONLY);
+        brightnessValue.setOpacity(0.9D);
+        brightnessValue.setOnScroll(this::brightnessScroll_Action);
+        brightnessValue.setBackground(new Background(new BackgroundFill(
                 Color.rgb(173, 255, 47, (double) brightness / 100.0D),
                 new CornerRadii(fxGui.rem * 0.5D), Insets.EMPTY)));
-        brightnessValue_Label.setPadding(new Insets(fxGui.rem * 0.4D));
-        brightnessValue_Label.setFont(Font.loadFont(getClass().getResourceAsStream(
+        brightnessValue.setPadding(new Insets(fxGui.rem * 0.4D));
+        brightnessValue.setFont(Font.loadFont(getClass().getResourceAsStream(
                 "/Fonts/arcadeclassic.ttf"), 16.0D));
-        brightnessValue_Label.setMinWidth(fxGui.calculateTextWidth(brightnessValue_Label.getFont(),
+        brightnessValue.setMinWidth(fxGui.calculateTextWidth(brightnessValue.getFont(),
                 "512=="));
-        brightnessValue_Label.setAlignment(Pos.CENTER);
+        brightnessValue.setAlignment(Pos.CENTER);
+        brightnessValue.setOnKeyPressed(this::brightness_KeyPressed);
+        brightnessValue.focusedProperty().addListener(this::brightness_focusedProperty);
+
+        brightnessFocusedBorder = new Border(new BorderStroke(
+                Color.DEEPSKYBLUE,
+                BorderStrokeStyle.SOLID,
+                brightnessValue.getBackground().getFills().get(0).getRadii(),
+                BorderStroke.THIN));
+        brighnessDropShadow = new DropShadow(fxGui.rem * 1.2D, Color.DEEPSKYBLUE);
 
         Image search_Image = new Image(getClass().getResourceAsStream("/Images/Search.png"));
 
@@ -631,7 +645,7 @@ public class ATimerFX_gui extends Application
         killProcessWithChildren_CheckBox.setPadding(new Insets(0.0D, 0.0D,
                 0.0D, fxGui.rem * 1.2D));
 
-        radioGroup_Box = new VBox(fxGui.rem * 0.5D);
+        radioGroup_Box = new VBox(fxGui.rem * 0.6D);
         radioGroup_Box.setPadding(new Insets(0.0D, 0.0D,
                 fxGui.rem * 0.3D, fxGui.rem * 0.6D));
         for (Pane radioHBox : radioButtonsBoxes)
@@ -806,16 +820,8 @@ public class ATimerFX_gui extends Application
         {
             brightness -= brightnessStep;
         }
-        double opacity = (double) brightness / 100.0D;
-        if (brightness < 25)
-        {
-            opacity = 0.25D;
-        }
 
-        brightnessValue_Label.setText("" + brightness);
-        brightnessValue_Label.setBackground(new Background(new BackgroundFill(
-                Color.rgb(173, 255, 47, opacity),
-                new CornerRadii(fxGui.rem * 0.4D), Insets.EMPTY)));
+        changingBrightnessButtonViewByBrightnessValue();
 
 //        if(brightness > 50)
 //        {
@@ -870,7 +876,7 @@ public class ATimerFX_gui extends Application
             actionRadioButton_Action(new ActionEvent());
 
             findRadioButtonContainerByRadioButtonAction(TimerAction.BRIGHTNESS).getChildren()
-                    .add(brightnessValue_Label);
+                    .add(brightnessValue);
         });
 
         radioButtons.add(shutdown_radio);
@@ -914,7 +920,6 @@ public class ATimerFX_gui extends Application
     {
         if (performActionAfterTimerWentOut_checkBox.isSelected())
         {
-            action = true;
             if (!root.getChildren().contains(radioGroup_Box))
             {
                 root.getChildren().add(radioGroup_Box);
@@ -938,7 +943,6 @@ public class ATimerFX_gui extends Application
             }
         } else
         {
-            action = false;
             root.getChildren().remove(radioGroup_Box);
 
             startTimer_MenuItem.setDisable(false);
@@ -1846,7 +1850,7 @@ public class ATimerFX_gui extends Application
         } else if (actions.contains(TimerAction.BRIGHTNESS))
         {
             brightness = template.getBrightness();
-            brightnessValue_Label.setText("" + brightness);
+            brightnessValue.setText("" + brightness);
         }
 
 
@@ -1949,7 +1953,7 @@ public class ATimerFX_gui extends Application
         removeNodeFromRadioPaneByRadioButtonAction(TimerAction.KILL_PROCESS_BY_PID,
                 killProcessWithChildren_CheckBox);
         removeNodeFromRadioPaneByRadioButtonAction(TimerAction.BRIGHTNESS,
-                brightnessValue_Label);
+                brightnessValue);
 
         actionDescription = findActionDescriptionStringByTimerTypeAction(
                 findSelectedActionRadioButtonUsingToggleGroup().getAction());
@@ -2054,7 +2058,7 @@ public class ATimerFX_gui extends Application
         }
 
 
-        if (action)
+        if (performActionAfterTimerWentOut_checkBox.isSelected())
         {
             actionValue_Label.setText(actionDescription);
             if (processToKill != null)
@@ -2091,7 +2095,7 @@ public class ATimerFX_gui extends Application
             separator = true;
         }
 
-        if (action)
+        if (performActionAfterTimerWentOut_checkBox.isSelected())
         {
             timerInfoPane.getChildren().add(timerActionInfo_Pane);
             separator = true;
@@ -2145,6 +2149,11 @@ public class ATimerFX_gui extends Application
      */
     private void checkingBrightnessSettingAvailableLinux()
     {
+        if (true)
+        {
+            return;
+        }
+
         try
         {
             Brightness brightness1 = new Brightness(BrightnessMethod.BACKLIGHT_CONFIG_FILE,
@@ -2171,6 +2180,103 @@ public class ATimerFX_gui extends Application
         {
             System.out.println(ioException);
         }
+    }
+
+    private void brightness_KeyPressed(KeyEvent event)
+    {
+        KeyCode keyCode = event.getCode();
+
+        switch (keyCode)
+        {
+            case UP:
+                brightnessValue.requestFocus();
+                if (brightness >= 100)
+                {
+                    break;
+                }
+                brightness++;
+                break;
+
+            case DOWN:
+                brightnessValue.requestFocus();
+                if (brightness <= 0)
+                {
+                    break;
+                }
+                brightness--;
+                break;
+
+            case LEFT:
+                brightnessValue.requestFocus();
+                if (brightness <= 1)
+                {
+                    brightness = 0;
+                    break;
+                }
+                brightness -= 2;
+                break;
+
+            case RIGHT:
+                brightnessValue.requestFocus();
+                if (brightness >= 99)
+                {
+                    brightness = 100;
+                    break;
+                }
+                brightness += 2;
+                break;
+
+            case PAGE_UP:
+                brightnessValue.requestFocus();
+                if (brightness >= 98)
+                {
+                    brightness = 100;
+                    break;
+                }
+                brightness += 3;
+                break;
+
+            case PAGE_DOWN:
+                brightnessValue.requestFocus();
+                if (brightness <= 2)
+                {
+                    brightness = 0;
+                    break;
+                }
+                brightness -= 3;
+                break;
+        }
+
+        brightnessValue.setText("" + brightness);
+        changingBrightnessButtonViewByBrightnessValue();
+    }
+
+    private void brightness_focusedProperty(Observable observableValue,
+                                            boolean oldValue, boolean newValue)
+    {
+        if (newValue)
+        {
+            brightnessValue.setBorder(brightnessFocusedBorder);
+            brightnessValue.setEffect(brighnessDropShadow);
+        } else
+        {
+            brightnessValue.setBorder(Border.EMPTY);
+            brightnessValue.setEffect(null);
+        }
+    }
+
+    private void changingBrightnessButtonViewByBrightnessValue()
+    {
+        double opacity = (double) brightness / 100.0D;
+        if (brightness < 25)
+        {
+            opacity = 0.25D;
+        }
+
+        brightnessValue.setText("" + brightness);
+        brightnessValue.setBackground(new Background(new BackgroundFill(
+                Color.rgb(173, 255, 47, opacity),
+                new CornerRadii(fxGui.rem * 0.4D), Insets.EMPTY)));
     }
 }
 //22 24
