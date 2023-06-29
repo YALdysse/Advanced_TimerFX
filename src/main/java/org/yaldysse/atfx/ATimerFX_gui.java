@@ -152,8 +152,8 @@ public class ATimerFX_gui extends Application
     private int locY;
     private static String currentLanguage_str;
     private GridPane gp;
-    private static final int PREFERRED_WIDTH = (int) (fxGui.rem * 18.7D);
-    private static final int PREFERRED_HEIGHT = (int) (fxGui.rem * 15.6D);
+    private static final int PREFERRED_WIDTH = (int) (fxGui.rem * 17.6D);
+    private static final int PREFERRED_HEIGHT = (int) (fxGui.rem * 16.2D);
     private Popup popup;
     private Notification notify;
     private Thread initializingTimerIsRunningComponent_Thread;
@@ -219,10 +219,10 @@ public class ATimerFX_gui extends Application
         stage.setX(locX);
         stage.setY(locY);
         stage.setScene(scene);
-        stage.setTitle(NAME_OF_PROGRAM + " [build 47 Stable]");
-        stage.setMinWidth(PREFERRED_WIDTH + fxGui.rem * 0.1D);
-        stage.setMaxWidth(PREFERRED_WIDTH + fxGui.rem * 0.5D);
-        stage.setMinHeight(PREFERRED_HEIGHT - fxGui.rem * 1.1D);
+        stage.setTitle(NAME_OF_PROGRAM + " [build 48 Stable]");
+        stage.setMinWidth(PREFERRED_WIDTH);
+        stage.setMaxWidth(PREFERRED_WIDTH + fxGui.rem * 2.3D);
+        stage.setMinHeight(PREFERRED_HEIGHT);
 
         if (initializeMenu_Thread.isAlive())
         {
@@ -247,11 +247,13 @@ public class ATimerFX_gui extends Application
 
         superRoot.getChildren().add(0, menuBar);
 
-        //stage.show();
-        //stage.hide();
-        stage.setHeight(fxGui.rem * 18.9D);
         stage.show();
-
+        //stage.sizeToScene();
+        System.out.println("pane: " + superRoot.getBoundsInParent().getHeight());
+        stage.setHeight(PREFERRED_HEIGHT + (fxGui.rem * 0.8D));
+        System.out.println("stageH: " + stage.getHeight()
+                + "\nsceneH " + scene.getHeight());
+        stage.setWidth(PREFERRED_WIDTH + fxGui.rem * 1.1D);
         System.out.println("Времени прошло: " + (System.currentTimeMillis() - startTime));
 
         initializingTimerIsRunningComponent_Thread = new Thread(this::initializeTimerIsRunningComponents);
@@ -370,8 +372,7 @@ public class ATimerFX_gui extends Application
             {
                 YALtools.printDebugMessage("Задержка включена");
                 delayCustomMenuItem_HBox.getChildren().add(delayBeforeAction_Spinner);
-            }
-            else
+            } else
             {
                 delayCustomMenuItem_HBox.getChildren().remove(delayBeforeAction_Spinner);
             }
@@ -386,8 +387,7 @@ public class ATimerFX_gui extends Application
             if (event.getDeltaY() > 10)
             {
                 delayBeforeAction_Spinner.increment();
-            }
-            else if (event.getDeltaY() < 0)
+            } else if (event.getDeltaY() < 0)
             {
                 delayBeforeAction_Spinner.decrement();
             }
@@ -524,7 +524,7 @@ public class ATimerFX_gui extends Application
         rootPrivilege_ToolTip = new Tooltip();
         rootPrivilege_ToolTip.setShowDelay(Duration.millis(200));
 
-        if(System.getProperty("os.name").contains("Linux"))
+        if (System.getProperty("os.name").contains("Linux"))
         {
             checkingBrightnessSettingAvailableLinux();
         }
@@ -644,7 +644,7 @@ public class ATimerFX_gui extends Application
         root.setOnRotate(event -> timerWentOutAction());
 
         superRoot = new VBox(root);
-        superRoot.setMaxWidth(PREFERRED_WIDTH + fxGui.rem * 0.7D);
+        superRoot.setMaxWidth(PREFERRED_WIDTH + fxGui.rem * 2.4D);
     }
 
     private void openProcessSelector_Action(ActionEvent actionEvent)
@@ -666,8 +666,7 @@ public class ATimerFX_gui extends Application
             {
                 startTimer_MenuItem.setDisable(true);
                 startTimer_button.setDisable(true);
-            }
-            else
+            } else
             {
                 System.out.println("Selected: " + processToKill.getPid() + "\t" + processToKill.getShortCommand());
                 startTimer_MenuItem.setDisable(false);
@@ -722,8 +721,7 @@ public class ATimerFX_gui extends Application
         if (event.getDeltaY() > 10.0D)
         {
             spinner.increment();
-        }
-        else if (event.getDeltaY() < 0.0D)
+        } else if (event.getDeltaY() < 0.0D)
         {
             spinner.decrement();
         }
@@ -768,8 +766,7 @@ public class ATimerFX_gui extends Application
         if (event.getDeltaY() > 10.0D && brightness < 100)
         {
             brightness += brightnessStep;
-        }
-        else if (event.getDeltaY() < -10.0D && brightness > 0)
+        } else if (event.getDeltaY() < -10.0D && brightness > 0)
         {
             brightness -= brightnessStep;
         }
@@ -889,14 +886,12 @@ public class ATimerFX_gui extends Application
             {
                 startTimer_MenuItem.setDisable(true);
                 startTimer_button.setDisable(true);
-            }
-            else
+            } else
             {
                 startTimer_MenuItem.setDisable(false);
                 startTimer_button.setDisable(false);
             }
-        }
-        else
+        } else
         {
             root.getChildren().remove(radioGroup_Box);
 
@@ -943,8 +938,7 @@ public class ATimerFX_gui extends Application
         if (!timerName_textFiels.getText().equals(""))
         {
             message = "The timer with name '" + timerName_textFiels.getText() + "' has expired.";
-        }
-        else
+        } else
         {
             message = theTimerHasExpired_str;
         }
@@ -957,8 +951,7 @@ public class ATimerFX_gui extends Application
             {
                 stage.setOpacity(0.5D);
                 createAndShowTimerDelayAlert();
-            }
-            else
+            } else
             {
                 stage.setOpacity(1.0D);
                 stage.setAlwaysOnTop(false);
@@ -1113,8 +1106,7 @@ public class ATimerFX_gui extends Application
             countdownTimer = destinationTime.minusHours(time.getHour());
             countdownTimer = countdownTimer.minusMinutes(time.getMinute());
             countdownTimer = countdownTimer.minusSeconds(time.getSecond());
-        }
-        else
+        } else
         {
             if (timerHours == 0 && timerMinutes == 0 && timerSeconds == 0)
             {
@@ -1251,8 +1243,7 @@ public class ATimerFX_gui extends Application
         if (windows)
         {
             performWindowsAction(findSelectedActionRadioButtonUsingToggleGroup().getAction());
-        }
-        else if (linux)
+        } else if (linux)
         {
             performLinuxAction(findSelectedActionRadioButtonUsingToggleGroup().getAction());
         }
@@ -1271,37 +1262,30 @@ public class ATimerFX_gui extends Application
             {
                 timerAction = new Shutdown();
 
-            }
-            else if (timerActionType == TimerAction.SUSPEND)
+            } else if (timerActionType == TimerAction.SUSPEND)
             {
                 timerAction = new Suspend();
-            }
-            else if (timerActionType == TimerAction.CUSTOM_COMMAND)//------------------------- Реалізація
+            } else if (timerActionType == TimerAction.CUSTOM_COMMAND)//------------------------- Реалізація
             {
                 timerAction = new Command(customCommand_textField.getText());
-            }
-            else if (timerActionType == TimerAction.REBOOT)
+            } else if (timerActionType == TimerAction.REBOOT)
             {
                 timerAction = new Reboot();
                 //commandArray[2] = "firefox mail.yahoo.com & audacious /media/yaroslav/Freedom/1.\\ Audio/1996\\ Pure\\ Instinct\\ [1996\\ Japan\\ AMCE-950\\ EW]/1996\\ -\\ Pure\\ Instinct\\ (AMCE-950)/10\\ -\\ You\\ And\\ I.flac & gnome-terminal";
-            }
-            else if (timerActionType == TimerAction.KILL_PROCESS_BY_PID)
+            } else if (timerActionType == TimerAction.KILL_PROCESS_BY_PID)
             {
                 if (killProcessWithChildren_CheckBox.isSelected())
                 {
                     timerAction = new KillProcessByPid(processToKill.getShortCommand(),
                             true);
-                }
-                else
+                } else
                 {
                     timerAction = new KillProcessByPid(processToKill.getPid());
                 }
-            }
-            else if (timerActionType == TimerAction.LOGOUT)
+            } else if (timerActionType == TimerAction.LOGOUT)
             {
                 timerAction = new Logout();
-            }
-            else if (timerActionType == TimerAction.BRIGHTNESS)
+            } else if (timerActionType == TimerAction.BRIGHTNESS)
             {
                 timerAction = new Brightness(BrightnessMethod.BACKLIGHT_CONFIG_FILE, brightness);
             }
@@ -1321,29 +1305,23 @@ public class ATimerFX_gui extends Application
         if (timerActionType == TimerAction.SHUTDOWN)
         {
             timerAction = new org.yaldysse.atfx.action.windows.Shutdown();
-        }
-        else if (timerActionType == TimerAction.SUSPEND)
+        } else if (timerActionType == TimerAction.SUSPEND)
         {
             timerAction = new org.yaldysse.atfx.action.windows.Suspend();
-        }
-        else if (timerActionType == TimerAction.CUSTOM_COMMAND)//--------------------- Implementation
+        } else if (timerActionType == TimerAction.CUSTOM_COMMAND)//--------------------- Implementation
         {
             timerAction = new Command(customCommand_textField.getText());
-        }
-        else if (timerActionType == TimerAction.REBOOT)
+        } else if (timerActionType == TimerAction.REBOOT)
         {
             timerAction = new org.yaldysse.atfx.action.windows.Reboot();
-        }
-        else if (timerActionType == TimerAction.KILL_PROCESS_BY_PID)
+        } else if (timerActionType == TimerAction.KILL_PROCESS_BY_PID)
         {
             timerAction = new org.yaldysse.atfx.action.windows.KillProcessByPid(
                     processToKill.getPid(), killProcessWithChildren_CheckBox.isSelected());
-        }
-        else if (timerActionType == TimerAction.LOGOUT)
+        } else if (timerActionType == TimerAction.LOGOUT)
         {
             timerAction = new org.yaldysse.atfx.action.windows.Logout();
-        }
-        else if (timerActionType == TimerAction.BRIGHTNESS)
+        } else if (timerActionType == TimerAction.BRIGHTNESS)
         {
             timerAction = new org.yaldysse.atfx.action.windows.Brightness(brightness);
         }
@@ -1436,8 +1414,7 @@ public class ATimerFX_gui extends Application
             if (countdownTimer_MenuItem.isSelected())
             {
                 startTimer_button.setText(notify_str + " " + inTimerType_str + " (" + startButton_str + ")");
-            }
-            else
+            } else
             {
                 startTimer_button.setText(notify_str + " " + atTimerType_str + " (" + startButton_str + ")");
             }
@@ -1629,8 +1606,7 @@ public class ATimerFX_gui extends Application
                     !delayCustomMenuItem_HBox.getChildren().contains(delayBeforeAction_Spinner))
             {
                 delayCustomMenuItem_HBox.getChildren().add(delayBeforeAction_Spinner);
-            }
-            else if (!delayBeforeAction_CheckBox.isSelected() &&
+            } else if (!delayBeforeAction_CheckBox.isSelected() &&
                     delayCustomMenuItem_HBox.getChildren().contains(delayBeforeAction_Spinner))
             {
                 delayCustomMenuItem_HBox.getChildren().remove(delayBeforeAction_Spinner);
@@ -1716,8 +1692,7 @@ public class ATimerFX_gui extends Application
                 temporaryTemplate.setOnAction(event -> applyTimerTemplate(timerTemplates.get(finalK)));
                 timeTemplate_MenuItemsArray.add(temporaryTemplate);
                 temporaryTemplate.setAccelerator(KeyCodeCombination.valueOf("Alt+" + (k + 1)));
-            }
-            else
+            } else
             {
                 temporaryTemplate = timeTemplate_MenuItemsArray.get(k);
                 temporaryTemplate.setOnAction(null);
@@ -1785,8 +1760,7 @@ public class ATimerFX_gui extends Application
         if (template.isCountdownTimer())
         {
             Event.fireEvent(countdownTimer_MenuItem, new ActionEvent());
-        }
-        else
+        } else
         {
             Event.fireEvent(specifiedTimeTimer_MenuItem, new ActionEvent());
         }
@@ -1819,12 +1793,10 @@ public class ATimerFX_gui extends Application
         if (actions.contains(TimerAction.KILL_PROCESS_BY_PID))
         {
             processToKill = template.getProcessToKill();
-        }
-        else if (actions.contains(TimerAction.CUSTOM_COMMAND))
+        } else if (actions.contains(TimerAction.CUSTOM_COMMAND))
         {
             customCommand_textField.setText(template.getCustomCommand());
-        }
-        else if (actions.contains(TimerAction.BRIGHTNESS))
+        } else if (actions.contains(TimerAction.BRIGHTNESS))
         {
             brightness = template.getBrightness();
             brightnessValue.setText(String.valueOf(brightness));
@@ -1965,8 +1937,7 @@ public class ATimerFX_gui extends Application
             if (ta.getResultButton().getText().equals("No"))
             {
                 YALtools.printDebugMessage("Таймер отменен.");
-            }
-            else
+            } else
             {
                 performAction();
                 YALtools.printDebugMessage("Starting: stopTimerButton_Action");
@@ -2184,8 +2155,7 @@ public class ATimerFX_gui extends Application
         {
             brightnessValue.setBorder(brightnessFocusedBorder);
             brightnessValue.setEffect(brighnessDropShadow);
-        }
-        else
+        } else
         {
             brightnessValue.setBorder(Border.EMPTY);
             brightnessValue.setEffect(null);
