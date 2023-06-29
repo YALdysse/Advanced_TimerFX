@@ -38,7 +38,7 @@
 <entry key="timerTemplateCreated_str">Шаблон создан.</entry>
 <entry key="allTemplatesRemoved_str">Все шаблоны удалены.</entry>
 <entry key="timerTemplateApplied_str" >Шаблон применен.</entry>
-<entry key="needRootPrivilege_str">Для выполнения той операции необходимы права суперпользователя (Root).</entry>
+<entry key="needRootPrivilege_str">Для выполнения той операции необходимы права суперпользователя (root).</entry>
 <entry key="killProcessWithChildren_CheckBox" >Завершить дочерние процессы</entry>
 <entry key="SUSPEND_actionDescription">Перевести ОС в сон</entry>
 <entry key="REBOOT_actionDescription">Перезагрузить ОС</entry>
@@ -54,4 +54,6 @@
 <entry key="KILL_PROCESS_BY_PID_Button">Завершить процесс</entry>
 <entry key="CUSTOM_COMMAND_Button">Команда</entry>
 <entry key="BRIGHTNESS_Button">Изменить яркость дисплея</entry>
+<entry key="loopTimer_MenuItem">Циклический таймер</entry>
+<entry key="loopTimer_toolTip">Если эта функция включена, то после истечений времени таймер будет запущен снова.</entry>
 </properties>

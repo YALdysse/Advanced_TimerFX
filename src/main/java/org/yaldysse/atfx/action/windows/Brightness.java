@@ -1,6 +1,6 @@
 package org.yaldysse.atfx.action.windows;
 
-import org.yaldysse.atfx.ProcessUtils;
+import org.yaldysse.atfx.process.ProcessUtils;
 import org.yaldysse.atfx.action.Action;
 
 import java.io.IOException;
@@ -23,7 +23,7 @@ public class Brightness implements Action
     {
         if (aBrightnessInPercent < 1 || aBrightnessInPercent > 100)
         {
-            throw new IllegalArgumentException("Значення повинно знаходитись в мехах від 1 до 100");
+            throw new IllegalArgumentException("Значення повинно знаходитись в межах від 1 до 100");
         }
         brightnessInPercent = aBrightnessInPercent;
 

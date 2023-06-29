@@ -55,4 +55,6 @@
 <entry key="KILL_PROCESS_BY_PID_Button">Примусово завершити процес</entry>
 <entry key="CUSTOM_COMMAND_Button">Команда</entry>
 <entry key="BRIGHTNESS_Button">Змінити яскравість дисплею</entry>
+<entry key="loopTimer_MenuItem">Циклічний таймер</entry>
+<entry key="loopTimer_toolTip">Якщо ця функція включена, то після закінчення відведеного часу таймер буде запущений знову.</entry>
 </properties>

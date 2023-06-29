@@ -1,7 +1,7 @@
 package org.yaldysse.atfx.action.linux;
 
 import org.yaldysse.atfx.action.Action;
-import org.yaldysse.atfx.ProcessUtils;
+import org.yaldysse.atfx.process.ProcessUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
