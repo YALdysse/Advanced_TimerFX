@@ -48,4 +48,6 @@
 <entry key="KILL_PROCESS_BY_PID_Button">Kill process</entry>
 <entry key="CUSTOM_COMMAND_Button">Custom command</entry>
 <entry key="BRIGHTNESS_Button">Set Display Brightness</entry>
+<entry key="sounds_Menu">Sounds</entry>
+<entry key="noSound_MenuItem">No sound</entry>
 </properties>

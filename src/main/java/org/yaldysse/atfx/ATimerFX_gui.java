@@ -21,6 +21,10 @@ package org.yaldysse.atfx;
 
 import javafx.beans.Observable;
 import javafx.scene.effect.DropShadow;
+import javafx.scene.media.AudioClip;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import javafx.stage.FileChooser;
 import org.yaldysse.animation.FallingSnowflakes;
 import org.yaldysse.animation.flowers.FlowersGrowing;
 import org.yaldysse.atfx.action.Action;
@@ -59,7 +63,10 @@ import org.yaldysse.tools.notification.Notification;
 import org.yaldysse.tools.notification.NotificationType;
 
 import java.io.*;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Month;
@@ -68,6 +75,7 @@ import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * Рекомендації
@@ -104,6 +112,7 @@ public class ATimerFX_gui extends Application
     private Menu general_menu;
     private Menu language_Menu;
     private Menu timerType_Menu;
+    private Menu sounds_Menu;
     private RadioMenuItem countdownTimer_MenuItem;
     private RadioMenuItem specifiedTimeTimer_MenuItem;
     private MenuItem russianLanguage_MenuItem;
@@ -123,7 +132,7 @@ public class ATimerFX_gui extends Application
     private VBox superRoot;
     private HBox delayCustomMenuItem_HBox;
     private LocalTime timerTime_LocalTime;
-    Timeline timeline = null;
+    private Timeline timeline = null;
     private Scene scene;
     private Stage stage;
     public static final String NAME_OF_PROGRAM = "Advanced TimerFX";
@@ -174,6 +183,8 @@ public class ATimerFX_gui extends Application
     private Image applicationIcon_Image;
     private Image deleteTemplate_Image;
     private Image deleteUnActive_Image;
+    private Image play_Image;
+    private Image stop_Image;
     private byte brightnessStep;
     private ToggleGroup actionRadioButtonToggleGroup;
     private VBox timerNameInfo_Pane;
@@ -189,9 +200,13 @@ public class ATimerFX_gui extends Application
     private HBox timerInformation_Box;
     private Border brightnessFocusedBorder;
     private DropShadow brighnessDropShadow;
-    private CustomMenuItem loopTimer_CustomMenuItem;
     private CheckBox loopTimer_CheckBox;
     private boolean stoppedByUser;
+    private ToggleGroup soundsToggleGroup;
+    private Sound notificationSound;
+    private Properties savedProperties;
+    private Properties language_properties;
+    private RadioButton noSound_RadioButton;
 
     public void start(Stage aStage)
     {
@@ -219,7 +234,7 @@ public class ATimerFX_gui extends Application
         stage.setX(locX);
         stage.setY(locY);
         stage.setScene(scene);
-        stage.setTitle(NAME_OF_PROGRAM + " [build 48 Stable]");
+        stage.setTitle(NAME_OF_PROGRAM + " [build 49 Stable]");
         stage.setMinWidth(PREFERRED_WIDTH);
         stage.setMaxWidth(PREFERRED_WIDTH + fxGui.rem * 2.3D);
         stage.setMinHeight(PREFERRED_HEIGHT);
@@ -243,6 +258,9 @@ public class ATimerFX_gui extends Application
 //                new Menu("b")));
         //superRoot.getChildren().add(0,new Label());
 
+        initializingInternalSounds();
+        initializingCustomSounds(savedProperties);
+        //applySavedSoundProperties();
         initLocalization(currentLanguage_str);
 
         superRoot.getChildren().add(0, menuBar);
@@ -321,26 +339,31 @@ public class ATimerFX_gui extends Application
         timer_Menu = new Menu();
         timerType_Menu = new Menu();
         timeTemplates_Menu = new Menu();
+        sounds_Menu = new Menu();
 
         timeTemplate_MenuItemsArray = new ArrayList<>();
 
-        Image russianFlag_Image = new Image(getClass().getResourceAsStream("/Images/russia.png"));
-        Image ukraineFlag_Image = new Image(getClass().getResourceAsStream("/Images/ukraine_2.png"));
-        Image unitedKingdom_Image = new Image(getClass().getResourceAsStream("/Images/UK.png"));
-        Image exit_Image = new Image(getClass().getResourceAsStream("/Images/exit.png"));
-        Image gitHub_Image = new Image(getClass().getResourceAsStream("/Images/gitHub.png"));
-        Image language_Image = new Image(getClass().getResourceAsStream("/Images/language_2.png"));
-        Image startTimer_Image = new Image(getClass().getResourceAsStream("/Images/startTimer_3.png"));
-        Image stopTimer_Image = new Image(getClass().getResourceAsStream("/Images/stopTimer_3.png"));
-        Image delay_Image = new Image(getClass().getResourceAsStream("/Images/delay_1.png"));
-        Image timerType_Image = new Image(getClass().getResourceAsStream("/Images/timerType.png"));
-        Image createTemplate_Image = new Image(getClass().getResourceAsStream("/Images/plus.png"));
-        Image removeAllTimeTemplates_Image = new Image(this.getClass().getResourceAsStream("/Images/eraser.png"));
-        info_Image = new Image(this.getClass().getResourceAsStream("/Images/info.png"));
-        deleteTemplate_Image = new Image(this.getClass().getResourceAsStream("/Images/delete_active.png"));
-        deleteUnActive_Image = new Image(this.getClass().getResourceAsStream("/Images/delete_unActive.png"));
-        Image animation_Image = new Image(this.getClass().getResourceAsStream("/Images/Animation.png"));
-        Image loop_Image = new Image(getClass().getResourceAsStream("/Images/Loop.png"));
+        Image russianFlag_Image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/Images/russia.png")));
+        Image ukraineFlag_Image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/Images/ukraine_2.png")));
+        Image unitedKingdom_Image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/Images/UK.png")));
+        Image exit_Image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/Images/exit.png")));
+        Image gitHub_Image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/Images/gitHub.png")));
+        Image language_Image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/Images/language_2.png")));
+        Image startTimer_Image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/Images/startTimer_3.png")));
+        Image stopTimer_Image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/Images/stopTimer_3.png")));
+        Image delay_Image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/Images/delay_1.png")));
+        Image timerType_Image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/Images/timerType.png")));
+        Image createTemplate_Image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/Images/plus.png")));
+        Image removeAllTimeTemplates_Image = new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/Images/eraser.png")));
+        info_Image = new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/Images/info.png")));
+        deleteTemplate_Image = new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/Images/delete_active.png")));
+        deleteUnActive_Image = new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/Images/delete_unActive.png")));
+        Image animation_Image = new Image(Objects.requireNonNull(this.getClass().getResourceAsStream("/Images/Animation.png")));
+        Image loop_Image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/Images/Loop.png")));
+        play_Image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/Images/Play_1.png")));
+        stop_Image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/Images/Pause_1.png")));
+        Image addSound_Image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/Images/AddSound.png")));
+        Image noSound_Image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/Images/NoSound.png")));
 
 
         startTimer_MenuItem = new MenuItem();
@@ -376,7 +399,6 @@ public class ATimerFX_gui extends Application
             {
                 delayCustomMenuItem_HBox.getChildren().remove(delayBeforeAction_Spinner);
             }
-            saveSettings();
         });
 
         delayBeforeAction_Spinner = new Spinner<>(1, 59, 15);
@@ -473,7 +495,23 @@ public class ATimerFX_gui extends Application
 
         loopTimer_CheckBox.setTooltip(timerLoop_ToolTip);
 
-        loopTimer_CustomMenuItem = new CustomMenuItem(loopTimer_CheckBox);
+        CustomMenuItem loopTimer_CustomMenuItem = new CustomMenuItem(loopTimer_CheckBox);
+
+        HBox addCustomSound_HBox = new HBox(fxGui.createImageView(addSound_Image, ICON_SIZE));
+        addCustomSound_HBox.setAlignment(Pos.CENTER);
+        HBox.setHgrow(addCustomSound_HBox.getChildren().get(0), Priority.ALWAYS);
+        addCustomSound_HBox.setPrefWidth(fxGui.rem * 13.3D);
+
+        MenuItem addCustomSound_MenuItem = new CustomMenuItem(addCustomSound_HBox);
+        addCustomSound_MenuItem.setOnAction(this::addCustomSound_Action);
+        //addCustomSound_MenuItem.setGraphic(fxGui.createImageView(addSound_Image, ICON_SIZE));
+
+        noSound_RadioButton = new RadioButton();
+        noSound_RadioButton.setToggleGroup(soundsToggleGroup);
+        noSound_RadioButton.setGraphic(fxGui.createImageView(noSound_Image, ICON_SIZE));
+        noSound_RadioButton.setTextFill(Color.BLACK);
+        CustomMenuItem noSound_MenuItem = new CustomMenuItem(noSound_RadioButton);
+        noSound_MenuItem.setOnAction(this::noSound_MenuItem_Action);
 
         language_Menu.setGraphic(fxGui.createImageView(language_Image, ICON_SIZE));
         timerType_Menu.setGraphic(fxGui.createImageView(timerType_Image, ICON_SIZE));
@@ -483,7 +521,8 @@ public class ATimerFX_gui extends Application
         timer_Menu.getItems().addAll(timerType_Menu, new SeparatorMenuItem(), startTimer_MenuItem, stopTimer_MenuItem,
                 new SeparatorMenuItem(), delay_CustomMenuItem, loopTimer_CustomMenuItem);
         timeTemplates_Menu.getItems().addAll(createTimeTemplate_MenuItem, removeAllTimeTemplates_MenuItem, new SeparatorMenuItem());
-        menuBar.getMenus().addAll(general_menu, timer_Menu, timeTemplates_Menu);
+        sounds_Menu.getItems().addAll(noSound_MenuItem, new SeparatorMenuItem(), new SeparatorMenuItem(), addCustomSound_MenuItem);
+        menuBar.getMenus().addAll(general_menu, timer_Menu, timeTemplates_Menu, sounds_Menu);
     }
 
     private void initializeComponents()
@@ -494,6 +533,8 @@ public class ATimerFX_gui extends Application
         actionDescriptionStrings = new ArrayList<>();
         brightnessStep = 1;
         currentLanguage_str = "English";
+        soundsToggleGroup = new ToggleGroup();
+        //soundsToggleGroup.selectedToggleProperty().addListener(this::soundsToggleGroup_SelectedProperty);
 
         final double TIME_TEXT_OPACITY = 0.55D;
         hours_text = new Text();
@@ -535,6 +576,7 @@ public class ATimerFX_gui extends Application
         YALtools.printDebugMessage("gp: " + gp.getLayoutBounds().getHeight());
         YALtools.printDebugMessage("PREFERRED_HEIGHT: " + PREFERRED_HEIGHT);
     }
+
 
     /**
      * Ініціалізує компоненти графічного інтерфейсу, що відносяться до першої 'сцени'
@@ -585,7 +627,7 @@ public class ATimerFX_gui extends Application
                 BorderStroke.THIN));
         brighnessDropShadow = new DropShadow(fxGui.rem * 1.2D, Color.DEEPSKYBLUE);
 
-        Image search_Image = new Image(getClass().getResourceAsStream("/Images/Search.png"));
+        Image search_Image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/Images/Search.png")));
 
         openProcessSelector_Button = new Button();
         openProcessSelector_Button.setGraphic(fxGui.createImageView(search_Image, 20.0D));
@@ -641,7 +683,6 @@ public class ATimerFX_gui extends Application
         //root.setPrefSize(PREFERRED_WIDTH, PREFERRED_HEIGHT);
         root.setPadding(new Insets(fxGui.rem * 1.05D));
         root.getChildren().addAll(startTimer_Box, new Separator(), performActionAfterTimerWentOut_checkBox);
-        root.setOnRotate(event -> timerWentOutAction());
 
         superRoot = new VBox(root);
         superRoot.setMaxWidth(PREFERRED_WIDTH + fxGui.rem * 2.4D);
@@ -905,34 +946,15 @@ public class ATimerFX_gui extends Application
     }
 
     /**
-     * Вмикає або вимикає кнопки старту та зупинки таймеру в
-     * тому випадку, коли жоден з RadioButton не обрано.
-     * true - вимикає
+     * Реалізація відігравання звуку та постійне відображення повідомлення зроблено криво.
+     * Так, звук перестає грати тоді, коли вікно повідомлення буде приховане, в
+     * свою чергу, вікно буде приховане тільки після ручного його закриття.
+     * При чому, відображення вікна з повідомленням роботи програму модальною.
      */
-    private void enableOrDisableButtonsIfRadioButtonsNotSelected(final boolean value)
-    {
-        boolean oneSelected = false;
-
-        for (RadioButton radioButton : radioButtons)
-        {
-            if (radioButton.isSelected())
-            {
-                oneSelected = true;
-            }
-        }
-
-        if (!oneSelected)
-        {
-            startTimer_button.setDisable(value);
-            startTimer_MenuItem.setDisable(value);
-            stopTimer_MenuItem.setDisable(value);
-        }
-    }
-
     private void timerWentOutAction()
     {
         stage.setIconified(false);
-        //stage.setAlwaysOnTop(true);
+        stage.setAlwaysOnTop(true);
 
         String message;
         if (!timerName_textFiels.getText().equals(""))
@@ -943,6 +965,10 @@ public class ATimerFX_gui extends Application
             message = theTimerHasExpired_str;
         }
 
+        //------------
+        stopCurrentNotificationSound();
+        playCurrentNotificationSound();
+        //Якщо викликати - буде виключна ситуація через те, що якась анімація проігрується.
         showNotification(NAME_OF_PROGRAM, message);
 
         if (performActionAfterTimerWentOut_checkBox.isSelected())
@@ -984,9 +1010,16 @@ public class ATimerFX_gui extends Application
         notify.setHeightPercent(0.1D);
         notify.setIcon(NotificationType.INFORMATION);
         notify.setIconSizePercent(0.5D);
-        notify.setDisplayDuration(Duration.seconds(10.0D));
+        //notify.setDisplayDuration(Duration.seconds(10.0D));
+        notify.setDisplayDuration(Duration.INDEFINITE);
         notify.setDisappearanceAnimation(AnimationType.FADE, Duration.seconds(1.0D));
-        notify.showNotification();
+        notify.initModality(Modality.APPLICATION_MODAL);
+        notify.setOnHidden(event ->
+        {
+            stopCurrentNotificationSound();
+            stage.setAlwaysOnTop(false);
+        });
+        notify.show();
     }
 
     private void startTimer_Action(ActionEvent event)
@@ -1049,7 +1082,6 @@ public class ATimerFX_gui extends Application
         //startTimer_MenuItem.setDisable(true);
         checkDateAndAddAnimation();
     }
-
 
     private void checkDateAndAddAnimation()
     {
@@ -1401,7 +1433,7 @@ public class ATimerFX_gui extends Application
 
     private void initLocalization(final String aLocale)
     {
-        Properties language_properties = new Properties();
+        language_properties = new Properties();
         try
         {
             language_properties.loadFromXML(this.getClass().getResourceAsStream("/Localizations/Language_" + aLocale + ".lang"));
@@ -1450,7 +1482,8 @@ public class ATimerFX_gui extends Application
             loopTimer_CheckBox.setText(language_properties.getProperty("loopTimer_MenuItem", "Cyclic timer"));
             loopTimer_CheckBox.getTooltip().setText(language_properties.getProperty("loopTimer_toolTip",
                     "<Not Found>"));
-
+            sounds_Menu.setText(language_properties.getProperty("sounds_Menu", "Sounds"));
+            noSound_RadioButton.setText(language_properties.getProperty("noSound_MenuItem", "No sound"));
             rootPrivilege_ToolTip.setText(needRootPrivilege_str);
 
             actionDescriptionStrings.clear();
@@ -1557,6 +1590,10 @@ public class ATimerFX_gui extends Application
         properties.put("delayBeforeAction_CheckBox", String.valueOf(delayBeforeAction_CheckBox.isSelected()));
         properties.put("delayBeforeAction", String.valueOf(delayBeforeAction_Spinner.getValue()));
         properties.put("playSeasonAnimation", String.valueOf(playAnimation_MenuItem.isSelected()));
+        properties.put("currentNotificationSoundFilePath", notificationSound.getPath());
+        properties.put("currentNotificationSoundSize", String.valueOf(notificationSound.getSize()));
+
+        puttingCustomSoundsToProperties(properties);
 
         try
         {
@@ -1586,21 +1623,21 @@ public class ATimerFX_gui extends Application
     {
         long startTime = System.currentTimeMillis();
 
-        Properties properties = new Properties();
+        savedProperties = new Properties();
 
         try
         {
-            properties.loadFromXML(Files.newInputStream(YALtools.getJarLocation().toPath()
+            savedProperties.loadFromXML(Files.newInputStream(YALtools.getJarLocation().toPath()
                     .getParent().resolve(PROPERTY_FILE_NAME)));
 
-            currentLanguage_str = properties.getProperty("Language", "English");
-            locX = (int) Double.parseDouble(properties.getProperty("locX", "100"));
-            locY = (int) Double.parseDouble(properties.getProperty("locY", "0"));
+            currentLanguage_str = savedProperties.getProperty("Language", "English");
+            locX = (int) Double.parseDouble(savedProperties.getProperty("locX", "100"));
+            locY = (int) Double.parseDouble(savedProperties.getProperty("locY", "0"));
             delayBeforeAction_CheckBox.setSelected(Boolean.parseBoolean(
-                    properties.getProperty("delayBeforeAction_CheckBox", "true")));
+                    savedProperties.getProperty("delayBeforeAction_CheckBox", "true")));
             delayBeforeAction_Spinner.getValueFactory().setValue(Integer.parseInt(
-                    properties.getProperty("delayBeforeAction", "15")));
-            playAnimation_MenuItem.setSelected(Boolean.parseBoolean(properties.getProperty("playSeasonAnimation", "true")));
+                    savedProperties.getProperty("delayBeforeAction", "15")));
+            playAnimation_MenuItem.setSelected(Boolean.parseBoolean(savedProperties.getProperty("playSeasonAnimation", "true")));
 
             if (delayBeforeAction_CheckBox.isSelected() &&
                     !delayCustomMenuItem_HBox.getChildren().contains(delayBeforeAction_Spinner))
@@ -1638,7 +1675,8 @@ public class ATimerFX_gui extends Application
         TimerTemplate timerTemplate = new TimerTemplate(timerName_textFiels.getText(),
                 LocalTime.of(hours_Spinner.getValue(), minutes_Spinner.getValue(),
                         seconds_Spinner.getValue()), countdownTimer_MenuItem.isSelected(),
-                delayBeforeAction_CheckBox.isSelected(), delayBeforeAction_Spinner.getValue());
+                delayBeforeAction_CheckBox.isSelected(), delayBeforeAction_Spinner.getValue(),
+                notificationSound);
 
         if (performActionAfterTimerWentOut_checkBox.isSelected())
         {
@@ -1802,6 +1840,16 @@ public class ATimerFX_gui extends Application
             brightnessValue.setText(String.valueOf(brightness));
         }
 
+        try
+        {
+            SoundMenuItem sItem = findSoundMenuItem(template.getSoundPath(), template.getSoundSize());
+            sItem.getSelect_RadioButton().setSelected(true);
+            sItem.fire();
+        }
+        catch (IllegalArgumentException illegalArgumentException)
+        {
+            createAndShowMissingSoundInTemplateAlert(template);
+        }
 
         showAutoHideTooltip(timerTemplateApplied_str, Duration.millis(1500),
                 timerName_textFiels);
@@ -2175,5 +2223,335 @@ public class ATimerFX_gui extends Application
                 Color.rgb(173, 255, 47, opacity),
                 new CornerRadii(fxGui.rem * 0.4D), Insets.EMPTY)));
     }
+
+    private void initializingInternalSounds()
+    {
+        Properties sounds_Properties = new Properties();
+
+        try
+        {
+            sounds_Properties.loadFromXML(getClass().getResourceAsStream("/Configs/Sounds.properties"));
+
+            Set<Object> keys = sounds_Properties.keySet();
+            SoundMenuItem soundMenuItem;
+            String value;
+            int iterator = 2;
+
+            for (Object key : keys)
+            {
+                try
+                {
+                    value = sounds_Properties.getProperty((String) key);
+                    sounds_Menu.getItems().add(iterator, createSoundMenuItem(true,
+                            String.valueOf(key),"/Sounds/" + value));
+                    iterator++;
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            //sounds_Menu.getItems().add(new SeparatorMenuItem());
+            selectFirstSound();
+        }
+        catch (IOException ioException)
+        {
+            ioException.printStackTrace();
+        }
+    }
+
+    private Sound createSound(final boolean internal, final String name, final String path) throws URISyntaxException, IOException
+    {
+        Sound sound = null;
+        Path filePath = Paths.get(path);
+
+        if (internal)
+        {
+            sound = new Sound(name,
+                    (long) getClass().getResourceAsStream(path).available(), path,
+                    new MediaPlayer(new Media(getClass().getResource(path).toExternalForm())),
+                    true);
+
+        } else
+        {
+            System.out.println("URI: " + filePath.toUri().toString());
+            sound = new Sound(name,
+                    Files.size(filePath), path, new MediaPlayer(
+                    new Media(filePath.toUri().toString())), false);
+        }
+        return sound;
+    }
+
+    private void soundMenuItem_Action(ActionEvent event)
+    {
+        SoundMenuItem soundMenuItem = (SoundMenuItem) event.getSource();
+        notificationSound = soundMenuItem.getSound();
+    }
+
+//    private void soundsToggleGroup_SelectedProperty(Observable observable,
+//                                                    Toggle oldValue,
+//                                                    Toggle newValue)
+//    {
+//        RadioButton radioButton = (RadioButton) newValue;
+//        SoundMenuItem sItem = findSoundsMenuItemByRadioButtonInSoundsMenu(radioButton);
+//
+//        currentAudioClip = sItem.getSound().getAudioClip();
+//        currentMediaPlayer = sItem.getSound().getMediaPlayer();
+//    }
+
+    /**
+     * Знаходить та повертає об'єкт меню з вибором звуку з всіх елементів меню.
+     */
+    private SoundMenuItem findSoundsMenuItemByRadioButtonInSoundsMenu(final RadioButton aRadio)
+    {
+        ObservableList<MenuItem> menuItems = sounds_Menu.getItems();
+
+        SoundMenuItem sItem = null;
+        for (MenuItem item : menuItems)
+        {
+            if (item.getClass().getName().contains(SoundMenuItem.class.getName()))
+            {
+                sItem = (SoundMenuItem) item;
+                if (aRadio.equals(sItem.getSelect_RadioButton()))
+                {
+                    return sItem;
+                }
+            }
+        }
+
+        throw new IllegalArgumentException("Не знайдено.");
+    }
+
+    private void selectFirstSound()
+    {
+        ObservableList<MenuItem> items = sounds_Menu.getItems();
+
+        SoundMenuItem sItem = null;
+
+        for (MenuItem item : items)
+        {
+            if (item.getClass().getName().contains(SoundMenuItem.class.getName()))
+            {
+                sItem = (SoundMenuItem) item;
+                sItem.getSelect_RadioButton().setSelected(true);
+                sItem.fire();
+                return;
+            }
+        }
+    }
+
+    /**
+     * Робить 'активним' той звуковий сигнал, дані про яких збережено в файлі налаштування.
+     */
+    private void applySavedSoundProperties()
+    {
+        ObservableList<MenuItem> items = sounds_Menu.getItems();
+
+        long savedSize = Long.parseLong(savedProperties.getProperty("currentNotificationSoundSize", "-1"));
+        String savedPath = savedProperties.getProperty("currentNotificationSoundFilePath", "<NOT_FOUND>");
+
+        try
+        {
+            SoundMenuItem sItem = findSoundMenuItem(savedPath, savedSize);
+            sItem.getSelect_RadioButton().setSelected(true);
+            sItem.fire();
+        }
+        catch (IllegalArgumentException illegalArgumentException)
+        {
+            System.out.println("Неможливо встановити звук повідомлення, так як " +
+                    "відповідний об'єкт не знайдений в меню" + illegalArgumentException);
+        }
+    }
+
+    private void puttingCustomSoundsToProperties(final Properties properties)
+    {
+        ObservableList<MenuItem> items = sounds_Menu.getItems();
+        SoundMenuItem sItem = null;
+
+//        long savedSize = Long.parseLong(savedProperties.getProperty("currentNotificationSoundSize", "-1"));
+//        String savedName = savedProperties.getProperty("currentNotificationSoundFileName", "<NOT_FOUND>");
+        int iterator = 0;
+
+        for (MenuItem item : items)
+        {
+            if (item.getClass().getName().contains(SoundMenuItem.class.getName()))
+            {
+                sItem = (SoundMenuItem) item;
+
+                if (!sItem.getSound().isInternal())
+                {
+                    properties.put("Custom_Sound_" + iterator + "_path", String.valueOf(
+                            sItem.getSound().getPath()));
+                    properties.put("Custom_Sound_" + iterator + "_size", String.valueOf(
+                            sItem.getSound().getSize()));
+
+                    iterator++;
+                }
+            }
+        }
+    }
+
+    private void initializingCustomSounds(final Properties properties)
+    {
+        final String NOT_FOUND = "<NOT_FOUND>";
+        SoundMenuItem soundMenuItem;
+        int iterator = 0;
+        String temporaryPath;
+
+        while (true)
+        {
+//                properties.put("Custom_Sound_" + iterator + "_fileName", String.valueOf(
+//                        sItem.getSound().getName()));
+//                properties.put("Custom_Sound_" + iterator + "_size", String.valueOf(
+//                        sItem.getSound().getSize()));
+            temporaryPath = properties.getProperty("Custom_Sound_" + iterator + "_path", NOT_FOUND);
+
+            Path path = Paths.get(temporaryPath);
+            if (temporaryPath.equals(NOT_FOUND))
+            {
+                break;
+            } else if (!Files.exists(path))
+            {
+                System.out.println("Звукового файлу не існує: " + temporaryPath);
+                iterator++;
+                continue;
+            }
+
+            try
+            {
+                sounds_Menu.getItems().add(sounds_Menu.getItems().size() - 1,
+                        createSoundMenuItem(false, path.getFileName().toString()
+                                , temporaryPath));
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+            iterator++;
+        }
+    }
+
+    private void addCustomSound_Action(ActionEvent event)
+    {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Notification sound",
+                "*.mp3", "*.wav"));
+        fileChooser.setTitle("Add custom notification sound");
+
+        File resultFile = fileChooser.showOpenDialog(stage);
+
+        if (resultFile == null)
+        {
+            System.out.println("Файл не було обрано");
+            return;
+        }
+
+        try
+        {
+
+            sounds_Menu.getItems().add(sounds_Menu.getItems().size() - 1,
+                    createSoundMenuItem(false, resultFile.getName(), resultFile.getAbsolutePath()));
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    private void playCurrentNotificationSound()
+    {
+        MediaPlayer currentMediaPlayer = notificationSound.getMediaPlayer();
+        if (currentMediaPlayer != null)
+        {
+//            currentMediaPlayer.setStartTime(Duration.ZERO);
+//            //currentMediaPlayer.setStopTime(currentMediaPlayer.getTotalDuration());
+////            currentMediaPlayer.setCycleCount(MediaPlayer.INDEFINITE);
+//            currentMediaPlayer.setOnEndOfMedia(() ->
+//                    {
+//                        currentMediaPlayer.seek(Duration.ZERO);
+//                    }
+//            );
+            //currentMediaPlayer.setCycleCount(8);
+            currentMediaPlayer.setOnEndOfMedia(() ->
+            {
+                //playStopButton.setGraphic(play_ImageView);
+                //sound.getMediaPlayer().stop();
+                currentMediaPlayer.seek(Duration.ZERO);
+                //sound.getMediaPlayer().setAutoPlay(true);
+                currentMediaPlayer.play();
+            });
+            currentMediaPlayer.play();
+        }
+    }
+
+    private void stopCurrentNotificationSound()
+    {
+        if (notificationSound.getMediaPlayer() != null)
+        {
+            notificationSound.getMediaPlayer().stop();
+        }
+    }
+
+    private SoundMenuItem createSoundMenuItem(final boolean internal, final String name,
+                                              final String path) throws IOException, URISyntaxException
+    {
+        SoundMenuItem soundMenuItem =  new SoundMenuItem(createSound(internal,
+                    name, path));
+        soundMenuItem.getSelect_RadioButton().setToggleGroup(soundsToggleGroup);
+        soundMenuItem.setOnAction(this::soundMenuItem_Action);
+        soundMenuItem.setPlay_ImageView(fxGui.createImageView(play_Image, ICON_SIZE));
+        soundMenuItem.setStop_ImageView(fxGui.createImageView(stop_Image, ICON_SIZE));
+        soundMenuItem.setContentPreferredWidth(fxGui.rem * 13.3D);
+        soundMenuItem.setHideOnClick(false);
+        soundMenuItem.setPrefHeight(fxGui.rem * 1.5D);
+        //soundMenuItem.setFont(noSound_RadioButton.getFont());
+        return soundMenuItem;
+    }
+
+    /**
+     * Знаходить об'єкт SoundMenuItem в колекції елементів меню Sound, за
+     * розміром та шляхом до звуку, що асоційований з об'єктом SoundMenuItem.
+     */
+    private SoundMenuItem findSoundMenuItem(final String soundPath, final long soundSize)
+    {
+        ObservableList<MenuItem> items = sounds_Menu.getItems();
+
+        SoundMenuItem sItem = null;
+
+        for (MenuItem item : items)
+        {
+            if (item.getClass().getName().contains(SoundMenuItem.class.getName()))
+            {
+                sItem = (SoundMenuItem) item;
+                if (sItem.getSound().getSize() == soundSize
+                        && sItem.getSound().getPath().equals(soundPath))
+                {
+                    return sItem;
+                }
+            }
+        }
+        throw new IllegalArgumentException("Об'єктів SoundMenuItem не було знайдено зі шляхом: " + soundPath
+                + " та розміром: " + soundSize);
+    }
+
+    private void createAndShowMissingSoundInTemplateAlert(final TimerTemplate template)
+    {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+
+        String message = language_properties.getProperty("templateUsedNotExistsSound_message", "<NOT_FOUND>") + "\n"
+                + language_properties.getProperty("File:", "File:") + " " + template.getSoundPath()
+                + "\n" + language_properties.getProperty("Size:", "Size:") + " " + template.getSoundSize()
+                + language_properties.getProperty("bytes", "bytes") + ".";
+        alert.setContentText(message);
+        alert.setHeaderText(language_properties.getProperty("soundNotFound", "<NOT_FOUND>"));
+        alert.showAndWait();
+    }
+
+    private void noSound_MenuItem_Action(ActionEvent event)
+    {
+        notificationSound.setMediaPlayer(null);
+    }
+
 }
 //22 24
+//2517

@@ -55,5 +55,12 @@
 <entry key="CUSTOM_COMMAND_Button">Команда</entry>
 <entry key="BRIGHTNESS_Button">Изменить яркость дисплея</entry>
 <entry key="loopTimer_MenuItem">Циклический таймер</entry>
-<entry key="loopTimer_toolTip">Если эта функция включена, то после истечений времени таймер будет запущен снова.</entry>
+<entry key="loopTimer_toolTip">Если эта функция включена, то после истечении времени таймер будет запущен снова.</entry>
+<entry key="sounds_Menu">Звуки</entry>
+<entry key="Size:">Размер:</entry>
+<entry key="bytes">байт</entry>
+<entry key="File:">Файл:</entry>
+<entry key="templateUsedNotExistsSound_message">Выбранный шаблон использует звук, которого больше не существует по указанному пути.</entry>
+<entry key="soundNotFound">Звук не найден.</entry>
+<entry key="noSound_MenuItem">Без звука</entry>
 </properties>

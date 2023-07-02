@@ -60,11 +60,9 @@ public class Notification extends Stage
 
     private VBox icon_VBox;
     private ImageView icon_ImageView;
-
     private static Image error_Image;
     private static Image information_Image;
     private static Image warning_Image;
-
     private double widthOfLeftVerticalLine;
     private double spaceBetweenNotifications_ratio = 0.05D;
 
@@ -76,7 +74,6 @@ public class Notification extends Stage
     //определяют положение
     private double x;
     private double y;
-
     private boolean leftLineColorSameAsIcon = true;
 
     private Duration displayDuration;
@@ -415,7 +412,6 @@ public class Notification extends Stage
             return;
         }
         displayDuration = duration;
-
         display_Timeline = new Timeline(new KeyFrame(displayDuration, event ->
         {
             disappear_Animation.play();

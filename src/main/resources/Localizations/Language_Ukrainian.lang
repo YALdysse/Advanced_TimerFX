@@ -57,4 +57,11 @@
 <entry key="BRIGHTNESS_Button">Змінити яскравість дисплею</entry>
 <entry key="loopTimer_MenuItem">Циклічний таймер</entry>
 <entry key="loopTimer_toolTip">Якщо ця функція включена, то після закінчення відведеного часу таймер буде запущений знову.</entry>
+<entry key="sounds_Menu">Звуки</entry>
+<entry key="Size:">Розмір:</entry>
+<entry key="bytes">байт</entry>
+<entry key="File:">Файл:</entry>
+<entry key="templateUsedNotExistsSound_message">Обраний шаблон використовує звук, що не існує за вказаним шляхом.</entry>
+<entry key="soundNotFound">Звук не знайдено.</entry>
+<entry key="noSound_MenuItem">Без звуку</entry>
 </properties>

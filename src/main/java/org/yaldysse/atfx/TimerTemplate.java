@@ -43,10 +43,14 @@ public class TimerTemplate implements Serializable
     private String customCommand_str;
     private Action customCommandAction;
     private ArrayList<TimerAction> timerActionTypes;
+    //private Sound notificationSound;
+    private long soundSize;
+    private String soundPath;
+    private String soundName;
 
     public TimerTemplate(final String newName, LocalTime newTime,
                          final boolean countdown, final boolean newActionDelay,
-                         final int newActionDelayValue)
+                         final int newActionDelayValue, final Sound newSound)
     {
         name = newName;
         time = newTime;
@@ -54,6 +58,9 @@ public class TimerTemplate implements Serializable
         actionDelay = newActionDelay;
         actionDelayValue = newActionDelayValue;
         timerActionTypes = new ArrayList<>();
+        soundName = newSound.getName();
+        soundPath = newSound.getPath();
+        soundSize = newSound.getSize();
     }
 
     public boolean hasActionDelay()
@@ -204,5 +211,46 @@ public class TimerTemplate implements Serializable
     public byte getBrightness()
     {
         return brightness;
+    }
+
+//    public Sound getNotificationSound()
+//    {
+//        return notificationSound;
+//    }
+//
+//    public void setNotificationSound(final Sound notificationSound)
+//    {
+//        this.notificationSound = notificationSound;
+//    }
+
+
+    public long getSoundSize()
+    {
+        return soundSize;
+    }
+
+    public String getSoundPath()
+    {
+        return soundPath;
+    }
+
+    public String getSoundName()
+    {
+        return soundName;
+    }
+
+    public void setSoundSize(long soundSize)
+    {
+        this.soundSize = soundSize;
+    }
+
+    public void setSoundPath(String soundPath)
+    {
+        this.soundPath = soundPath;
+    }
+
+    public void setSoundName(String soundName)
+    {
+        this.soundName = soundName;
     }
 }
