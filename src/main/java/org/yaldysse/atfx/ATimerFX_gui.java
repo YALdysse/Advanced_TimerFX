@@ -2483,21 +2483,11 @@ public class ATimerFX_gui extends Application
         MediaPlayer currentMediaPlayer = notificationSound.getMediaPlayer();
         if (currentMediaPlayer != null)
         {
-//            currentMediaPlayer.setStartTime(Duration.ZERO);
-//            //currentMediaPlayer.setStopTime(currentMediaPlayer.getTotalDuration());
-////            currentMediaPlayer.setCycleCount(MediaPlayer.INDEFINITE);
-//            currentMediaPlayer.setOnEndOfMedia(() ->
-//                    {
-//                        currentMediaPlayer.seek(Duration.ZERO);
-//                    }
-//            );
-            //currentMediaPlayer.setCycleCount(8);
+            /*Таке реалізація потрібна для того, щоб трек відтворювався багато разів, та під час повторного відтворення не було прискорення або 'рвання' мелодії.*/
             currentMediaPlayer.setOnEndOfMedia(() ->
             {
-                //sound.getMediaPlayer().stop();
                 currentMediaPlayer.setStartTime(Duration.ZERO);
                 currentMediaPlayer.seek(Duration.ZERO);
-                //sound.getMediaPlayer().setAutoPlay(true);
                 currentMediaPlayer.play();
             });
             currentMediaPlayer.play();
