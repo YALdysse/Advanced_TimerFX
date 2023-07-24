@@ -199,6 +199,10 @@ public class TemplateToolTip extends Tooltip
     public void updateInfo()
     {
         templateNameValue.setText(timerTemplate.getName());
+        if(templateNameValue.getText().equals(""))
+        {
+            templateNameValue.setText("- - - ");
+        }
         //delayName.setText("" + timerTemplate.hasActionDelay());
         delayValue.setText("" + timerTemplate.getActionDelayValue());
 

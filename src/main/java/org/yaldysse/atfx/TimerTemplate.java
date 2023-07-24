@@ -163,6 +163,7 @@ public class TimerTemplate implements Serializable
     }
 
     public static ArrayList<TimerTemplate> importTimerTemplatesFromFile(final Path targetPath)
+            throws IOException
     {
         System.out.println("ImportPath: " + targetPath.toAbsolutePath().toString());
         ArrayList<TimerTemplate> timerTemplates = new ArrayList<>();
@@ -176,7 +177,7 @@ public class TimerTemplate implements Serializable
                 System.out.println("Зчитаний розподілювач об`єктів. " + objectInputStream.readUTF());
             }
         }
-        catch (IOException | ClassNotFoundException ioException)
+        catch (ClassNotFoundException ioException)
         {
             ioException.printStackTrace();
         }

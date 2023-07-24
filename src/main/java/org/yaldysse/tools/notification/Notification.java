@@ -31,7 +31,7 @@ import java.io.InputStream;
  */
 public class Notification extends Stage
 {
-    private double SIZE_TO_SCREEN_RATIO = 0.2D;
+    private double SIZE_TO_SCREEN_RATIO;
     private double WIDTH_TO_SCREEN_RATIO;
     private double HEIGHT_TO_SCREEN_RATIO;
 
@@ -64,10 +64,10 @@ public class Notification extends Stage
     private static Image information_Image;
     private static Image warning_Image;
     private double widthOfLeftVerticalLine;
-    private double spaceBetweenNotifications_ratio = 0.05D;
+    private double spaceBetweenNotifications_ratio;
 
     //удаление уведомление от правого края относительно всей ширины экрана
-    private double spaceXGap_ratio = 0.014D;
+    private double spaceXGap_ratio;
     //удаление уведомление от нижнего края относительно всей высоты экрана
     private double spaceYGap_ratio = 0.05D;
 
@@ -162,6 +162,9 @@ public class Notification extends Stage
         WIDTH_TO_SCREEN_RATIO = 0.2D;
         HEIGHT_TO_SCREEN_RATIO = 0.1125D;
         widthOfLeftVerticalLine = 0.08D;
+        spaceBetweenNotifications_ratio = 0.05D;
+        spaceXGap_ratio = 0.014D;
+        SIZE_TO_SCREEN_RATIO = 0.2D;
 
         preferred_width = Screen.getPrimary().getBounds().getWidth() * WIDTH_TO_SCREEN_RATIO;
         preferred_height = Screen.getPrimary().getBounds().getHeight() * HEIGHT_TO_SCREEN_RATIO;
@@ -191,12 +194,23 @@ public class Notification extends Stage
 
         close_Label = new Label("X");
         close_Label.setAlignment(Pos.TOP_RIGHT);
-        close_Label.setFont(Font.font(close_Label.getFont().getName(), FontWeight.BOLD, close_Label.getFont().getSize()));
+        close_Label.setFont(Font.font(close_Label.getFont().getName(), FontWeight.BOLD, 14.0D));
         close_Label.setOpacity(0.8D);
         close_Label.setOnMouseClicked(event ->
         {
             System.out.println("Окно будет скрыто.");
             stage.hide();
+        });
+        close_Label.hoverProperty().addListener((event, oldValue, newValue) ->
+        {
+            if(newValue)
+            {
+                close_Label.setTextFill(Color.CRIMSON);
+            }
+            else
+            {
+                close_Label.setTextFill(Color.BLACK);
+            }
         });
 
         close_HBox = new HBox(close_Label);
@@ -217,7 +231,7 @@ public class Notification extends Stage
         icon_VBox = new VBox(icon_ImageView);
         icon_VBox.setAlignment(Pos.CENTER);
 
-        content_VBox.setPadding(new Insets(preferred_height * 0.05D));
+        content_VBox.setPadding(new Insets(preferred_height * 0.07D));
         //content_VBox.setBackground(new Background(new BackgroundFill(Color.SALMON, CornerRadii.EMPTY, Insets.EMPTY)));
         content_VBox.setSpacing(preferred_height * 0.1D);
         content_VBox.getChildren().addAll(upLevel_HBox, message_Label);

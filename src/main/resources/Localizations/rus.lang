@@ -27,9 +27,7 @@
 <entry key="theTimerHasExpired_str" >Время таймера истекло.</entry>
 <entry key="timerType_Menu" >Тип таймера</entry>
 <entry key="specifiedTime_MenuItem" >В указанное время</entry>
-<entry key="countdownTimer_MenuItem" >Обратный отсч'т</entry>
-<entry key="timerType_In_Label" >через</entry>
-<entry key="timerType_At_Label" >в</entry>
+<entry key="countdownTimer_MenuItem" >Обратный отсчет</entry>
 <entry key="notify_str">Уведомить</entry>
 <entry key="removeAllTimeTemplates_MenuItem">Удалить все</entry>
 <entry key="animations_MenuItem">Анимации</entry>
@@ -60,6 +58,7 @@
 <entry key="Size:">Размер:</entry>
 <entry key="bytes">байт</entry>
 <entry key="File:">Файл:</entry>
+<entry key="Name:">Название:</entry>
 <entry key="templateUsedNotExistsSound_message">Выбранный шаблон использует звук, которого больше не существует по указанному пути.</entry>
 <entry key="soundNotFound">Звук не найден.</entry>
 <entry key="noSound_MenuItem">Без звука</entry>

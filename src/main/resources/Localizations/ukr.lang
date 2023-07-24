@@ -30,8 +30,6 @@
 <entry key="specifiedTime_MenuItem">в вказаний час</entry>
 <entry key="countdownTimer_MenuItem">Зворотній відлік</entry>
 <entry key="notify_str">Повідомити</entry>
-<entry key="timerType_In_Label">через</entry>
-<entry key="timerType_At_Label">в</entry>
 <entry key="removeAllTimeTemplates_MenuItem">Видалити всі</entry>
 <entry key="animations_MenuItem">Анімації</entry>
 <entry key="timeTemplates_Menu">Шаблони</entry>
@@ -61,6 +59,7 @@
 <entry key="Size:">Розмір:</entry>
 <entry key="bytes">байт</entry>
 <entry key="File:">Файл:</entry>
+<entry key="Name:">Назва:</entry>
 <entry key="templateUsedNotExistsSound_message">Обраний шаблон використовує звук, що не існує за вказаним шляхом.</entry>
 <entry key="soundNotFound">Звук не знайдено.</entry>
 <entry key="noSound_MenuItem">Без звуку</entry>

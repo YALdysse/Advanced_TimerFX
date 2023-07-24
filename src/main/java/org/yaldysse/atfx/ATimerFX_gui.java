@@ -19,6 +19,7 @@
 
 package org.yaldysse.atfx;
 
+import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.media.Media;
@@ -82,7 +83,6 @@ import java.util.Set;
  * Відключення {@link Menu} не забороняє користуватись {@link MenuItem}, що входять до цього Menu
  * за допомогою горячих клавіш.
  * <p>
- * CSS Warning генеруються, коли MenuBar додається до якогось layout.
  */
 public class ATimerFX_gui extends Application
 {
@@ -90,10 +90,6 @@ public class ATimerFX_gui extends Application
     private Spinner<Integer> hours_Spinner;
     private Spinner<Integer> minutes_Spinner;
     private Spinner<Integer> seconds_Spinner;
-    private Text hours_text;
-    private Text minutes_text;
-    private Text seconds_text;
-    private Label timerType_Label;
     private Button startTimer_button;
     private CheckBox performActionAfterTimerWentOut_checkBox;
     private ArrayList<ActionRadioButton> radioButtons;
@@ -114,9 +110,6 @@ public class ATimerFX_gui extends Application
     private Menu sounds_Menu;
     private RadioMenuItem countdownTimer_MenuItem;
     private RadioMenuItem specifiedTimeTimer_MenuItem;
-    private MenuItem russianLanguage_MenuItem;
-    private MenuItem ukrainianLanguage_MenuItem;
-    private MenuItem englishLanguage_MenuItem;
     private MenuItem gitHubRepository_MenuItem;
     private MenuItem createTimeTemplate_MenuItem;
     private Menu timer_Menu;
@@ -137,25 +130,10 @@ public class ATimerFX_gui extends Application
     public static final String NAME_OF_PROGRAM = "Advanced TimerFX";
     public static final String PROPERTY_FILE_NAME = "Advanced_TimerFX.properties";
     public final String TIMER_TEMPLATES_FILE_NAME = "ATfx_TimerTemplates.templates";
-    private String timerName_str;
-    private String action_str;
-    private String info_str;
     private ArrayList<String> actionDescriptionStrings;
     private String customCommandPromtText_str;
-    private String doYouWantToContinue_str;
-    private String warning_str;
-    private String popup_str;
-    private String theTimerHasExpired_str;
-    private String inTimerType_str;
-    private String atTimerType_str;
-    private String startButton_str;
-    private String notify_str;
-    private String timerTemplateCreated_str;
-    private String allTimerTemplatesRemoved_str;
-    private String timerTemplateApplied_str;
     private Label actionInfo_Label;
     private Label actionValue_Label;
-    private String needRootPrivilege_str;
     private int locX;
     private int locY;
     private static String currentLanguage_str;
@@ -206,12 +184,21 @@ public class ATimerFX_gui extends Application
     private Properties savedProperties;
     private Properties language_properties;
     private RadioButton noSound_RadioButton;
+    private EventHandler<KeyEvent> keyEventEventHandler;
+    private EventHandler<MouseEvent> mouseEventEventHandler;
+    private Label hours_Label;
+    private Label minutes_Label;
+    private Label seconds_Label;
 
     public void start(Stage aStage)
     {
         long startTime = System.currentTimeMillis();
 
         System.out.println(System.getProperty("os.name"));
+
+        initializeSettingsProperties();
+        currentLanguage_str = savedProperties.getProperty("Language", "eng");
+        initializeLocalization(currentLanguage_str);
 
         Thread initializeMenu_Thread = new Thread(this::initializeMenu, "Initializing Menu");
         initializeMenu_Thread.start();
@@ -223,32 +210,25 @@ public class ATimerFX_gui extends Application
         stage = aStage;
         stage.getIcons().add(applicationIcon_Image);
         stage.setOnCloseRequest(event -> exit());
+        //зповільнює роботу
+        //stage.setOnShowing(event-> stageShown());
+        keyEventEventHandler = event -> windowsShowed_startInitializeOtherComponent(mouseEventEventHandler, keyEventEventHandler);
+        scene.addEventFilter(KeyEvent.KEY_PRESSED, keyEventEventHandler);
 
-        importSettings();
+        mouseEventEventHandler = event -> windowsShowed_startInitializeOtherComponent(mouseEventEventHandler, keyEventEventHandler);
+        scene.addEventFilter(MouseEvent.MOUSE_MOVED, mouseEventEventHandler);
 
         /*Использование вместе с многократным вызовом метода scene.getWindow().sizeToScene();
          * приводит к появлению артефактов. Исправляется установкой ограничения
          * на минимальную ширину корневого узла сцены таким образом, чтобы корневой узел
          * был больше, чем такое же ограничение на stage.*/
-        stage.setX(locX);
-        stage.setY(locY);
+        stage.setX(Double.parseDouble(savedProperties.getProperty("locX", "100")));
+        stage.setY(Double.parseDouble(savedProperties.getProperty("locY", "0")));
         stage.setScene(scene);
-        stage.setTitle(NAME_OF_PROGRAM + " [build 51 Stable]");
+        stage.setTitle(NAME_OF_PROGRAM + " [build 53 Stable]");
         stage.setMinWidth(PREFERRED_WIDTH);
         stage.setMaxWidth(PREFERRED_WIDTH + fxGui.rem * 2.3D);
         stage.setMinHeight(PREFERRED_HEIGHT);
-
-        if (initializeMenu_Thread.isAlive())
-        {
-            try
-            {
-                initializeMenu_Thread.join();
-            }
-            catch (InterruptedException interruptedException)
-            {
-                interruptedException.printStackTrace();
-            }
-        }
 
         //Увага: Викликає проблеми з css!!!=======================================
         //Будь-який menubar викликає помилки пов'язані з css, якщо його додавати в BorderPane
@@ -257,12 +237,8 @@ public class ATimerFX_gui extends Application
 //                new Menu("b")));
         //superRoot.getChildren().add(0,new Label());
 
-        initializingInternalSounds();
-        initializingCustomSounds(savedProperties);
         //applySavedSoundProperties();
-        initLocalization(currentLanguage_str);
 
-        superRoot.getChildren().add(0, menuBar);
 
         stage.show();
         //stage.sizeToScene();
@@ -272,9 +248,6 @@ public class ATimerFX_gui extends Application
                 + "\nsceneH " + scene.getHeight());
         stage.setWidth(PREFERRED_WIDTH + fxGui.rem * 1.1D);
         System.out.println("Времени прошло: " + (System.currentTimeMillis() - startTime));
-
-        initializingTimerIsRunningComponent_Thread = new Thread(this::initializeTimerIsRunningComponents);
-        initializingTimerIsRunningComponent_Thread.start();
     }
 
     private void initializeFlowersGrowingAnimation()
@@ -333,18 +306,15 @@ public class ATimerFX_gui extends Application
         System.out.println(Thread.currentThread().getName());
         //--------------------------------- Меню
         menuBar = new MenuBar();
-        general_menu = new Menu();
-        language_Menu = new Menu();
-        timer_Menu = new Menu();
-        timerType_Menu = new Menu();
-        timeTemplates_Menu = new Menu();
-        sounds_Menu = new Menu();
+        general_menu = new Menu(language_properties.getProperty("general_menu", "General"));
+        language_Menu = new Menu(language_properties.getProperty("language_Menu", "Language"));
+        timer_Menu = new Menu(language_properties.getProperty("timer_Menu", "Timer"));
+        timerType_Menu = new Menu(language_properties.getProperty("timerType_Menu", "Timer type"));
+        timeTemplates_Menu = new Menu(language_properties.getProperty("timeTemplates_Menu", "Templates"));
+        sounds_Menu = new Menu(language_properties.getProperty("sounds_Menu", "Sounds"));
 
         timeTemplate_MenuItemsArray = new ArrayList<>();
 
-        Image russianFlag_Image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/Images/russia.png")));
-        Image ukraineFlag_Image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/Images/ukraine_2.png")));
-        Image unitedKingdom_Image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/Images/UK.png")));
         Image exit_Image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/Images/exit.png")));
         Image gitHub_Image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/Images/gitHub.png")));
         Image language_Image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/Images/language_2.png")));
@@ -365,13 +335,13 @@ public class ATimerFX_gui extends Application
         Image noSound_Image = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/Images/NoSound.png")));
 
 
-        startTimer_MenuItem = new MenuItem();
+        startTimer_MenuItem = new MenuItem(language_properties.getProperty("startTimer_MenuItem", "Start"));
         startTimer_MenuItem.setGraphic(fxGui.createImageView(startTimer_Image, ICON_SIZE));
         startTimer_MenuItem.setOnAction(this::startTimer_Action);
         startTimer_MenuItem.acceleratorProperty().set(new KeyCodeCombination(KeyCode.ENTER, KeyCodeCombination.CONTROL_DOWN));
         //startTimer_MenuItem.setDisable(true);
 
-        stopTimer_MenuItem = new MenuItem();
+        stopTimer_MenuItem = new MenuItem(language_properties.getProperty("stopTimer_MenuItem", "Stop"));
         stopTimer_MenuItem.setGraphic(fxGui.createImageView(stopTimer_Image, ICON_SIZE));
         stopTimer_MenuItem.setOnAction(this::stopTimerButton_Action);
         stopTimer_MenuItem.acceleratorProperty().set(new KeyCodeCombination(KeyCode.SPACE, KeyCodeCombination.CONTROL_DOWN));
@@ -384,7 +354,7 @@ public class ATimerFX_gui extends Application
         CustomMenuItem delay_CustomMenuItem = new CustomMenuItem(delayCustomMenuItem_HBox);
         //delay_CustomMenuItem.setGraphic(delay_ImageView);
 
-        delayBeforeAction_CheckBox = new CheckBox();
+        delayBeforeAction_CheckBox = new CheckBox(language_properties.getProperty("delayBeforeAction_CheckBox", "Delay before action"));
         delayBeforeAction_CheckBox.setTextFill(Color.BLACK);
         delayBeforeAction_CheckBox.setGraphic(fxGui.createImageView(delay_Image, ICON_SIZE));
         delayBeforeAction_CheckBox.setSelected(true);
@@ -394,7 +364,8 @@ public class ATimerFX_gui extends Application
             {
                 YALtools.printDebugMessage("Задержка включена");
                 delayCustomMenuItem_HBox.getChildren().add(delayBeforeAction_Spinner);
-            } else
+            }
+            else
             {
                 delayCustomMenuItem_HBox.getChildren().remove(delayBeforeAction_Spinner);
             }
@@ -408,7 +379,8 @@ public class ATimerFX_gui extends Application
             if (event.getDeltaY() > 10)
             {
                 delayBeforeAction_Spinner.increment();
-            } else if (event.getDeltaY() < 0)
+            }
+            else if (event.getDeltaY() < 0)
             {
                 delayBeforeAction_Spinner.decrement();
             }
@@ -419,75 +391,60 @@ public class ATimerFX_gui extends Application
 
         delayCustomMenuItem_HBox.getChildren().addAll(delayBeforeAction_CheckBox, delayBeforeAction_Spinner);
 
-        exit_menuItem = new MenuItem();
+        exit_menuItem = new MenuItem(language_properties.getProperty("exit_MenuItem", "Exit"));
         exit_menuItem.setGraphic(fxGui.createImageView(exit_Image, ICON_SIZE));
         exit_menuItem.acceleratorProperty().set(new KeyCodeCombination(KeyCode.Q, KeyCombination.CONTROL_DOWN));
         exit_menuItem.setOnAction(event -> exit());
 
-        gitHubRepository_MenuItem = new MenuItem();
+        gitHubRepository_MenuItem = new MenuItem(language_properties.getProperty("gitHubRepository_MenuItem", "Repository on GitHub"));
         gitHubRepository_MenuItem.setGraphic(fxGui.createImageView(gitHub_Image, ICON_SIZE));
         gitHubRepository_MenuItem.setOnAction(event ->
                 getHostServices().showDocument("https://github.com/YALdysse/Advanced_TimerFX"));
 
-        russianLanguage_MenuItem = new MenuItem("Русский",
-                fxGui.createImageView(russianFlag_Image, ICON_SIZE));
-        russianLanguage_MenuItem.setOnAction(event ->
-                initLocalization("Russian"));
-        ukrainianLanguage_MenuItem = new MenuItem("Українська",
-                fxGui.createImageView(ukraineFlag_Image, ICON_SIZE));
-        ukrainianLanguage_MenuItem.setOnAction(event ->
-                initLocalization("Ukrainian"));
 
-        englishLanguage_MenuItem = new MenuItem("English",
-                fxGui.createImageView(unitedKingdom_Image, ICON_SIZE));
-        englishLanguage_MenuItem.setOnAction(event ->
-                initLocalization("English"));
+        ToggleGroup timerType_ToggleGroup = new ToggleGroup();
 
-        specifiedTimeTimer_MenuItem = new RadioMenuItem();
+        specifiedTimeTimer_MenuItem = new RadioMenuItem(language_properties.getProperty("specifiedTime_MenuItem", "at specified time"));
         specifiedTimeTimer_MenuItem.setOnAction(event ->
         {
-            countdownTimer_MenuItem.setSelected(false);
-            timerType_Label.setText(atTimerType_str);
-            startTimer_button.setText(notify_str + " " + atTimerType_str + " (" + startButton_str + ")");
             LocalTime time = LocalTime.now();
             hours_Spinner.getValueFactory().setValue(time.getHour());
             minutes_Spinner.getValueFactory().setValue(time.getMinute() + 1);
             seconds_Spinner.getValueFactory().setValue(time.getSecond());
         });
+        specifiedTimeTimer_MenuItem.setToggleGroup(timerType_ToggleGroup);
 
-        countdownTimer_MenuItem = new RadioMenuItem();
+
+        countdownTimer_MenuItem = new RadioMenuItem(language_properties.getProperty("countdownTimer_MenuItem", "in specified time"));
         countdownTimer_MenuItem.setSelected(true);
-        countdownTimer_MenuItem.setOnAction(event ->
-        {
-            specifiedTimeTimer_MenuItem.setSelected(false);
-            timerType_Label.setText(inTimerType_str);
-            startTimer_button.setText(notify_str + " " + inTimerType_str + " (" + startButton_str + ")");
-        });
+        countdownTimer_MenuItem.setToggleGroup(timerType_ToggleGroup);
 
-        createTimeTemplate_MenuItem = new MenuItem();
+
+        createTimeTemplate_MenuItem = new MenuItem(language_properties.getProperty("createTimeTemplate_MenuItem", "Create"));
         createTimeTemplate_MenuItem.setOnAction(this::createTimeTemplate_Action);
         createTimeTemplate_MenuItem.setAccelerator(new KeyCodeCombination(KeyCode.S, KeyCombination.CONTROL_DOWN));
         createTimeTemplate_MenuItem.setGraphic(fxGui.createImageView(createTemplate_Image,
                 ICON_SIZE));
 
-        removeAllTimeTemplates_MenuItem = new MenuItem();
+        removeAllTimeTemplates_MenuItem = new MenuItem(language_properties.getProperty("removeAllTimeTemplates_MenuItem", "Remove All"));
         removeAllTimeTemplates_MenuItem.setOnAction(this::removeAllTimeTemplates_Action);
         removeAllTimeTemplates_MenuItem.setAccelerator(new KeyCodeCombination(KeyCode.J, KeyCombination.CONTROL_DOWN));
         removeAllTimeTemplates_MenuItem.setGraphic(fxGui.createImageView(removeAllTimeTemplates_Image, ICON_SIZE));
 
-        playAnimation_MenuItem = new CheckMenuItem();
+        playAnimation_MenuItem = new CheckMenuItem(language_properties.getProperty("animations_MenuItem", "Animations"));
         playAnimation_MenuItem.setSelected(true);
         playAnimation_MenuItem.setGraphic(fxGui.createImageView(animation_Image,
                 ICON_SIZE));
 
-        loopTimer_CheckBox = new CheckBox();
+        loopTimer_CheckBox = new CheckBox(language_properties.getProperty("loopTimer_MenuItem", "Cyclic timer"));
         loopTimer_CheckBox.setGraphic(fxGui.createImageView(loop_Image, ICON_SIZE));
         loopTimer_CheckBox.setTextFill(Color.DODGERBLUE);
         loopTimer_CheckBox.setFont(Font.font(Font.getDefault().getName(), FontWeight.BOLD,
                 13.0D));
         loopTimer_CheckBox.setGraphic(fxGui.createImageView(loop_Image, ICON_SIZE));
 
-        Tooltip timerLoop_ToolTip = new Tooltip();
+        Tooltip timerLoop_ToolTip = new Tooltip(language_properties.getProperty("loopTimer_toolTip",
+                "<Not Found>"));
         timerLoop_ToolTip.setShowDelay(Duration.millis(600));
         timerLoop_ToolTip.setMaxWidth(PREFERRED_WIDTH);
         timerLoop_ToolTip.setWrapText(true);
@@ -505,7 +462,7 @@ public class ATimerFX_gui extends Application
         addCustomSound_MenuItem.setOnAction(this::addCustomSound_Action);
         //addCustomSound_MenuItem.setGraphic(fxGui.createImageView(addSound_Image, ICON_SIZE));
 
-        noSound_RadioButton = new RadioButton();
+        noSound_RadioButton = new RadioButton(language_properties.getProperty("noSound_MenuItem", "No sound"));
         noSound_RadioButton.setToggleGroup(soundsToggleGroup);
         noSound_RadioButton.setGraphic(fxGui.createImageView(noSound_Image, ICON_SIZE));
         noSound_RadioButton.setTextFill(Color.BLACK);
@@ -515,13 +472,18 @@ public class ATimerFX_gui extends Application
         language_Menu.setGraphic(fxGui.createImageView(language_Image, ICON_SIZE));
         timerType_Menu.setGraphic(fxGui.createImageView(timerType_Image, ICON_SIZE));
         timerType_Menu.getItems().addAll(countdownTimer_MenuItem, specifiedTimeTimer_MenuItem);
-        language_Menu.getItems().addAll(russianLanguage_MenuItem, ukrainianLanguage_MenuItem, englishLanguage_MenuItem);
         general_menu.getItems().addAll(playAnimation_MenuItem, language_Menu, gitHubRepository_MenuItem, exit_menuItem);
         timer_Menu.getItems().addAll(timerType_Menu, new SeparatorMenuItem(), startTimer_MenuItem, stopTimer_MenuItem,
                 new SeparatorMenuItem(), delay_CustomMenuItem, loopTimer_CustomMenuItem);
         timeTemplates_Menu.getItems().addAll(createTimeTemplate_MenuItem, removeAllTimeTemplates_MenuItem, new SeparatorMenuItem());
         sounds_Menu.getItems().addAll(noSound_MenuItem, new SeparatorMenuItem(), new SeparatorMenuItem(), addCustomSound_MenuItem);
         menuBar.getMenus().addAll(general_menu, timer_Menu, timeTemplates_Menu, sounds_Menu);
+
+        Platform.runLater(() ->
+        {
+            superRoot.getChildren().add(0, menuBar);
+
+        });
     }
 
     private void initializeComponents()
@@ -531,17 +493,22 @@ public class ATimerFX_gui extends Application
         radioButtonsBoxes = new ArrayList<>();
         actionDescriptionStrings = new ArrayList<>();
         brightnessStep = 1;
-        currentLanguage_str = "English";
+//        currentLanguage_str = "English";
         soundsToggleGroup = new ToggleGroup();
         //soundsToggleGroup.selectedToggleProperty().addListener(this::soundsToggleGroup_SelectedProperty);
 
         final double TIME_TEXT_OPACITY = 0.55D;
-        hours_text = new Text();
-        hours_text.setOpacity(TIME_TEXT_OPACITY);
-        minutes_text = new Text();
-        minutes_text.setOpacity(TIME_TEXT_OPACITY);
-        seconds_text = new Text();
-        seconds_text.setOpacity(TIME_TEXT_OPACITY);
+        final Font timeText_Font =  Font.font(Font.getDefault().getName(),FontWeight.NORMAL,11.0D);
+        hours_Label = new Label(language_properties.getProperty("hours_Text", "Hours"));
+        hours_Label.setOpacity(TIME_TEXT_OPACITY);
+        hours_Label.setFont(timeText_Font);
+        minutes_Label = new Label(language_properties.getProperty("minutes_Text", "Minutes"));
+        minutes_Label.setOpacity(TIME_TEXT_OPACITY);
+        minutes_Label.setFont(timeText_Font);
+        seconds_Label = new Label(language_properties.getProperty("seconds_Text", "Seconds"));
+        seconds_Label.setOpacity(TIME_TEXT_OPACITY);
+        seconds_Label.setFont(timeText_Font);
+
 
         wingterBackground = new Background(new BackgroundFill(Color.rgb(234, 246, 251),
                 CornerRadii.EMPTY, Insets.EMPTY));
@@ -561,7 +528,7 @@ public class ATimerFX_gui extends Application
             ioException.printStackTrace();
         }
 
-        rootPrivilege_ToolTip = new Tooltip();
+        rootPrivilege_ToolTip = new Tooltip(language_properties.getProperty("needRootPrivilege_str", "To perform this operation Root privilege needed."));
         rootPrivilege_ToolTip.setShowDelay(Duration.millis(200));
 
         if (System.getProperty("os.name").contains("Linux"))
@@ -591,16 +558,11 @@ public class ATimerFX_gui extends Application
         customCommand_textField.setPromptText(customCommandPromtText_str);
 
         timerName_textFiels = new TextField();
+        timerName_textFiels.setPromptText(language_properties.getProperty("TimerName_PromtText", "Name of timer (optional)"));
 
         HBox timerName_Box = new HBox(fxGui.rem * 0.1, timerName_textFiels);
         timerName_Box.setAlignment(Pos.CENTER);
         HBox.setHgrow(timerName_textFiels, Priority.ALWAYS);
-
-        timerType_Label = new Label();
-        timerType_Label.setFont(Font.font(timerType_Label.getFont().getName(), FontPosture.ITALIC,
-                timerType_Label.getFont().getSize() - 2.0D));
-        HBox timerType_HBox = new HBox(timerType_Label);
-        timerType_HBox.setAlignment(Pos.CENTER);
 
         brightness = 50;
         brightnessValue = new Button(String.valueOf(brightness));
@@ -633,7 +595,8 @@ public class ATimerFX_gui extends Application
         openProcessSelector_Button.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
         openProcessSelector_Button.setOnAction(this::openProcessSelector_Action);
 
-        killProcessWithChildren_CheckBox = new CheckBox();
+        killProcessWithChildren_CheckBox = new CheckBox(language_properties.getProperty("killProcessWithChildren_CheckBox",
+                "Kill children processes"));
         killProcessWithChildren_CheckBox.setPadding(new Insets(0.0D, 0.0D,
                 0.0D, fxGui.rem * 1.2D));
 
@@ -651,13 +614,19 @@ public class ATimerFX_gui extends Application
             actionRadioButtonToggleGroup.getToggles().add(radioButton);
         }
 
-        startTimer_button = new Button();
+        startTimer_button = new Button(language_properties.getProperty("startTimer_button", "Start"));
         startTimer_button.setPrefWidth(PREFERRED_WIDTH * 0.6D);
         startTimer_button.setOnAction(this::startTimer_Action);
 
         HBox startTimer_Box = new HBox(fxGui.rem * 1.1D, startTimer_button);
         startTimer_Box.setAlignment(Pos.CENTER);
 
+        HBox hours_HBox = new HBox(hours_Label);
+        hours_HBox.setAlignment(Pos.TOP_CENTER);
+        HBox minutes_HBox = new HBox(minutes_Label);
+        minutes_HBox.setAlignment(Pos.TOP_CENTER);
+        HBox seconds_HBox = new HBox(seconds_Label);
+        seconds_HBox.setAlignment(Pos.TOP_CENTER);
 
         gp = new GridPane();
         //gp.add(timerType_Label,0,0);
@@ -665,14 +634,14 @@ public class ATimerFX_gui extends Application
         gp.add(minutes_Spinner, 1, 0);
         gp.add(seconds_Spinner, 2, 0);
         //gp.add(new Text(), 0, 1);
-        gp.add(hours_text, 0, 1);
-        gp.add(minutes_text, 1, 1);
-        gp.add(seconds_text, 2, 1);
+        gp.add(hours_HBox, 0, 1);
+        gp.add(minutes_HBox, 1, 1);
+        gp.add(seconds_HBox, 2, 1);
         gp.setAlignment(Pos.CENTER);
         //gp.setGridLinesVisible(true);
         gp.setHgap(fxGui.rem * 1.1);
 
-        performActionAfterTimerWentOut_checkBox = new CheckBox();
+        performActionAfterTimerWentOut_checkBox = new CheckBox(language_properties.getProperty("performActionAfterTimerWentOut_checkBox", "Start"));
         performActionAfterTimerWentOut_checkBox.setWrapText(true);
         //performActionAfterTimerWentOut_checkBox.setBackground(new Background(bImage));
         performActionAfterTimerWentOut_checkBox.setOnAction(this::performActionAfterTimerWentOut_CheckBox_Action);
@@ -706,7 +675,8 @@ public class ATimerFX_gui extends Application
             {
                 startTimer_MenuItem.setDisable(true);
                 startTimer_button.setDisable(true);
-            } else
+            }
+            else
             {
                 System.out.println("Selected: " + processToKill.getPid() + "\t" + processToKill.getShortCommand());
                 startTimer_MenuItem.setDisable(false);
@@ -761,7 +731,8 @@ public class ATimerFX_gui extends Application
         if (event.getDeltaY() > 10.0D)
         {
             spinner.increment();
-        } else if (event.getDeltaY() < 0.0D)
+        }
+        else if (event.getDeltaY() < 0.0D)
         {
             spinner.decrement();
         }
@@ -806,7 +777,8 @@ public class ATimerFX_gui extends Application
         if (event.getDeltaY() > 10.0D && brightness < 100)
         {
             brightness += brightnessStep;
-        } else if (event.getDeltaY() < -10.0D && brightness > 0)
+        }
+        else if (event.getDeltaY() < -10.0D && brightness > 0)
         {
             brightness -= brightnessStep;
         }
@@ -878,6 +850,17 @@ public class ATimerFX_gui extends Application
         radioButtons.add(custom_command);
         radioButtons.add(killProcess_RadioButton);
         radioButtons.add(brightness_RadioButton);
+
+        String key;
+        //ActionRadioButtons
+        for (ActionRadioButton radioButton : radioButtons)
+        {
+            key = radioButton.getAction() + "_Button";
+            radioButton.setText(language_properties.getProperty(key, "<Not Found: >" + key));
+
+            key = radioButton.getAction().name() + "_actionDescription";
+            actionDescriptionStrings.add(language_properties.getProperty(key, "<Not Found:>" + key));
+        }
     }
 
     /**
@@ -926,12 +909,14 @@ public class ATimerFX_gui extends Application
             {
                 startTimer_MenuItem.setDisable(true);
                 startTimer_button.setDisable(true);
-            } else
+            }
+            else
             {
                 startTimer_MenuItem.setDisable(false);
                 startTimer_button.setDisable(false);
             }
-        } else
+        }
+        else
         {
             root.getChildren().remove(radioGroup_Box);
 
@@ -958,10 +943,12 @@ public class ATimerFX_gui extends Application
         String message;
         if (!timerName_textFiels.getText().equals(""))
         {
-            message = "The timer with name '" + timerName_textFiels.getText() + "' has expired.";
-        } else
+            message = language_properties.getProperty("theTimerHasExpired_str", "The timer is out.") +
+                    "\n" + language_properties.getProperty("Name:", "Name:") + " " + timerName_textFiels.getText();
+        }
+        else
         {
-            message = theTimerHasExpired_str;
+            message = language_properties.getProperty("theTimerHasExpired_str", "The timer is out.");
         }
 
         //------------
@@ -969,6 +956,7 @@ public class ATimerFX_gui extends Application
         playCurrentNotificationSound();
         //Якщо викликати - буде виключна ситуація через те, що якась анімація проігрується.
         showNotification(NAME_OF_PROGRAM, message);
+        stage.setOpacity(0.5D);
 
         if (performActionAfterTimerWentOut_checkBox.isSelected())
         {
@@ -976,7 +964,8 @@ public class ATimerFX_gui extends Application
             {
                 stage.setOpacity(0.5D);
                 createAndShowTimerDelayAlert();
-            } else
+            }
+            else
             {
                 stage.setOpacity(1.0D);
                 stage.setAlwaysOnTop(false);
@@ -1002,6 +991,7 @@ public class ATimerFX_gui extends Application
 
     public void showNotification(final String aTitle, final String aMessage)
     {
+        System.out.println("aMessage: " + aMessage);
         notify = new Notification(aTitle, aMessage);
         notify.setNotificationTitle(aTitle);
         notify.setMessage(aMessage);
@@ -1017,6 +1007,7 @@ public class ATimerFX_gui extends Application
         {
             stopCurrentNotificationSound();
             stage.setAlwaysOnTop(false);
+            stage.setOpacity(1.0D);
         });
         notify.show();
     }
@@ -1027,7 +1018,6 @@ public class ATimerFX_gui extends Application
         timerIsRunning_pane_superRoot.getChildren().remove(menuBar);
         timerIsRunning_pane_superRoot.getChildren().add(0, menuBar);
 
-        System.out.println("startTimer_MenuItem and button: " + startTimer_MenuItem.isDisable() + "\t" + startTimer_button.isDisable());
         long startTime = System.currentTimeMillis();
         saveSettings();
 
@@ -1137,7 +1127,8 @@ public class ATimerFX_gui extends Application
             countdownTimer = destinationTime.minusHours(time.getHour());
             countdownTimer = countdownTimer.minusMinutes(time.getMinute());
             countdownTimer = countdownTimer.minusSeconds(time.getSecond());
-        } else
+        }
+        else
         {
             if (timerHours == 0 && timerMinutes == 0 && timerSeconds == 0)
             {
@@ -1182,7 +1173,7 @@ public class ATimerFX_gui extends Application
         stopTimer_Box.setAlignment(Pos.CENTER);
 
 
-        timerInformation_Label = new Label(info_str);
+        timerInformation_Label = new Label(language_properties.getProperty("info_text", "Info"));
 
         timerInformation_Box = new HBox(timerInformation_Label);
         timerInformation_Box.setAlignment(Pos.CENTER);
@@ -1214,7 +1205,7 @@ public class ATimerFX_gui extends Application
         final Color keyColor = Color.FIREBRICK;
         final Color valueColor = Color.MEDIUMSLATEBLUE;
 
-        actionInfo_Label = new Label(action_str);
+        actionInfo_Label = new Label(language_properties.getProperty("timerAction_Label", "Action: "));
         actionInfo_Label.setFont(fontForLabels);
         actionInfo_Label.setTextFill(keyColor);
 
@@ -1223,7 +1214,7 @@ public class ATimerFX_gui extends Application
         actionValue_Label.setWrapText(true);
         actionValue_Label.setTextFill(valueColor);
 
-        timerName_Label = new Label(timerName_str);
+        timerName_Label = new Label(language_properties.getProperty("timerName_Label", "Name of timer:"));
         timerName_Label.setFont(fontForLabels);
         timerName_Label.setTextFill(keyColor);
 
@@ -1254,7 +1245,7 @@ public class ATimerFX_gui extends Application
         rootPopup_HBox.setBorder(new Border(new BorderStroke(Color.CHOCOLATE, BorderStrokeStyle.SOLID,
                 new CornerRadii(15.0D), new BorderWidths(fxGui.rem * 0.09D))));
 
-        Label textPopup = new Label(popup_str);
+        Label textPopup = new Label(language_properties.getProperty("popup_str", "To stop timer click left button twice."));
         textPopup.setFont(Font.font(textPopup.getFont().getName(), FontWeight.BOLD, 12.0D));
 
         rootPopup_HBox.getChildren().add(textPopup);
@@ -1274,7 +1265,8 @@ public class ATimerFX_gui extends Application
         if (windows)
         {
             performWindowsAction(findSelectedActionRadioButtonUsingToggleGroup().getAction());
-        } else if (linux)
+        }
+        else if (linux)
         {
             performLinuxAction(findSelectedActionRadioButtonUsingToggleGroup().getAction());
         }
@@ -1293,30 +1285,37 @@ public class ATimerFX_gui extends Application
             {
                 timerAction = new Shutdown();
 
-            } else if (timerActionType == TimerAction.SUSPEND)
+            }
+            else if (timerActionType == TimerAction.SUSPEND)
             {
                 timerAction = new Suspend();
-            } else if (timerActionType == TimerAction.CUSTOM_COMMAND)//------------------------- Реалізація
+            }
+            else if (timerActionType == TimerAction.CUSTOM_COMMAND)//------------------------- Реалізація
             {
                 timerAction = new Command(customCommand_textField.getText());
-            } else if (timerActionType == TimerAction.REBOOT)
+            }
+            else if (timerActionType == TimerAction.REBOOT)
             {
                 timerAction = new Reboot();
                 //commandArray[2] = "firefox mail.yahoo.com & audacious /media/yaroslav/Freedom/1.\\ Audio/1996\\ Pure\\ Instinct\\ [1996\\ Japan\\ AMCE-950\\ EW]/1996\\ -\\ Pure\\ Instinct\\ (AMCE-950)/10\\ -\\ You\\ And\\ I.flac & gnome-terminal";
-            } else if (timerActionType == TimerAction.KILL_PROCESS_BY_PID)
+            }
+            else if (timerActionType == TimerAction.KILL_PROCESS_BY_PID)
             {
                 if (killProcessWithChildren_CheckBox.isSelected())
                 {
                     timerAction = new KillProcessByPid(processToKill.getShortCommand(),
                             true);
-                } else
+                }
+                else
                 {
                     timerAction = new KillProcessByPid(processToKill.getPid());
                 }
-            } else if (timerActionType == TimerAction.LOGOUT)
+            }
+            else if (timerActionType == TimerAction.LOGOUT)
             {
                 timerAction = new Logout();
-            } else if (timerActionType == TimerAction.BRIGHTNESS)
+            }
+            else if (timerActionType == TimerAction.BRIGHTNESS)
             {
                 timerAction = new Brightness(BrightnessMethod.BACKLIGHT_CONFIG_FILE, brightness);
             }
@@ -1336,23 +1335,29 @@ public class ATimerFX_gui extends Application
         if (timerActionType == TimerAction.SHUTDOWN)
         {
             timerAction = new org.yaldysse.atfx.action.windows.Shutdown();
-        } else if (timerActionType == TimerAction.SUSPEND)
+        }
+        else if (timerActionType == TimerAction.SUSPEND)
         {
             timerAction = new org.yaldysse.atfx.action.windows.Suspend();
-        } else if (timerActionType == TimerAction.CUSTOM_COMMAND)//--------------------- Implementation
+        }
+        else if (timerActionType == TimerAction.CUSTOM_COMMAND)//--------------------- Implementation
         {
             timerAction = new Command(customCommand_textField.getText());
-        } else if (timerActionType == TimerAction.REBOOT)
+        }
+        else if (timerActionType == TimerAction.REBOOT)
         {
             timerAction = new org.yaldysse.atfx.action.windows.Reboot();
-        } else if (timerActionType == TimerAction.KILL_PROCESS_BY_PID)
+        }
+        else if (timerActionType == TimerAction.KILL_PROCESS_BY_PID)
         {
             timerAction = new org.yaldysse.atfx.action.windows.KillProcessByPid(
                     processToKill.getPid(), killProcessWithChildren_CheckBox.isSelected());
-        } else if (timerActionType == TimerAction.LOGOUT)
+        }
+        else if (timerActionType == TimerAction.LOGOUT)
         {
             timerAction = new org.yaldysse.atfx.action.windows.Logout();
-        } else if (timerActionType == TimerAction.BRIGHTNESS)
+        }
+        else if (timerActionType == TimerAction.BRIGHTNESS)
         {
             timerAction = new org.yaldysse.atfx.action.windows.Brightness(brightness);
         }
@@ -1430,150 +1435,13 @@ public class ATimerFX_gui extends Application
         stoppedByUser = false;
     }
 
-    private void initLocalization(final String aLocale)
+    private void initializeLocalization(final String aLocale)
     {
         language_properties = new Properties();
+
         try
         {
-            language_properties.loadFromXML(this.getClass().getResourceAsStream("/Localizations/Language_" + aLocale + ".lang"));
-
-            startButton_str = language_properties.getProperty("startTimer_button", "Start");
-            inTimerType_str = language_properties.getProperty("timerType_In_Label", "in");
-            atTimerType_str = language_properties.getProperty("timerType_At_Label", "at");
-            notify_str = language_properties.getProperty("notify_str", "Notify");
-
-            if (countdownTimer_MenuItem.isSelected())
-            {
-                startTimer_button.setText(notify_str + " " + inTimerType_str + " (" + startButton_str + ")");
-            } else
-            {
-                startTimer_button.setText(notify_str + " " + atTimerType_str + " (" + startButton_str + ")");
-            }
-
-            startTimer_MenuItem.setText(language_properties.getProperty("startTimer_MenuItem", "Start"));
-            stopTimer_MenuItem.setText(language_properties.getProperty("stopTimer_MenuItem", "Start"));
-            performActionAfterTimerWentOut_checkBox.setText(language_properties.getProperty("performActionAfterTimerWentOut_checkBox", "Start"));
-            timerType_Menu.setText(language_properties.getProperty("timerType_Menu", "Timer type"));
-            removeAllTimeTemplates_MenuItem.setText(language_properties.getProperty("removeAllTimeTemplates_MenuItem", "Remove All"));
-            timeTemplates_Menu.setText(language_properties.getProperty("timeTemplates_Menu", "Templates"));
-            createTimeTemplate_MenuItem.setText(language_properties.getProperty("createTimeTemplate_MenuItem", "Create"));
-            specifiedTimeTimer_MenuItem.setText(language_properties.getProperty("specifiedTime_MenuItem", "at specified time"));
-            countdownTimer_MenuItem.setText(language_properties.getProperty("countdownTimer_MenuItem", "in specified time"));
-            playAnimation_MenuItem.setText(language_properties.getProperty("animations_MenuItem", "Animations"));
-            timerName_textFiels.setPromptText(language_properties.getProperty("TimerName_PromtText", "Name of timer (optional)"));
-            timerName_str = language_properties.getProperty("timerName_Label", "Name of timer:");
-            action_str = language_properties.getProperty("timerAction_Label", "Action: ");
-            info_str = language_properties.getProperty("info_text", "Info");
-            gitHubRepository_MenuItem.setText(language_properties.getProperty("gitHubRepository_MenuItem", "Repository on GitHub"));
-            customCommandPromtText_str = language_properties.getProperty("customCommandPromtText", "Enter here command that will be performed after timer went out");
-            delayBeforeAction_CheckBox.setText(language_properties.getProperty("delayBeforeAction_CheckBox", "Delay before action"));
-            doYouWantToContinue_str = language_properties.getProperty("doYouWantToContinue_str", "Do you want to continue ?");
-            warning_str = language_properties.getProperty("warning_str", "Warning!");
-            popup_str = language_properties.getProperty("popup_str", "To stop timer click left button twice.");
-            customCommand_textField.setPromptText(customCommandPromtText_str);
-            theTimerHasExpired_str = language_properties.getProperty("theTimerHasExpired_str", "The timer has expired.");
-            timerTemplateCreated_str = language_properties.getProperty("timerTemplateCreated_str", "Timer Template has been created.");
-            timerTemplateApplied_str = language_properties.getProperty("timerTemplateApplied_str", "Timer template has been applied.");
-            allTimerTemplatesRemoved_str = language_properties.getProperty("allTemplatesRemoved_str", "All Timer Templates have been removed.");
-            needRootPrivilege_str = language_properties.getProperty("needRootPrivilege_str", "To perform this operation Root privilege needed.");
-            killProcessWithChildren_CheckBox.setText(language_properties.getProperty("killProcessWithChildren_CheckBox",
-                    "Kill children processes"));
-            loopTimer_CheckBox.setText(language_properties.getProperty("loopTimer_MenuItem", "Cyclic timer"));
-            loopTimer_CheckBox.getTooltip().setText(language_properties.getProperty("loopTimer_toolTip",
-                    "<Not Found>"));
-            sounds_Menu.setText(language_properties.getProperty("sounds_Menu", "Sounds"));
-            noSound_RadioButton.setText(language_properties.getProperty("noSound_MenuItem", "No sound"));
-            rootPrivilege_ToolTip.setText(needRootPrivilege_str);
-
-            actionDescriptionStrings.clear();
-
-            String key;
-            //ActionRadioButtons
-            for (ActionRadioButton radioButton : radioButtons)
-            {
-                key = radioButton.getAction() + "_Button";
-                radioButton.setText(language_properties.getProperty(key, "<Not Found: >" + key));
-
-                key = radioButton.getAction().name() + "_actionDescription";
-                actionDescriptionStrings.add(language_properties.getProperty(key, "<Not Found:>" + key));
-            }
-
-
-            ActionRadioButton selectedRadioButton = findSelectedActionRadioButtonUsingToggleGroup();
-            if (selectedRadioButton != null)
-            {
-                actionDescription = findActionDescriptionStringByTimerTypeAction(
-                        findSelectedActionRadioButtonUsingToggleGroup().getAction());
-                actionValue_Label.setText(actionDescription);
-            }
-
-            if (timerInformation_Label != null)
-            {
-                timerInformation_Label.setText(info_str);
-            }
-
-            if (timerName_Label != null)
-            {
-                timerName_Label.setText(language_properties.getProperty("timerName_Label", "Start"));
-            }
-
-            if (actionInfo_Label != null)
-
-            {
-                actionInfo_Label.setText(language_properties.getProperty("timerAction_Label", "Action:"));
-
-                if (selectedRadioButton != null)
-                {
-                    actionDescription = findActionDescriptionStringByTimerTypeAction(
-                            findSelectedActionRadioButtonUsingToggleGroup().getAction());
-                    actionValue_Label.setText(actionDescription);
-                }
-            }
-
-//            if (timerType_Label != null)
-//            {
-//                if (specifiedTimeTimer_MenuItem.isSelected())
-//                {
-//                    timerType_Label.setText(atTimerType_str);
-//                }
-//                else
-//                {
-//                    timerType_Label.setText(inTimerType_str);
-//                }
-//            }
-
-            general_menu.setText(language_properties.getProperty("general_menu", "General"));
-            language_Menu.setText(language_properties.getProperty("language_Menu", "Language"));
-            timer_Menu.setText(language_properties.getProperty("timer_Menu", "Timer"));
-            exit_menuItem.setText(language_properties.getProperty("exit_MenuItem", "Exit"));
-
-            if (hours_text != null)
-            {
-                hours_text.setText(language_properties.getProperty("hours_Text", "Hours"));
-                minutes_text.setText(language_properties.getProperty("minutes_Text", "Minutes"));
-                seconds_text.setText(language_properties.getProperty("seconds_Text", "Seconds"));
-            }
-
-            if (popup != null)
-            {
-                HBox temporary = (HBox) popup.getContent().get(0);
-                Label temporaryLabel = (Label) temporary.getChildren().get(0);
-                temporaryLabel.setText(popup_str);
-            }
-
-            ObservableList<MenuItem> menuItems = timeTemplates_Menu.getItems();
-            TemplateMenuItem tmi;
-
-            for (int k = 3; k < menuItems.size(); k++)
-            {
-                tmi = (TemplateMenuItem) menuItems.get(k);
-
-                tmi.requestUpdateLocalization("Language_"
-                        + aLocale + ".lang_templateTip");
-
-            }
-
-            scene.getWindow().sizeToScene();
+            language_properties.loadFromXML(this.getClass().getResourceAsStream("/Localizations/" + aLocale + ".lang"));
         }
         catch (IOException ioException)
         {
@@ -1581,6 +1449,111 @@ public class ATimerFX_gui extends Application
             return;
         }
         currentLanguage_str = aLocale;
+    }
+
+    public void requestLocalization()
+    {
+        startTimer_MenuItem.setText(language_properties.getProperty("startTimer_MenuItem", "Start"));
+        stopTimer_MenuItem.setText(language_properties.getProperty("stopTimer_MenuItem", "Stop"));
+        performActionAfterTimerWentOut_checkBox.setText(language_properties.getProperty("performActionAfterTimerWentOut_checkBox", "Start"));
+        timerType_Menu.setText(language_properties.getProperty("timerType_Menu", "Timer type"));
+        removeAllTimeTemplates_MenuItem.setText(language_properties.getProperty("removeAllTimeTemplates_MenuItem", "Remove All"));
+        timeTemplates_Menu.setText(language_properties.getProperty("timeTemplates_Menu", "Templates"));
+        createTimeTemplate_MenuItem.setText(language_properties.getProperty("createTimeTemplate_MenuItem", "Create"));
+        specifiedTimeTimer_MenuItem.setText(language_properties.getProperty("specifiedTime_MenuItem", "at specified time"));
+        countdownTimer_MenuItem.setText(language_properties.getProperty("countdownTimer_MenuItem", "in specified time"));
+        playAnimation_MenuItem.setText(language_properties.getProperty("animations_MenuItem", "Animations"));
+        timerName_textFiels.setPromptText(language_properties.getProperty("TimerName_PromtText", "Name of timer (optional)"));
+        gitHubRepository_MenuItem.setText(language_properties.getProperty("gitHubRepository_MenuItem", "Repository on GitHub"));
+        customCommandPromtText_str = language_properties.getProperty("customCommandPromtText", "Enter here command that will be performed after timer went out");
+        delayBeforeAction_CheckBox.setText(language_properties.getProperty("delayBeforeAction_CheckBox", "Delay before action"));
+        customCommand_textField.setPromptText(customCommandPromtText_str);
+        killProcessWithChildren_CheckBox.setText(language_properties.getProperty("killProcessWithChildren_CheckBox",
+                "Kill children processes"));
+        loopTimer_CheckBox.setText(language_properties.getProperty("loopTimer_MenuItem", "Cyclic timer"));
+        loopTimer_CheckBox.getTooltip().setText(language_properties.getProperty("loopTimer_toolTip",
+                "<Not Found>"));
+        sounds_Menu.setText(language_properties.getProperty("sounds_Menu", "Sounds"));
+        noSound_RadioButton.setText(language_properties.getProperty("noSound_MenuItem", "No sound"));
+        rootPrivilege_ToolTip.setText(language_properties.getProperty("needRootPrivilege_str", "To perform this operation Root privilege needed."));
+        startTimer_button.setText(language_properties.getProperty("startTimer_button", "Start"));
+        actionDescriptionStrings.clear();
+
+        String key;
+        //ActionRadioButtons
+        for (ActionRadioButton radioButton : radioButtons)
+        {
+            key = radioButton.getAction() + "_Button";
+            radioButton.setText(language_properties.getProperty(key, "<Not Found: >" + key));
+
+            key = radioButton.getAction().name() + "_actionDescription";
+            actionDescriptionStrings.add(language_properties.getProperty(key, "<Not Found:>" + key));
+        }
+
+
+        ActionRadioButton selectedRadioButton = findSelectedActionRadioButtonUsingToggleGroup();
+        if (selectedRadioButton != null)
+        {
+            actionDescription = findActionDescriptionStringByTimerTypeAction(
+                    findSelectedActionRadioButtonUsingToggleGroup().getAction());
+            actionValue_Label.setText(actionDescription);
+        }
+
+        if (timerInformation_Label != null)
+        {
+            timerInformation_Label.setText(language_properties.getProperty("info_text", "Info"));
+        }
+
+        if (timerName_Label != null)
+        {
+            timerName_Label.setText(language_properties.getProperty("timerName_Label", "Start"));
+        }
+
+        if (actionInfo_Label != null)
+
+        {
+            actionInfo_Label.setText(language_properties.getProperty("timerAction_Label", "Action:"));
+
+            if (selectedRadioButton != null)
+            {
+                actionDescription = findActionDescriptionStringByTimerTypeAction(
+                        findSelectedActionRadioButtonUsingToggleGroup().getAction());
+                actionValue_Label.setText(actionDescription);
+            }
+        }
+
+
+        general_menu.setText(language_properties.getProperty("general_menu", "General"));
+        language_Menu.setText(language_properties.getProperty("language_Menu", "Language"));
+        timer_Menu.setText(language_properties.getProperty("timer_Menu", "Timer"));
+        exit_menuItem.setText(language_properties.getProperty("exit_MenuItem", "Exit"));
+
+        if (hours_Label != null)
+        {
+            hours_Label.setText(language_properties.getProperty("hours_Text", "Hours"));
+            minutes_Label.setText(language_properties.getProperty("minutes_Text", "Minutes"));
+            seconds_Label.setText(language_properties.getProperty("seconds_Text", "Seconds"));
+        }
+
+        if (popup != null)
+        {
+            HBox temporary = (HBox) popup.getContent().get(0);
+            Label temporaryLabel = (Label) temporary.getChildren().get(0);
+            temporaryLabel.setText(language_properties.getProperty("popup_str", "To stop timer click left button twice."));
+        }
+
+        ObservableList<MenuItem> menuItems = timeTemplates_Menu.getItems();
+        TemplateMenuItem tmi;
+
+        for (int k = 3; k < menuItems.size(); k++)
+        {
+            tmi = (TemplateMenuItem) menuItems.get(k);
+
+            tmi.requestUpdateLocalization(currentLanguage_str + ".lang_templateTip");
+
+        }
+
+        scene.getWindow().sizeToScene();
     }
 
     private void saveSettings()
@@ -1621,7 +1594,10 @@ public class ATimerFX_gui extends Application
         }
     }
 
-    private void importSettings()
+    /**
+     * Створює об'єкт налаштування Properties.
+     */
+    private void initializeSettingsProperties()
     {
         long startTime = System.currentTimeMillis();
 
@@ -1631,10 +1607,27 @@ public class ATimerFX_gui extends Application
         {
             savedProperties.loadFromXML(Files.newInputStream(YALtools.getJarLocation().toPath()
                     .getParent().resolve(PROPERTY_FILE_NAME)));
+        }
+        catch (FileNotFoundException fileNFExc)
+        {
+            YALtools.printDebugMessage("Возникла ошибка при обнаружении каталога сохранения узла.\n" + fileNFExc);
+        }
+        catch (Exception ioExc)
+        {
+            YALtools.printDebugMessage("Возникла ошибка ввода-вывода узла настроек.\n" + ioExc);
+        }
+        System.out.println("initialize Settings: " + (System.currentTimeMillis() - startTime));
+    }
 
-            currentLanguage_str = savedProperties.getProperty("Language", "English");
-            locX = (int) Double.parseDouble(savedProperties.getProperty("locX", "100"));
-            locY = (int) Double.parseDouble(savedProperties.getProperty("locY", "0"));
+    private void applySettings()
+    {
+        long startTime = System.currentTimeMillis();
+
+        try
+        {
+            //currentLanguage_str = savedProperties.getProperty("Language", "English");
+            //locX = (int) Double.parseDouble(savedProperties.getProperty("locX", "100"));
+            //locY = (int) Double.parseDouble(savedProperties.getProperty("locY", "0"));
             delayBeforeAction_CheckBox.setSelected(Boolean.parseBoolean(
                     savedProperties.getProperty("delayBeforeAction_CheckBox", "true")));
             delayBeforeAction_Spinner.getValueFactory().setValue(Integer.parseInt(
@@ -1645,8 +1638,8 @@ public class ATimerFX_gui extends Application
                     !delayCustomMenuItem_HBox.getChildren().contains(delayBeforeAction_Spinner))
             {
                 delayCustomMenuItem_HBox.getChildren().add(delayBeforeAction_Spinner);
-            } else if (!delayBeforeAction_CheckBox.isSelected() &&
-                    delayCustomMenuItem_HBox.getChildren().contains(delayBeforeAction_Spinner))
+            }
+            else if (!delayBeforeAction_CheckBox.isSelected())
             {
                 delayCustomMenuItem_HBox.getChildren().remove(delayBeforeAction_Spinner);
             }
@@ -1654,10 +1647,6 @@ public class ATimerFX_gui extends Application
             timerTemplates = TimerTemplate.importTimerTemplatesFromFile(YALtools.getJarLocation().toPath().getParent().resolve(TIMER_TEMPLATES_FILE_NAME));
             updateTimeTemplatesMenu();
 
-        }
-        catch (FileNotFoundException fileNFExc)
-        {
-            YALtools.printDebugMessage("Возникла ошибка при обнаружении каталога сохранения узла.\n" + fileNFExc);
         }
         catch (Exception ioExc)
         {
@@ -1710,8 +1699,8 @@ public class ATimerFX_gui extends Application
 
         timerTemplates.add(timerTemplate);
 
-        showAutoHideTooltip(timerTemplateCreated_str, Duration.millis(1500),
-                timerName_textFiels);
+        showAutoHideTooltip(language_properties.getProperty("timerTemplateCreated_str", "Timer Template has been created.")
+                , Duration.millis(1500), timerName_textFiels);
 
         updateTimeTemplatesMenu();
     }
@@ -1732,7 +1721,8 @@ public class ATimerFX_gui extends Application
                 temporaryTemplate.setOnAction(event -> applyTimerTemplate(timerTemplates.get(finalK)));
                 timeTemplate_MenuItemsArray.add(temporaryTemplate);
                 temporaryTemplate.setAccelerator(KeyCodeCombination.valueOf("Alt+" + (k + 1)));
-            } else
+            }
+            else
             {
                 temporaryTemplate = timeTemplate_MenuItemsArray.get(k);
                 temporaryTemplate.setOnAction(null);
@@ -1771,8 +1761,8 @@ public class ATimerFX_gui extends Application
     private void removeAllTimeTemplates_Action(ActionEvent event)
     {
         timerTemplates.clear();
-        showAutoHideTooltip(allTimerTemplatesRemoved_str, Duration.millis(1500),
-                timerName_textFiels);
+        showAutoHideTooltip(language_properties.getProperty("allTemplatesRemoved_str", "All Timer Templates have been removed.")
+                , Duration.millis(1500), timerName_textFiels);
         updateTimeTemplatesMenu();
     }
 
@@ -1800,7 +1790,8 @@ public class ATimerFX_gui extends Application
         if (template.isCountdownTimer())
         {
             Event.fireEvent(countdownTimer_MenuItem, new ActionEvent());
-        } else
+        }
+        else
         {
             Event.fireEvent(specifiedTimeTimer_MenuItem, new ActionEvent());
         }
@@ -1833,10 +1824,12 @@ public class ATimerFX_gui extends Application
         if (actions.contains(TimerAction.KILL_PROCESS_BY_PID))
         {
             processToKill = template.getProcessToKill();
-        } else if (actions.contains(TimerAction.CUSTOM_COMMAND))
+        }
+        else if (actions.contains(TimerAction.CUSTOM_COMMAND))
         {
             customCommand_textField.setText(template.getCustomCommand());
-        } else if (actions.contains(TimerAction.BRIGHTNESS))
+        }
+        else if (actions.contains(TimerAction.BRIGHTNESS))
         {
             brightness = template.getBrightness();
             brightnessValue.setText(String.valueOf(brightness));
@@ -1853,8 +1846,8 @@ public class ATimerFX_gui extends Application
             createAndShowMissingSoundInTemplateAlert(template);
         }
 
-        showAutoHideTooltip(timerTemplateApplied_str, Duration.millis(1500),
-                timerName_textFiels);
+        showAutoHideTooltip(language_properties.getProperty("timerTemplateApplied_str", "Timer template has been applied.")
+                , Duration.millis(1500), timerName_textFiels);
     }
 
     public static String getCurrentLanguageName()
@@ -1977,7 +1970,9 @@ public class ATimerFX_gui extends Application
         ta.initOwner(scene.getWindow());
         ta.initModality(Modality.APPLICATION_MODAL);
         ta.setAlwaysOnTop(true);
-        ta.start(warning_str, doYouWantToContinue_str, tmpDelayTime);
+        ta.start(language_properties.getProperty("warning_str", "Warning!")
+                , language_properties.getProperty("doYouWantToContinue_str", "Do you want to continue ?")
+                , tmpDelayTime);
 
         ta.setOnHidden(eventHidden ->
         {
@@ -1987,7 +1982,8 @@ public class ATimerFX_gui extends Application
             if (ta.getResultButton().getText().equals("No"))
             {
                 YALtools.printDebugMessage("Таймер отменен.");
-            } else
+            }
+            else
             {
                 performAction();
                 YALtools.printDebugMessage("Starting: stopTimerButton_Action");
@@ -2205,7 +2201,8 @@ public class ATimerFX_gui extends Application
         {
             brightnessValue.setBorder(brightnessFocusedBorder);
             brightnessValue.setEffect(brighnessDropShadow);
-        } else
+        }
+        else
         {
             brightnessValue.setBorder(Border.EMPTY);
             brightnessValue.setEffect(null);
@@ -2235,7 +2232,6 @@ public class ATimerFX_gui extends Application
             sounds_Properties.loadFromXML(getClass().getResourceAsStream("/Configs/Sounds.properties"));
 
             Set<Object> keys = sounds_Properties.keySet();
-            SoundMenuItem soundMenuItem;
             String value;
             int iterator = 2;
 
@@ -2262,21 +2258,22 @@ public class ATimerFX_gui extends Application
         }
     }
 
-    private Sound createSound(final boolean internal, final String name, final String path) throws URISyntaxException, IOException
+    private Sound createSound(final boolean internal, final String name, final String path) throws IOException
     {
-        Sound sound = null;
+        Sound sound;
         Path filePath = Paths.get(path);
 
         if (internal)
         {
             sound = new Sound(name,
-                    (long) getClass().getResourceAsStream(path).available(), path,
+                     getClass().getResourceAsStream(path).available(), path,
                     new MediaPlayer(new Media(getClass().getResource(path).toExternalForm())),
                     true);
 
-        } else
+        }
+        else
         {
-            System.out.println("URI: " + filePath.toUri().toString());
+            System.out.println("URI: " + filePath.toUri());
             sound = new Sound(name,
                     Files.size(filePath), path, new MediaPlayer(
                     new Media(filePath.toUri().toString())), false);
@@ -2297,7 +2294,7 @@ public class ATimerFX_gui extends Application
     {
         ObservableList<MenuItem> menuItems = sounds_Menu.getItems();
 
-        SoundMenuItem sItem = null;
+        SoundMenuItem sItem;
         for (MenuItem item : menuItems)
         {
             if (item.getClass().getName().contains(SoundMenuItem.class.getName()))
@@ -2317,7 +2314,7 @@ public class ATimerFX_gui extends Application
     {
         ObservableList<MenuItem> items = sounds_Menu.getItems();
 
-        SoundMenuItem sItem = null;
+        SoundMenuItem sItem;
 
         for (MenuItem item : items)
         {
@@ -2357,7 +2354,7 @@ public class ATimerFX_gui extends Application
     private void puttingCustomSoundsToProperties(final Properties properties)
     {
         ObservableList<MenuItem> items = sounds_Menu.getItems();
-        SoundMenuItem sItem = null;
+        SoundMenuItem sItem;
 
 //        long savedSize = Long.parseLong(savedProperties.getProperty("currentNotificationSoundSize", "-1"));
 //        String savedName = savedProperties.getProperty("currentNotificationSoundFileName", "<NOT_FOUND>");
@@ -2497,7 +2494,7 @@ public class ATimerFX_gui extends Application
     {
         ObservableList<MenuItem> items = sounds_Menu.getItems();
 
-        SoundMenuItem sItem = null;
+        SoundMenuItem sItem;
 
         for (MenuItem item : items)
         {
@@ -2531,6 +2528,58 @@ public class ATimerFX_gui extends Application
     private void noSound_MenuItem_Action(ActionEvent event)
     {
         notificationSound.setMediaPlayer(null);
+    }
+
+    private void windowsShowed_startInitializeOtherComponent(EventHandler<MouseEvent> mouseHandler,
+                                                             EventHandler<KeyEvent> keyHandler)
+    {
+        System.out.println("windowsShowed_startInitializeOtherComponent()");
+        initializingTimerIsRunningComponent_Thread = new Thread(this::initializeTimerIsRunningComponents);
+        initializingTimerIsRunningComponent_Thread.start();
+
+        initializingInternalSounds();
+        initializingCustomSounds(savedProperties);
+        applySettings();
+        initializingLanguageList();
+
+        scene.removeEventFilter(MouseEvent.MOUSE_MOVED, mouseHandler);
+        scene.removeEventFilter(KeyEvent.KEY_PRESSED, keyHandler);
+        System.out.println("setOnKeyPressed(null)\nsetOnMouseMoved(null)");
+    }
+
+    private void initializingLanguageList()
+    {
+        Properties languageList_Properties = new Properties();
+        Properties languageIcon_Properties = new Properties();
+
+        try
+        {
+            languageList_Properties.loadFromXML(getClass().getResourceAsStream("/Localizations/general.properties"));
+            languageIcon_Properties.loadFromXML(getClass().getResourceAsStream("/Localizations/icon.properties"));
+
+            Set<Object> keys = languageList_Properties.keySet();
+            MenuItem langMenuItem;
+
+            for (Object key : keys)
+            {
+                langMenuItem = new MenuItem(String.valueOf(key));
+                langMenuItem.setOnAction(event ->
+                {
+                    initializeLocalization(languageList_Properties.getProperty(String.valueOf(key)));
+                    requestLocalization();
+                });
+                Image image = new Image(getClass().getResourceAsStream("/Images/" + languageIcon_Properties.getProperty(
+                        String.valueOf(key))));
+                langMenuItem.setGraphic(fxGui.createImageView(image, ICON_SIZE));
+                language_Menu.getItems().add(langMenuItem);
+            }
+        }
+        catch (IOException ioException)
+        {
+            ioException.printStackTrace();
+        }
+
+
     }
 
 }
