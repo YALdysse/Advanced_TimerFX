@@ -249,7 +249,6 @@ public class TemplateToolTip extends Tooltip
         }
         else if (actions.size() > 0)
         {
-            System.out.println("text");
             translation = language.getProperty(actions.get(0).name() + ACTION_DESCRIPTION_SUFFIX,
                     "<NOT_FOUND:>" + actions.get(0).name() + ACTION_DESCRIPTION_SUFFIX);
             actionValue_Label.setText(translation);

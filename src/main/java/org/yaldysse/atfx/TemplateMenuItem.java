@@ -40,8 +40,7 @@ public class TemplateMenuItem extends CustomMenuItem
         info = new Label();
 
         ttt = new TemplateToolTip(timerTemplate);
-        ttt.setLanguagePropertiesFileName("Language_"
-                + ATimerFX_gui.getCurrentLanguageName() + ".lang_templateTip");
+        ttt.setLanguagePropertiesFileName(ATimerFX_gui.getCurrentLanguageName() + "_templateTip.lang");
         ttt.getRootLayoutNode().setMaxWidth(fxGui.rem * 16.0D);
 
         info.setTooltip(ttt);
@@ -112,10 +111,10 @@ public class TemplateMenuItem extends CustomMenuItem
      * Запускає процес зміни мови інтерфейсу. На даний момент взаємодіє тільки з
      * вспливаючою підказкою.
      */
-    public void requestUpdateLocalization(final String fileName)
+    public void requestUpdateLocalization(final String aLocale)
     {
         TemplateToolTip tooltip = (TemplateToolTip) info.getTooltip();
-        tooltip.setLanguagePropertiesFileName(fileName);
+        tooltip.setLanguagePropertiesFileName(aLocale+"_templateTip.lang");
     }
 
     public void setTimerTemplate(final TimerTemplate aTemplate)

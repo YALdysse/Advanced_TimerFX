@@ -225,7 +225,7 @@ public class ATimerFX_gui extends Application
         stage.setX(Double.parseDouble(savedProperties.getProperty("locX", "100")));
         stage.setY(Double.parseDouble(savedProperties.getProperty("locY", "0")));
         stage.setScene(scene);
-        stage.setTitle(NAME_OF_PROGRAM + " [build 53 Stable]");
+        stage.setTitle(NAME_OF_PROGRAM + " [build 54 Stable]");
         stage.setMinWidth(PREFERRED_WIDTH);
         stage.setMaxWidth(PREFERRED_WIDTH + fxGui.rem * 2.3D);
         stage.setMinHeight(PREFERRED_HEIGHT);
@@ -1549,7 +1549,7 @@ public class ATimerFX_gui extends Application
         {
             tmi = (TemplateMenuItem) menuItems.get(k);
 
-            tmi.requestUpdateLocalization(currentLanguage_str + ".lang_templateTip");
+            tmi.requestUpdateLocalization(currentLanguage_str);
 
         }
 
